@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Somphea Reak - Inventory Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 pb-24">
+    <div class="max-w-6xl mx-auto p-6">
+        <header class="flex justify-between items-center mb-10">
+            <h1 class="text-3xl font-black italic uppercase">Inventory <span class="text-orange-600">Manager</span></h1>
+            <a href="/custom-bracelet" class="text-xs font-bold text-gray-400 hover:text-black">View Studio →</a>
+        </header>
+
+        {% for subcategory, items in grouped.items() %}
+        <div class="mb-16">
+            <h2 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mb-6 border-b pb-2">{{ subcategory }}</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                {% for p in items %}
+                <div class="bg-white rounded-3xl p-4 border border-gray-100 shadow-sm flex flex-col items-center">
+                    <img src="{{ p.image }}" class="w-full aspect-[2/3] object-cover rounded-2xl mb-4">
+                    <p class="text-[9px] font-black text-gray-800 truncate w-full text-center mb-4 uppercase">{{ p.name_kh }}</p>
+                    
+                    <div class="w-full relative">
+                        <span class="absolute -top-2 left-2 bg-white px-1 text-[7px] font-black text-gray-400 uppercase">Stock Count</span>
+                        <div class="flex gap-1">
+                            <input type="number" value="{{ p.stock }}" id="stock-{{ p.id }}"
+                                   class="w-full bg-slate-50 border-none rounded-lg p-2 text-center font-black text-sm focus:ring-1 focus:ring-orange-500">
+                            <button onclick="saveStock({{ p.id }})" 
+                                    class="bg-black text-white w-10 h-10 rounded-lg flex items-center justify-center active:scale-90 transition-transform">
+                                <i class="fa-solid fa-check text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        async function saveStock(id) {
+            const amount = document.getElementById('stock-' + id).value;
+            const res = await fetch('/admin/update-stock', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, amount })
+            });
+            if(res.ok) {
+                const btn = event.currentTarget;
+                btn.classList.replace('bg-black', 'bg-green-500');
+                setTimeout(() => btn.classList.replace('bg-green-500', 'bg-black'), 1000);
+            }
+        }
+    </script>
+</body>
+</html>
+

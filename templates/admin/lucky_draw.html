@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Somphea Reak - Mystery Box</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Moul&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f8fafc; 
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Unified Background Pattern */
+        .pka-chan-bg {
+            background-color: #fdfbf7;
+            background-image: radial-gradient(#ea580c 0.5px, transparent 0.5px), radial-gradient(#ea580c 0.5px, #fdfbf7 0.5px);
+            background-size: 20px 20px; background-position: 0 0, 10px 10px; opacity: 0.5;
+            position: fixed; inset: 0; z-index: -1;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Unified Cart Checkbox */
+        .cart-checkbox { 
+            appearance: none; width: 24px; height: 24px; border: 2.5px solid #cbd5e1; border-radius: 50%; 
+            outline: none; cursor: pointer; position: relative; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            background: white; flex-shrink: 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .cart-checkbox:checked { background-color: #ea580c; border-color: #ea580c; box-shadow: 0 2px 8px rgba(234, 88, 12, 0.3); }
+        .cart-checkbox:checked::after { 
+            content: ''; position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(45deg); 
+            width: 6px; height: 11px; border: solid white; border-width: 0 2.5px 2.5px 0; border-radius: 1px;
+        }
+
+        /* Premium Buttons */
+        .btn-3d { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); box-shadow: 0 8px 0 0 rgba(0,0,0,0.1); }
+        .btn-3d:active { transform: translateY(8px); box-shadow: 0 0 0 0 rgba(0,0,0,0.1); }
+        
+        .btn-orange-gradient { background: linear-gradient(135deg, #ea580c 0%, #f97316 100%); box-shadow: 0 8px 0 0 #c2410c, 0 15px 20px rgba(234, 88, 12, 0.3); }
+        .btn-orange-gradient:active { box-shadow: 0 0 0 0 #c2410c, 0 5px 10px rgba(234, 88, 12, 0.3); }
+
+        .btn-white-3d { background: #ffffff; box-shadow: 0 8px 0 0 #e2e8f0, 0 15px 20px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; }
+        .btn-white-3d:active { box-shadow: 0 0 0 0 #e2e8f0, 0 5px 10px rgba(0, 0, 0, 0.05); }
+
+        /* Rarity Styles */
+        .rarity-badge-Legendary { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; box-shadow: 0 2px 10px rgba(245, 158, 11, 0.3); }
+        .rarity-badge-Epic { background: #f3e8ff; color: #9333ea; border: 1px solid #d8b4fe; }
+        .rarity-badge-Rare { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+        .rarity-badge-Common { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        .pool-flt.active { background-color: #0f172a; color: white; border-color: #0f172a; }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .anim-float { animation: float 3s ease-in-out infinite; }
+
+        @keyframes boxShake {
+            0%, 100% { transform: rotate(0deg) scale(1); filter: brightness(1); }
+            20% { transform: rotate(-5deg) scale(1.1); filter: brightness(1.2); }
+            40% { transform: rotate(5deg) scale(1.1); filter: brightness(1.2); }
+            60% { transform: rotate(-5deg) scale(1.1); filter: brightness(1.2); }
+            80% { transform: rotate(5deg) scale(1.1); filter: brightness(1.2); }
+        }
+        .anim-shake { animation: boxShake 0.5s ease-in-out infinite; }
+
+        @keyframes popReveal {
+            0% { transform: scale(0.3) translateY(50px); opacity: 0; filter: blur(10px); }
+            60% { transform: scale(1.1) translateY(-10px); opacity: 1; filter: blur(0px); }
+            100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0px); }
+        }
+        .anim-pop { animation: popReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden">
+
+    <div class="pka-chan-bg"></div>
+    <canvas id="confetti-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-[9999]"></canvas>
+
+    <!-- IMAGE VIEWER MODAL -->
+    <div id="image-viewer-modal" class="fixed inset-0 z-[6000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-sm transition-opacity">
+        <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <img id="viewer-img" src="" class="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl mb-6">
+    </div>
+
+    <!-- 🌟 HEADER 🌟 -->
+    <header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl border-b border-gray-100 px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between shadow-sm">
+        
+        <a href="/" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-500 border border-gray-100 active:scale-90 transition-transform shrink-0">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+        </a>
+        
+        <div class="flex items-center justify-center flex-1 px-1 sm:px-2 gap-1.5 sm:gap-2.5 min-w-0">
+            <img src="/static/images/logo.png" onerror="this.src='/static/images/logo.jpg'" class="w-8 h-8 sm:w-12 sm:h-12 object-contain drop-shadow-sm shrink-0" alt="Logo">
+            <div class="flex flex-col justify-center text-left">
+                <h1 class="text-[13px] sm:text-lg font-black text-gray-900 leading-normal tracking-tight font-['Moul'] pb-0.5">
+                    សម្ភារៈ <span class="font-['Plus_Jakarta_Sans'] text-[10px] sm:text-sm whitespace-nowrap">- Somphea Reak</span>
+                </h1>
+                <p class="text-[8px] sm:text-[10px] font-bold text-[#ea580c] uppercase tracking-widest leading-none">Mystery Box</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <a href="https://t.me/somphea_reak" target="_blank" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-blue-50 rounded-full text-blue-500 border border-blue-100 active:scale-90 transition-transform shrink-0">
+                <i class="fa-brands fa-telegram text-sm sm:text-lg"></i>
+            </a>
+
+            <!-- Cart Drawer Icon -->
+            <button onclick="openCartDrawer()" class="relative w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white border border-gray-200 rounded-full text-gray-800 shadow-sm active:scale-90 transition-transform shrink-0">
+                <i class="fa-solid fa-cart-shopping text-sm sm:text-base"></i>
+                <span id="cart-badge" class="absolute -top-1 -right-1 bg-[#ea580c] text-white text-[8px] sm:text-[9px] font-black w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center shadow-md hidden">0</span>
+            </button>
+            
+            <!-- Balance Pill -->
+            <div class="bg-orange-50 border border-orange-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full flex items-center gap-1 shadow-sm shrink-0" id="balance-pill">
+                <div class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#ea580c] flex items-center justify-center text-white text-[7px] sm:text-[8px] shadow-inner">
+                    <i class="fa-solid fa-coins"></i>
+                </div>
+                <span id="player-balance" class="font-black text-[10px] sm:text-xs text-[#ea580c] tracking-tight">0៛</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-5xl mx-auto p-4 flex flex-col gap-6 pb-24">
+        
+        <!-- THE MACHINE -->
+        <div class="max-w-lg mx-auto w-full bg-white rounded-[2rem] p-6 border border-gray-100 shadow-xl relative overflow-hidden flex flex-col items-center pt-8 mt-2">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(ellipse_at_top,rgba(234,88,12,0.1),transparent_70%)] pointer-events-none z-0"></div>
+            
+            <div id="hero-machine" class="relative z-10 anim-float">
+                <div class="w-32 h-32 bg-gradient-to-br from-orange-100 to-orange-50 rounded-3xl border-4 border-white shadow-xl flex items-center justify-center relative mb-4">
+                    <div class="absolute inset-0 border border-orange-200 rounded-3xl"></div>
+                    <i class="fa-solid fa-box-open text-6xl text-[#ea580c] drop-shadow-md"></i>
+                    <div class="absolute -bottom-3 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md border border-gray-700">Series 1</div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-black text-gray-900 mt-2 z-10 font-['Moul']">ចាប់យករង្វាន់</h2>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8 z-10">Pull exclusive minifigures</p>
+
+            <!-- Play Buttons -->
+            <div class="flex gap-4 w-full z-10">
+                <button onclick="playSpin(1)" class="btn-3d btn-white-3d flex-1 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 group">
+                    <span class="text-sm font-black text-gray-900 uppercase tracking-widest group-active:text-[#ea580c] transition-colors">Draw 1x</span>
+                    <span class="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">1,000 ៛</span>
+                </button>
+                
+                <button onclick="playSpin(5)" class="btn-3d btn-orange-gradient flex-1 py-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-white/20 w-full h-full transform -skew-x-12 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                    <span class="text-sm font-black text-white uppercase tracking-widest relative z-10">Draw 5x</span>
+                    <span class="text-[10px] font-bold text-white bg-black/20 px-2 py-0.5 rounded-full border border-white/20 relative z-10 shadow-inner">5,000 ៛</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- COMPACT REDEEM BAR -->
+        <div class="max-w-lg mx-auto w-full bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-2 relative z-10">
+            <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-[#ea580c] shrink-0 border border-orange-100">
+                <i class="fa-solid fa-ticket transform -rotate-45"></i>
+            </div>
+            <input type="text" id="redeem-input" placeholder="Enter Riel Code" maxlength="8" class="flex-1 bg-transparent border-none outline-none font-black text-sm text-gray-900 placeholder-gray-300 uppercase tracking-widest min-w-0">
+            <button onclick="submitRedeem()" class="bg-gray-900 text-white px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black active:scale-95 transition-all shadow-md shrink-0 border border-gray-700">Claim</button>
+        </div>
+
+        <!-- PRIZE SHOWCASE GRID -->
+        <div class="mt-4 w-full">
+            <div class="flex justify-between items-end mb-3 px-1">
+                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest border-l-4 border-[#ea580c] pl-2 leading-none">Prize Pool</h3>
+                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1"><i class="fa-solid fa-circle text-green-500 text-[6px] animate-pulse"></i> Live Stock</span>
+            </div>
+            
+            <!-- Filter Options -->
+            <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 px-1 pb-1">
+                <button onclick="filterPool('All')" id="flt-All" class="pool-flt active bg-gray-900 text-white border border-gray-900 px-3 py-1.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap shadow-sm transition-all">All</button>
+                <button onclick="filterPool('Legendary')" id="flt-Legendary" class="pool-flt bg-white text-yellow-600 border border-yellow-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap shadow-sm hover:bg-yellow-50 transition-all">Legendary</button>
+                <button onclick="filterPool('Epic')" id="flt-Epic" class="pool-flt bg-white text-purple-600 border border-purple-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap shadow-sm hover:bg-purple-50 transition-all">Epic</button>
+                <button onclick="filterPool('Rare')" id="flt-Rare" class="pool-flt bg-white text-blue-600 border border-blue-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap shadow-sm hover:bg-blue-50 transition-all">Rare</button>
+                <button onclick="filterPool('Common')" id="flt-Common" class="pool-flt bg-white text-gray-500 border border-gray-200 px-3 py-1.5 rounded-full text-[10px] font-black uppercase whitespace-nowrap shadow-sm hover:bg-gray-50 transition-all">Common</button>
+            </div>
+
+            <!-- Upgraded Grid -->
+            <div id="pool-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                <div class="col-span-full text-center py-10 text-gray-300 text-xs font-bold uppercase tracking-widest">Loading...</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- CINEMATIC REVEAL MODAL -->
+    <div id="prize-modal" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[5000] hidden flex-col items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        
+        <div class="absolute top-0 w-full h-[50vh] bg-[radial-gradient(ellipse_at_top,rgba(234,88,12,0.15),transparent_70%)] pointer-events-none"></div>
+
+        <h2 id="congrats-text" class="text-3xl font-black text-gray-900 mb-8 text-center uppercase tracking-widest transform -translate-y-4 opacity-0 transition-all duration-500 font-['Moul'] z-10">អបអរសាទរ!</h2>
+        
+        <div id="prize-showcase" class="flex flex-wrap justify-center gap-4 max-w-lg w-full mb-12 z-10">
+            <!-- Drawn prizes injected here -->
+        </div>
+
+        <!-- CLAIM TO CART BUTTON -->
+        <button onclick="claimPrizesToCart()" class="bg-gradient-to-r from-orange-500 to-[#ea580c] text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-orange-500/30 hover:bg-orange-600 active:scale-95 transition-all opacity-0 transform translate-y-4 z-10 border border-orange-400 flex items-center gap-2" style="animation: popReveal 0.5s forwards 1s;">
+            <i class="fa-solid fa-cart-arrow-down text-lg"></i> Claim to Cart
+        </button>
+    </div>
+
+    <!-- UNIFIED CART DRAWER -->
+    <div id="cart-drawer" class="fixed inset-0 z-[6000] flex flex-col justify-end translate-y-full transition-transform duration-400 ease-in-out">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeCartDrawer()"></div>
+        <div class="relative w-full h-[85vh] md:max-w-md md:mx-auto bg-gray-50 rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden">
+            <div class="bg-white px-6 py-4 flex items-center justify-between border-b border-gray-100 z-10 shadow-sm">
+                <div>
+                    <h2 class="text-xl font-black text-gray-900 font-['Moul']">កន្ត្រករបស់អ្នក</h2>
+                    <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Your Rewards & Cart</p>
+                </div>
+                <button onclick="closeCartDrawer()" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-800 hover:text-red-500 hover:bg-red-50 active:scale-90 transition-all border border-gray-100"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="cart-items-container" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
+            <div class="bg-white border-t border-gray-100 p-5 z-10 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
+                <div class="flex justify-between items-end mb-4">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">សរុប (Total)</span>
+                    <span id="cart-grand-total" class="text-2xl font-black text-[#ea580c] leading-none">0៛</span>
+                </div>
+                <button onclick="openCheckout()" class="w-full bg-gray-900 hover:bg-black text-white font-black py-4 rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.15)] uppercase text-xs tracking-widest active:scale-95 transition-all flex items-center justify-center gap-2 font-['Kantumruy_Pro'] border border-gray-800"><i class="fa-solid fa-truck-fast"></i> រៀបចំការដឹកជញ្ជូន</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNIFIED CHECKOUT MODAL -->
+    <div id="checkout-modal" class="fixed inset-0 z-[7000] bg-white flex flex-col translate-y-full transition-transform duration-500 ease-in-out">
+        <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10 shadow-sm md:max-w-md md:mx-auto md:w-full">
+            <h2 class="text-xl font-black font-['Moul']">ព័ត៌មានដឹកជញ្ជូន</h2>
+            <button onclick="closeCheckout()" class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-800 hover:text-red-500 active:scale-90 transition-all"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 pb-32 bg-gray-50 md:max-w-md md:mx-auto md:w-full md:border-x md:border-gray-100">
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 space-y-3 mb-6 relative overflow-hidden shadow-sm">
+                <div class="absolute top-0 left-0 w-1 h-full bg-[#ea580c]"></div>
+                <div class="flex justify-between text-xs font-bold text-gray-500"><span>តម្លៃទំនិញ/រង្វាន់:</span><span id="check-subtotal">៛0</span></div>
+                <div class="flex justify-between text-xs font-bold text-blue-600"><span>ថ្លៃដឹកជញ្ជូន:</span><span id="check-delivery">៛0</span></div>
+                <div class="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-3 mt-3"><span class="text-sm">សរុបត្រូវបង់:</span><span id="check-total-khr" class="text-[#ea580c] text-xl leading-none">៛0</span></div>
+            </div>
+            <div class="space-y-4">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">ព័ត៌មានទំនាក់ទំនង</label>
+                <input type="text" id="cust-name" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="ឈ្មោះរបស់អ្នក (Name)">
+                <input type="tel" id="cust-phone" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="លេខទូរស័ព្ទ (Phone)">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2 mt-4">ទីតាំងដឹកជញ្ជូន</label>
+                <textarea id="cust-address" rows="3" class="w-full bg-white border border-gray-200 rounded-2xl p-4 font-bold text-sm outline-none focus:border-[#ea580c] focus:ring-4 focus:ring-orange-50 transition-all shadow-sm" placeholder="អាសយដ្ឋានដឹកជញ្ជូនពេញលេញ (Full Address)"></textarea>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 p-5 pb-8 md:max-w-md md:left-1/2 md:-translate-x-1/2 md:border-x">
+            <button onclick="processFinalOrder()" id="confirm-btn" class="w-full bg-gradient-to-r from-orange-500 to-[#ea580c] text-white font-black py-4 rounded-2xl shadow-[0_8px_20px_rgba(255,80,0,0.25)] uppercase text-xs tracking-widest active:scale-95 transition-all font-['Kantumruy_Pro'] border border-orange-400">បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)</button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[9000] bg-gray-900 text-white px-5 py-3 rounded-full font-black text-[10px] tracking-widest uppercase flex items-center gap-2 transition-all duration-300 transform -translate-y-10 opacity-0 shadow-xl border border-gray-700 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-sm"></i>
+        <span id="toast-msg">Success</span>
+    </div>
+
+    <script>
+        const RATE = 4000;
+        const formatRiel = (num) => new Intl.NumberFormat().format(num) + '៛';
+        let currentBalance = 0;
+        let isSpinning = false;
+        
+        let globalPool = [];
+        let currentFilter = 'All';
+
+        let userCart = [];
+        let wonPrizesForCart = [];
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            initCart();
+            fetchBalance(); 
+            fetchPool(); 
+        });
+
+        // --- API CONNECTION LOGIC ---
+        async function fetchBalance() {
+            try {
+                const res = await fetch('/api/spin/balance');
+                const data = await res.json();
+                currentBalance = data.balance;
+                document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+            } catch (err) {}
+        }
+
+        async function fetchPool() {
+            try {
+                const res = await fetch('/api/spin/pool');
+                const data = await res.json();
+                globalPool = data.pool;
+                renderPool();
+            } catch (err) { 
+                document.getElementById('pool-container').innerHTML = `<div class="col-span-full py-10 text-center font-bold text-red-400 uppercase text-[10px] tracking-widest">Failed to load live database.</div>`;
+            }
+        }
+
+        // --- UI RENDERING & FILTERING ---
+        function filterPool(rarity) {
+            currentFilter = rarity;
+            
+            document.querySelectorAll('.pool-flt').forEach(b => {
+                b.classList.remove('active', 'bg-gray-900', 'text-white', 'border-gray-900');
+                if(b.id === 'flt-All') b.classList.add('bg-white', 'text-gray-900', 'border-gray-200');
+            });
+            
+            const activeBtn = document.getElementById('flt-' + rarity);
+            activeBtn.classList.add('active', 'bg-gray-900', 'text-white', 'border-gray-900');
+            activeBtn.classList.remove('bg-white', 'text-yellow-600', 'text-purple-600', 'text-blue-600', 'text-gray-500');
+
+            renderPool();
+        }
+
+        function renderPool() {
+            const container = document.getElementById('pool-container');
+            if(!globalPool || globalPool.length === 0) { 
+                container.innerHTML = `<div class="col-span-full py-10 text-center font-bold text-gray-400 uppercase text-[10px] tracking-widest">Pool Empty. Admin needs to add items.</div>`; 
+                return; 
+            }
+
+            let filteredPool = globalPool;
+            if(currentFilter !== 'All') {
+                filteredPool = globalPool.filter(p => p.rarity === currentFilter);
+            }
+
+            if(filteredPool.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-10 text-center font-bold text-gray-400 uppercase text-[10px] tracking-widest">No ${currentFilter} items found.</div>`; 
+                return;
+            }
+
+            container.innerHTML = filteredPool.map(item => {
+                const isOut = item.stock <= 0;
+                return `
+                <div class="bg-white rounded-2xl p-2 border border-gray-100 shadow-sm flex flex-col relative transition-transform ${isOut ? 'opacity-50 grayscale' : 'hover:-translate-y-1 hover:shadow-md'}">
+                    <div class="flex justify-between items-start mb-2 px-1">
+                        <span class="text-[7px] font-black uppercase px-1.5 py-0.5 rounded rarity-badge-${item.rarity}">${item.rarity}</span>
+                        ${isOut ? `<span class="text-[7px] font-black text-red-500 bg-red-50 px-1 py-0.5 rounded uppercase">Out</span>` 
+                                : `<span class="text-[7px] font-bold text-gray-500 bg-gray-50 border border-gray-100 px-1 py-0.5 rounded uppercase">x${item.stock}</span>`}
+                    </div>
+                    <div onclick="openImageViewer('${item.image}')" class="w-full aspect-square bg-gray-50 rounded-xl mb-1.5 flex items-center justify-center p-1.5 border border-gray-50 cursor-zoom-in relative group">
+                        <img src="${item.image}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-110 transition-transform">
+                        <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center pointer-events-none"><i class="fa-solid fa-expand text-white text-xs drop-shadow-md"></i></div>
+                    </div>
+                    <h4 class="text-[9px] font-black text-gray-900 leading-tight line-clamp-2 text-center mt-auto px-1">${item.name}</h4>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
+        function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
+
+        // --- REDEEM LOGIC ---
+        async function submitRedeem() {
+            const input = document.getElementById('redeem-input');
+            const code = input.value.trim().toUpperCase();
+            if(code.length !== 8) return showToast('Code must be 8 Digits', 'error');
+
+            try {
+                const res = await fetch('/api/spin/redeem', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ code: code }) 
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    showToast(`+ ${formatRiel(data.value)}`, 'success');
+                    input.value = '';
+                    currentBalance = data.new_balance;
+                    document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+                    
+                    const pill = document.getElementById('balance-pill');
+                    pill.classList.add('scale-110', 'bg-orange-100');
+                    setTimeout(() => pill.classList.remove('scale-110', 'bg-orange-100'), 300);
+                } else {
+                    showToast(data.error || 'Invalid Code', 'error');
+                }
+            } catch (err) { showToast('Network Error. Is backend running?', 'error'); }
+        }
+
+        // --- PLAY/SPIN LOGIC ---
+        async function playSpin(count) {
+            if(isSpinning) return;
+            const cost = count === 1 ? 1000 : 5000;
+            if(currentBalance < cost) return showToast(`Not enough balance! Need ${formatRiel(cost)}`, 'error');
+
+            isSpinning = true;
+            
+            const machine = document.getElementById('hero-machine');
+            const boxIcon = machine.querySelector('i');
+            machine.classList.remove('anim-float');
+            boxIcon.classList.add('anim-shake');
+
+            try {
+                const res = await fetch('/api/spin/play', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ count: count }) 
+                });
+                const data = await res.json();
+
+                if(!data.success) {
+                    boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                    showToast(data.error || 'Draw failed. Admin needs to restock.', 'error');
+                    isSpinning = false; return;
+                }
+
+                currentBalance = data.new_balance;
+                document.getElementById('player-balance').innerText = formatRiel(currentBalance);
+                wonPrizesForCart = data.prizes;
+
+                setTimeout(() => {
+                    boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                    showPrizes(data.prizes, data.extra_reward || 0);
+                    fetchPool(); 
+                }, 1000);
+
+            } catch(err) {
+                boxIcon.classList.remove('anim-shake'); machine.classList.add('anim-float');
+                showToast('Network error during draw', 'error');
+                isSpinning = false;
+            }
+        }
+
+        // --- REVEAL MODAL LOGIC (CASH BONUS) ---
+        function showPrizes(prizes, extraReward = 0) {
+            const modal = document.getElementById('prize-modal');
+            const showcase = document.getElementById('prize-showcase');
+            const congratsText = document.getElementById('congrats-text');
+            
+            showcase.innerHTML = ''; 
+            
+            const hasLegendary = prizes.some(p => p.rarity === 'Legendary') || extraReward >= 5000;
+            if(hasLegendary) fireConfetti();
+
+            let delayOffset = 0;
+
+            if (extraReward > 0) {
+                const bonusHtml = `
+                    <div class="anim-pop opacity-0 bg-gradient-to-b from-green-50 to-green-100 rounded-3xl p-4 border-2 border-green-400 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: 0s">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md bg-green-500 text-white border border-green-400 whitespace-nowrap">
+                            <i class="fa-solid fa-gift mr-1"></i> BONUS
+                        </div>
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 mb-3 mt-3 flex items-center justify-center bg-white rounded-2xl border border-green-200 shadow-sm text-green-500">
+                            <i class="fa-solid fa-money-bills text-4xl sm:text-5xl drop-shadow-md"></i>
+                        </div>
+                        <h3 class="text-xs sm:text-sm font-black text-center text-green-700 leading-tight">+${extraReward.toLocaleString()} ៛</h3>
+                    </div>
+                `;
+                showcase.innerHTML += bonusHtml;
+                delayOffset = 1; 
+            }
+
+            prizes.forEach((prize, index) => {
+                const delay = (index + delayOffset) * 0.2; 
+                
+                const html = `
+                    <div class="anim-pop opacity-0 bg-white rounded-3xl p-4 border border-gray-100 flex flex-col items-center w-[45%] sm:w-40 shadow-xl relative" style="animation-delay: ${delay}s">
+                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md rarity-badge-${prize.rarity} whitespace-nowrap border border-white/50">
+                            ${prize.rarity}
+                        </div>
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 mb-3 mt-3 flex items-center justify-center p-2 bg-gray-50 rounded-2xl border border-gray-100">
+                            <img src="${prize.image}" class="max-w-full max-h-full object-contain drop-shadow-md mix-blend-multiply">
+                        </div>
+                        <h3 class="text-xs sm:text-sm font-black text-center text-gray-900 leading-tight">${prize.name}</h3>
+                    </div>
+                `;
+                showcase.innerHTML += html;
+            });
+
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                congratsText.style.opacity = '1'; congratsText.style.transform = 'translateY(0)';
+            }, 50);
+        }
+
+        function closePrizeModal() {
+            const modal = document.getElementById('prize-modal');
+            const congratsText = document.getElementById('congrats-text');
+            
+            modal.classList.add('opacity-0');
+            congratsText.style.opacity = '0'; congratsText.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); isSpinning = false; }, 300);
+        }
+
+        // --- CART INTEGRATION ---
+        function initCart() {
+            try {
+                const savedCart = localStorage.getItem('sr_cart');
+                if (savedCart) { userCart = JSON.parse(savedCart); updateCartBadge(); }
+            } catch(e) {}
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            if(userCart.length > 0) { badge.innerText = userCart.length; badge.classList.remove('hidden'); } 
+            else { badge.classList.add('hidden'); }
+        }
+
+        function saveCart() { localStorage.setItem('sr_cart', JSON.stringify(userCart)); updateCartBadge(); }
+
+        function claimPrizesToCart() {
+            wonPrizesForCart.forEach(prize => {
+                const prizeId = prize.id || prize.name; 
+                const existing = userCart.find(i => i.id === prizeId);
+                if(existing) {
+                    existing.qty += 1;
+                } else {
+                    userCart.push({
+                        id: prizeId,
+                        type: 'reward',
+                        title: prize.name,
+                        style: `Reward (${prize.rarity})`,
+                        price: 0,
+                        image: prize.image,
+                        maxStock: 99,
+                        qty: 1,
+                        selected: true
+                    });
+                }
+            });
+            wonPrizesForCart = [];
+            saveCart();
+            closePrizeModal();
+            showToast('Rewards Claimed to Cart!', 'success');
+        }
+
+        function openCartDrawer() { renderCartUI(); document.getElementById('cart-drawer').classList.remove('translate-y-full'); }
+        function closeCartDrawer() { document.getElementById('cart-drawer').classList.add('translate-y-full'); }
+
+        function renderCartUI() {
+            const container = document.getElementById('cart-items-container');
+            if(userCart.length === 0) {
+                container.innerHTML = `<div class="py-20 text-center opacity-30"><i class="fa-solid fa-cart-arrow-down text-5xl mb-3"></i><p class="font-black text-sm uppercase tracking-widest mt-2">កន្ត្រកទទេ (Empty)</p></div>`;
+                document.getElementById('cart-grand-total').innerText = "0៛";
+                return;
+            }
+
+            let grandTotal = 0; let customIndex = 1;
+
+            container.innerHTML = userCart.map((item) => {
+                let itemTotal = 0;
+                if(item.type === 'custom_bracelet') {
+                    itemTotal = (item.baseTotal + item.pkgPrice) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+                    
+                    return `
+                    <div class="bg-white rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-200'} flex flex-col relative transition-all overflow-hidden mb-4">
+                        <div class="w-full h-36 bg-gray-50 border-b border-gray-100 relative group">
+                            <img src="${item.image}" class="w-full h-full object-contain p-2">
+                            <div class="absolute bottom-0 left-0 right-0 bg-black/70 backdrop-blur-sm px-3 py-2 flex justify-between items-center text-white">
+                                <span class="text-[10px] font-bold tracking-widest uppercase font-['Kantumruy_Pro']"><i class="fa-solid fa-gem text-orange-400 mr-1"></i> ${item.charms.length} Charms</span>
+                                <span class="text-sm font-black text-orange-400">${itemTotal.toLocaleString()}៛</span>
+                            </div>
+                        </div>
+                        <div class="p-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <label class="flex items-start gap-3 cursor-pointer flex-1">
+                                    <input type="checkbox" class="cart-checkbox mt-0.5" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                                    <div>
+                                        <h4 class="font-black text-sm text-gray-900 leading-tight">Custom Bracelet #${customIndex++}</h4>
+                                        <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase tracking-widest flex items-center">Code: <span class="font-mono text-gray-800 ml-1">${item.code.substring(0,8)}</span></p>
+                                    </div>
+                                </label>
+                                <button type="button" onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 -mt-1 -mr-1"><i class="fa-solid fa-trash-can text-lg"></i></button>
+                            </div>
+                            <div class="flex justify-between items-center mt-3">
+                                <button onclick="window.location.href='/custom-bracelet'" class="text-[10px] bg-blue-50 text-blue-600 px-3 py-2 rounded-xl border border-blue-100 hover:bg-blue-100 transition-colors font-black uppercase tracking-widest shadow-sm active:scale-95"><i class="fa-solid fa-pen-ruler mr-1"></i> Edit</button>
+                                <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span class="font-black text-xs w-4 text-center">${item.qty}</span>
+                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded-lg shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    itemTotal = (item.price || 0) * item.qty;
+                    if(item.selected) grandTotal += itemTotal;
+                    const isReward = item.type === 'reward';
+
+                    return `
+                    <div class="bg-white p-3 rounded-2xl shadow-sm border ${item.selected ? 'border-[#ea580c] ring-2 ring-orange-100' : 'border-gray-100'} flex gap-3 relative transition-all mb-4">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" class="cart-checkbox mt-2 ml-1" ${item.selected ? 'checked' : ''} onchange="toggleCartItem('${item.id}')">
+                        </label>
+                        <div class="w-20 h-24 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 flex items-center justify-center relative p-1 overflow-hidden">
+                            ${isReward ? '<div class="absolute top-0 left-0 bg-yellow-400 text-[8px] font-black uppercase text-black px-2 py-0.5 rounded-br-lg shadow-sm">Reward</div>' : ''}
+                            <img src="${item.image}" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-between py-1 min-w-0">
+                            <div>
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-black text-xs text-gray-900 leading-tight truncate pr-2">${item.title}</h4>
+                                    <button onclick="removeCartItem('${item.id}')" class="text-gray-300 hover:text-red-500 -mt-1 -mr-1 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                                </div>
+                                <p class="text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">${item.style}</p>
+                            </div>
+                            <div class="flex justify-between items-end mt-2">
+                                <span class="font-black text-sm ${isReward ? 'text-green-500' : 'text-[#ea580c]'}">${isReward ? 'Claimed' : itemTotal.toLocaleString() + '៛'}</span>
+                                <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1 border border-gray-100">
+                                    <button onclick="updateCartQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                    <span class="font-black text-xs w-2 text-center">${item.qty}</span>
+                                    <button onclick="updateCartQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 active:scale-90"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+            document.getElementById('cart-grand-total').innerText = grandTotal.toLocaleString() + "៛";
+        }
+
+        function toggleCartItem(id) { const item = userCart.find(i => i.id === id); if(item) { item.selected = !item.selected; saveCart(); renderCartUI(); } }
+        function updateCartQty(id, delta) { const item = userCart.find(i => i.id === id); if(item) { item.qty += delta; if(item.qty < 1) item.qty = 1; if(item.qty > 10) item.qty = 10; saveCart(); renderCartUI(); } }
+        function removeCartItem(id) { if(confirm("លុបចេញពីកន្ត្រក? (Remove from cart?)")) { userCart = userCart.filter(i => i.id !== id); saveCart(); renderCartUI(); } }
+
+        function calculateDelivery(subtotalKHR) {
+            if (userCart.filter(i => i.selected).length > 0 && subtotalKHR === 0) return 8000;
+            if (subtotalKHR === 0) return 0;
+            if (subtotalKHR < 20000) return 8000;
+            if (subtotalKHR < 40000) return 6000;
+            if (subtotalKHR < 60000) return 4000;
+            if (subtotalKHR < 80000) return 2000;
+            return 0; 
+        }
+
+        function openCheckout() {
+            const selectedItems = userCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return alert("សូមជ្រើសរើសយ៉ាងហោចណាស់មួយដើម្បីបន្ត! (Please select an item to checkout)");
+
+            let subtotal = 0;
+            selectedItems.forEach(item => {
+                if(item.type === 'custom_bracelet') subtotal += ((item.baseTotal + item.pkgPrice) * item.qty);
+                else subtotal += (item.price * item.qty); 
+            });
+            
+            const delivery = calculateDelivery(subtotal);
+            document.getElementById('check-subtotal').innerText = subtotal.toLocaleString() + "៛";
+            document.getElementById('check-delivery').innerText = delivery === 0 ? "ឥតគិតថ្លៃ (Free)" : delivery.toLocaleString() + "៛";
+            document.getElementById('check-total-khr').innerText = (subtotal + delivery).toLocaleString() + "៛";
+
+            closeCartDrawer();
+            document.getElementById('checkout-modal').classList.remove('translate-y-full');
+        }
+
+        function closeCheckout() { document.getElementById('checkout-modal').classList.add('translate-y-full'); }
+
+        async function processFinalOrder() {
+            const selectedItems = userCart.filter(i => i.selected);
+            if(selectedItems.length === 0) return;
+
+            const name = document.getElementById('cust-name').value.trim(); 
+            const phone = document.getElementById('cust-phone').value.trim(); 
+            const address = document.getElementById('cust-address').value.trim();
+            
+            if(!name || !phone || !address) return alert("សូមបំពេញព័ត៌មានអោយបានគ្រប់គ្រាន់! (Please fill in all details)"); 
+            if(phone.length < 8) return alert("លេខទូរស័ព្ទមិនត្រឹមត្រូវ! (Invalid phone number)");
+
+            const btn = document.getElementById('confirm-btn'); 
+            btn.innerText = "កំពុងបញ្ជូន... (Processing...)"; 
+            btn.disabled = true;
+
+            let subtotal = 0; 
+            const orderItemsPayload = []; 
+            const charmCounts = {}; 
+
+            selectedItems.forEach((cartItem, bIdx) => {
+                if(cartItem.type === 'custom_bracelet') {
+                    const itemPrice = cartItem.baseTotal + cartItem.pkgPrice; subtotal += (itemPrice * cartItem.qty);
+                    const styleText = `Bracelet #${bIdx+1} | Code: ${cartItem.code} | Charms: ${cartItem.charms.length} | Pkg: ${cartItem.pkgName}`;
+                    orderItemsPayload.push({ cartId: "custom-" + Date.now() + "-" + bIdx, title: "Custom DIY Bracelet", style: styleText, price: itemPrice / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: 99 });
+                    cartItem.charms.forEach(c => { charmCounts[c.db_id] = (charmCounts[c.db_id] || 0) + (1 * cartItem.qty); });
+                } else {
+                    subtotal += (cartItem.price * cartItem.qty);
+                    orderItemsPayload.push({ cartId: cartItem.id, title: cartItem.title, style: cartItem.style, price: cartItem.price / RATE, qty: cartItem.qty, image: cartItem.image, maxStock: cartItem.maxStock });
+                }
+            });
+
+            for (const [id, count] of Object.entries(charmCounts)) { 
+                orderItemsPayload.push({ cartId: id, title: "DIY-Part", style: "Hidden stock component", price: 0, qty: count, image: "hidden", maxStock: 99 }); 
+            }
+
+            const delivery = calculateDelivery(subtotal); 
+            const totalUSD = (subtotal + delivery) / RATE;
+
+            try {
+                const res = await fetch('/api/checkout', { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ name, phone, address, items: orderItemsPayload, total: totalUSD }) 
+                });
+                if(res.ok) { 
+                    alert("Order Successful! We will contact you on Telegram soon to process delivery."); 
+                    userCart = userCart.filter(i => !i.selected); 
+                    saveCart(); 
+                    window.location.reload(); 
+                }
+            } catch (e) { 
+                alert("Error sending order. Please try again."); 
+            }
+            btn.innerText = "បញ្ជាក់ការកម្ម៉ង់ (Confirm Order)"; 
+            btn.disabled = false;
+        }
+
+        // --- UTILITIES ---
+        let toastTimeout;
+        function showToast(msg, type = 'error') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = msg;
+            clearTimeout(toastTimeout);
+            icon.className = type === 'error' ? "fa-solid fa-triangle-exclamation text-red-400 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
+            toast.style.opacity = '1'; toast.style.transform = 'translate(-50%, 0)';
+            toastTimeout = setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, -20px)'; }, 2500);
+        }
+
+        // --- CONFETTI ---
+        const canvas = document.getElementById('confetti-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+        function fireConfetti() {
+            particles = []; const colors = ['#ea580c', '#fcd34d', '#3b82f6'];
+            for(let i=0; i<100; i++) particles.push({ x: canvas.width/2, y: canvas.height/2, r: Math.random()*6+2, dx: Math.random()*20-10, dy: Math.random()*-20-5, color: colors[Math.floor(Math.random()*colors.length)], tilt: Math.floor(Math.random()*10)-10, tiltAngle: 0, tiltAngleInc: (Math.random()*0.07)+0.05 });
+            requestAnimationFrame(renderConfetti);
+        }
+        function renderConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false;
+            for(let i=0; i<particles.length; i++) {
+                let p = particles[i]; p.tiltAngle += p.tiltAngleInc; p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2; p.x += Math.sin(p.tiltAngle) * 2; p.dy += 0.5; p.y += p.dy; p.x += p.dx;
+                if(p.y <= canvas.height) active = true;
+                ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color; ctx.moveTo(p.x + p.tilt + p.r, p.y); ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r); ctx.stroke();
+            }
+            if(active) requestAnimationFrame(renderConfetti); else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    </script>
+</body>
+</html>
+
+
+

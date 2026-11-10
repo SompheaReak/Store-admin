@@ -1,0 +1,111 @@
+
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="space-y-4 md:space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-2 md:mb-4 px-1 gap-2">
+        <div>
+            <h2 class="text-xl md:text-2xl font-black text-gray-900">Business Snapshot</h2>
+            <p class="text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Real-time metrics & alerts</p>
+        </div>
+        <p class="text-[9px] md:text-xs font-black text-[#ff5000] bg-orange-50 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-orange-100" id="current-date-display"></p>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+        <a href="{{ url_for('admin_orders') }}" class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-[#ff5000] hover:shadow-md transition-all group gap-2">
+            <div class="order-2 sm:order-1">
+                <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-[#ff5000] transition-colors">Action Required</p>
+                <h3 class="text-2xl md:text-3xl font-black text-gray-900" id="stat-pending-count">{{ pending_count }}</h3>
+                <p class="text-[10px] md:text-xs font-bold text-gray-600 mt-0.5">Pending Orders</p>
+            </div>
+            <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-orange-50 flex items-center justify-center text-[#ff5000] text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-clock"></i></div>
+        </a>
+
+        <a href="{{ url_for('admin_inventory') }}" class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-blue-500 hover:shadow-md transition-all group gap-2">
+            <div class="order-2 sm:order-1">
+                <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-blue-500 transition-colors">Total Catalog</p>
+                <h3 class="text-2xl md:text-3xl font-black text-gray-900">{{ global_products|length }}</h3>
+                <p class="text-[10px] md:text-xs font-bold text-gray-600 mt-0.5">Active Products</p>
+            </div>
+            <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-boxes-stacked"></i></div>
+        </a>
+
+        <div class="bg-white rounded-2xl md:rounded-[24px] p-4 md:p-6 shadow-sm border border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between cursor-pointer hover:border-red-500 hover:shadow-md transition-all group gap-2" onclick="openStockSummaryModal(); if(!showOnlyOutOfStock){toggleOutOfStock();}">
+            <div class="order-2 sm:order-1">
+                <p class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5 md:mb-1 group-hover:text-red-500 transition-colors">Inventory Alert</p>
+                <h3 class="text-xl md:text-3xl font-black text-gray-900 mt-1 md:mt-0"><i class="fa-solid fa-magnifying-glass text-lg md:text-xl text-gray-300"></i></h3>
+                <p class="text-[10px] md:text-xs font-bold text-red-500 mt-0.5 md:mt-1 whitespace-nowrap">Check Empty Stock</p>
+            </div>
+            <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-red-50 flex items-center justify-center text-red-500 text-lg md:text-2xl group-hover:scale-110 transition-transform order-1 sm:order-2"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-200 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-full blur-3xl -z-10 opacity-50 transform translate-x-1/2 -translate-y-1/2"></div>
+        
+        <div class="flex flex-col sm:flex-row justify-between sm:items-end gap-4 mb-6 md:mb-8 border-b border-gray-100 pb-5">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg shadow-slate-900/20"><i class="fa-solid fa-chart-pie text-xl md:text-2xl"></i></div>
+                <div>
+                    <h3 class="text-xl md:text-2xl font-black text-gray-900 leading-tight">Financial Overview</h3>
+                    <p class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Professional Analytics Dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 shadow-sm w-fit group hover:border-[#ff5000] transition-colors">
+                <i class="fa-regular fa-calendar-days text-gray-400 group-hover:text-[#ff5000] transition-colors"></i>
+                <label class="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Period:</label>
+                <input type="month" id="finance-month-filter" class="bg-transparent text-gray-900 font-bold text-xs md:text-sm outline-none cursor-pointer" onchange="calculateIncome()">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+            <div class="p-6 bg-white rounded-2xl border-2 border-gray-100 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-green-500 transition-all">
+                <div class="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-green-50 to-transparent -z-10 opacity-50"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3"><i class="fa-solid fa-arrow-trend-up text-lg"></i></div>
+                <p class="text-[11px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Gross Revenue</p>
+                <p class="text-[9px] font-bold text-gray-400 mb-3">From fulfilled orders</p>
+                <h4 class="text-3xl md:text-4xl font-black text-gray-900 flex items-start"><span class="text-lg md:text-xl mr-1 text-green-500 mt-1">$</span><span id="calc-income">0.00</span></h4>
+            </div>
+            <div class="p-6 bg-white rounded-2xl border-2 border-gray-100 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-blue-500 transition-all">
+                <div class="absolute right-0 top-0 w-24 h-full bg-gradient-to-l from-blue-50 to-transparent -z-10 opacity-50"></div>
+                <div class="w-10 h-10 md:w-12 md:h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-3"><i class="fa-solid fa-check-circle text-lg"></i></div>
+                <p class="text-[11px] md:text-xs font-black text-gray-500 uppercase tracking-widest">Total Sales Volume</p>
+                <p class="text-[9px] font-bold text-gray-400 mb-3">Completed Orders</p>
+                <h4 class="text-3xl md:text-4xl font-black text-gray-900 flex items-start" id="calc-sales">0</h4>
+            </div>
+        </div>
+        
+        <!-- HIDDEN DIV TO STORE DATA FOR JS -->
+        <div id="hidden-order-data" style="display: none;">
+            {% for o in orders %}
+            <div class="order-data-card" data-status="{{ o.status }}" data-total="{{ o.total_usd }}" data-date="{{ o.timestamp.strftime('%Y-%m-%d') }}"></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('current-date-display').innerText = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+    
+    function calculateIncome() {
+        let totalIncome = 0;
+        let totalSales = 0;
+        const filterMonth = document.getElementById('finance-month-filter').value;
+        document.querySelectorAll('.order-data-card').forEach(card => {
+            const isCompleted = (card.dataset.status === 'Completed' || card.dataset.status === 'completed');
+            const cardDateStr = card.dataset.date; 
+            let matchMonth = true;
+            if (filterMonth && cardDateStr) { const cardMonth = cardDateStr.substring(0, 7); matchMonth = (cardMonth === filterMonth); }
+            if (isCompleted && matchMonth) { totalIncome += parseFloat(card.dataset.total || 0); totalSales += 1; }
+        });
+        document.getElementById('calc-income').innerText = totalIncome.toFixed(2);
+        document.getElementById('calc-sales').innerText = totalSales;
+    }
+    calculateIncome();
+</script>
+{% endblock %}
+
+
+

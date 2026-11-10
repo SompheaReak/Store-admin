@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Enterprise Admin | Somphea Reak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Moul&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
+        .input-box { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; font-size: 12px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a; appearance: none; }
+        .input-box:focus { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
+        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 12px; transition: all 0.2s; border: none; box-shadow: 0 4px 6px rgba(255, 80, 0, 0.2); }
+        .btn-taobao:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 80, 0, 0.3); }
+        .tab-btn { background: transparent; color: #64748b; transition: all 0.2s; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .tab-btn:hover { color: #0f172a; }
+        .tab-btn.active { background: white; color: #ff5000; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-bottom: 3px solid #ff5000; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="pb-20 md:pb-10">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[5000] hidden flex-col items-center justify-center text-white">
+        <i class="fa-solid fa-cloud-arrow-up text-4xl md:text-5xl mb-4 animate-bounce text-[#ff5000]"></i>
+        <h2 class="text-lg md:text-xl font-black tracking-widest uppercase">Syncing to Cloud</h2>
+        <p class="text-[9px] md:text-[10px] text-gray-400 font-bold mt-2 uppercase tracking-widest">Please wait. Do not close app...</p>
+    </div>
+
+    <div id="image-viewer-modal" class="fixed inset-0 z-[4000] bg-black/95 hidden flex-col items-center justify-center p-4 backdrop-blur-md transition-opacity">
+        <button onclick="closeImageViewer()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-white/10 rounded-full text-white hover:bg-red-500 transition-colors border border-white/20"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <img id="viewer-img" src="" class="max-w-full max-h-[70dvh] object-contain rounded-2xl shadow-2xl mb-6 ring-1 ring-white/10">
+    </div>
+
+    <div id="client-toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[9000] bg-gray-900 text-white px-5 py-3 rounded-full font-black text-[10px] tracking-widest uppercase flex items-center gap-2 transition-all duration-300 transform -translate-y-10 opacity-0 pointer-events-none shadow-xl border border-gray-700">
+        <i class="fa-solid fa-circle-check text-green-400 text-sm"></i><span id="client-toast-msg">Success</span>
+    </div>
+
+    <header class="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
+        <div class="flex items-center gap-3 md:gap-4">
+            <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
+            <div class="flex flex-col">
+                <h1 class="font-black text-gray-900 text-xs md:text-sm uppercase tracking-tight leading-none flex items-center gap-1.5 md:gap-2">Enterprise Admin <span class="bg-[#ff5000] text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded">PRO</span></h1>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Somphea Reak Studio</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="openStockSummaryModal()" class="px-3 py-2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-bolt"></i> Live Stock
+            </button>
+            <a href="{{ url_for('logout') }}" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="max-w-[1400px] mx-auto px-2 md:px-4 mt-4 md:mt-6">
+        <div class="bg-gray-200/60 p-1 md:p-1.5 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x">
+            <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                <i class="fa-solid fa-chart-pie mr-1 md:mr-1.5"></i> Overview
+            </a>
+            <a href="{{ url_for('admin_inventory') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
+                <i class="fa-solid fa-box mr-1 md:mr-1.5"></i> Inventory
+            </a>
+            <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center relative {% if request.endpoint == 'admin_orders' %}active{% endif %}">
+                <i class="fa-solid fa-receipt mr-1 md:mr-1.5"></i> Orders
+                
+                {% if pending_count and pending_count > 0 %}
+                <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-md border-2 border-white animate-bounce">{{ pending_count }}</span>
+                {% endif %}
+
+            </a>
+            <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_redeem' %}active{% endif %}">
+                <i class="fa-solid fa-ticket mr-1 md:mr-1.5"></i> Promo Codes
+            </a>
+            <a href="{{ url_for('admin_spin') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_spin' %}active{% endif %}">
+                <i class="fa-solid fa-gamepad mr-1 md:mr-1.5"></i> Minifig Spin
+            </a>
+        </div>
+    </div>
+
+    <!-- LIVE STOCK SUMMARY MODAL (Global) -->
+    <div id="stock-summary-modal" class="fixed inset-0 z-[5000] flex items-end md:items-center justify-center md:p-4 hidden overscroll-contain">
+        <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeStockSummaryModal()"></div>
+        <div class="bg-white w-full max-w-5xl rounded-t-[24px] md:rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col h-[85dvh] md:h-[90dvh] border-t md:border border-gray-200">
+            <div class="p-4 md:p-6 border-b border-gray-100 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 shadow-sm relative z-10">
+                <div class="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
+                    <div class="w-10 h-10 md:w-14 md:h-14 bg-orange-50 rounded-xl md:rounded-2xl flex items-center justify-center text-[#ff5000] text-xl md:text-2xl shadow-inner border border-orange-100 shrink-0"><i class="fa-solid fa-bolt"></i></div>
+                    <div class="flex-1">
+                        <h2 class="font-black text-lg md:text-2xl text-gray-900 leading-tight">Live Stock Matrix</h2>
+                        <p class="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 md:mt-1">Edit quantities, then hit Save.</p>
+                    </div>
+                    <button type="button" onclick="closeStockSummaryModal()" class="sm:hidden w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+                    <button id="save-stock-btn" onclick="saveAllStockChanges()" class="w-full sm:w-auto btn-taobao px-5 py-3 md:py-3.5 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center disabled:opacity-50" disabled>
+                        <i class="fa-solid fa-save mr-1.5 md:mr-2"></i> Save Changes
+                    </button>
+                    <button type="button" onclick="closeStockSummaryModal()" class="hidden sm:flex w-10 h-10 md:w-12 md:h-12 items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors shadow-sm shrink-0"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50/80 p-3 md:p-5 border-b border-gray-200 flex flex-col sm:flex-row gap-3 md:gap-4 items-center shrink-0 shadow-inner">
+                <div class="relative w-full sm:w-1/3">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="ls-search" oninput="filterLiveStock()" placeholder="Search Title, Variant..." class="input-box pl-9 md:pl-10 py-2.5 md:py-3 shadow-sm border-gray-200 text-xs">
+                </div>
+                <div class="flex flex-1 gap-2 md:gap-3 w-full">
+                    <select id="ls-store-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer text-[10px] md:text-xs">
+                        <option value="all">All Storefronts</option>
+                        <option value="toy">Toy Exclusives</option>
+                        <option value="lego">LEGO Sets</option>
+                        <option value="minifigure">Minifigures</option>
+                        <option value="bracelet">Bracelets</option>
+                        <option value="custom_bracelet">Custom</option>
+                    </select>
+                    <select id="ls-cat-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer hidden md:block text-xs">
+                        <option value="all">All Categories</option>
+                        {% for cat in global_categories %}<option value="{{cat.name|lower}}">{{cat.name}}</option>{% endfor %}
+                    </select>
+                </div>
+                <button id="ls-oos-btn" onclick="toggleOutOfStock()" class="px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 whitespace-nowrap shadow-sm w-full sm:w-auto justify-center bg-white border border-gray-300 rounded-xl"><i class="fa-solid fa-filter"></i> <span id="oos-btn-text">Filter Out of Stock</span></button>
+            </div>
+
+            <div class="overflow-y-auto flex-1 bg-gray-50 p-2 touch-pan-y hide-scrollbar w-full grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 content-start" id="live-stock-list">
+                {% for p in global_products %}
+                    {% set group_cats = [] %}
+                    {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
+                    {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
+                    {% set lower_cats = group_cats | join(',') | lower %}
+
+                    {% if p.parsed_variants|length > 0 %}
+                        {% for v in p.parsed_variants %}
+                            {% set is_gallery = ('building sets' in lower_cats and loop.index0 > 0) or (v.category and 'gallery' in v.category|lower) %}
+                            {% if not is_gallery %}
+                                <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ v.stock }}" data-name="{{ v.name|lower }} {{ p.title|lower }}" data-categories="{{ lower_cats }}">
+                                    <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if v.stock|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">{% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}</span>
+                                    <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ v.image }}')"><img src="{{ v.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
+                                    <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                        <input type="number" id="quick-stock-{{p.id}}-{{loop.index0}}" value="{{ v.stock }}" onchange="queueExactStock({{ p.id }}, {{ loop.index0 }}, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ p.stock|default(0) }}" data-name="{{ p.title|lower }}" data-categories="{{ lower_cats }}">
+                            <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if p.stock|default(0)|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">{% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}</span>
+                            <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ p.image }}')"><img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
+                            <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                <input type="number" id="quick-stock-{{p.id}}--1" value="{{ p.stock|default(0) }}" onchange="queueExactStock({{ p.id }}, -1, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-[1400px] mx-auto p-3 md:p-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function showClientToast(msg, isError = false) {
+            const toast = document.getElementById('client-toast');
+            const icon = toast.querySelector('i');
+            document.getElementById('client-toast-msg').innerText = msg;
+            icon.className = isError ? "fa-solid fa-triangle-exclamation text-red-400 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
+            toast.classList.remove('-translate-y-10', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { toast.classList.add('-translate-y-10', 'opacity-0'); toast.classList.remove('translate-y-0', 'opacity-100'); }, 3000);
+        }
+
+        function openImageViewer(src) { document.getElementById('viewer-img').src = src; document.getElementById('image-viewer-modal').classList.remove('hidden'); document.getElementById('image-viewer-modal').classList.add('flex'); }
+        function closeImageViewer() { document.getElementById('image-viewer-modal').classList.add('hidden'); document.getElementById('image-viewer-modal').classList.remove('flex'); }
+
+        document.querySelectorAll('form.submit-form').forEach(form => {
+            form.addEventListener('submit', () => { document.getElementById('loading-overlay').style.display = 'flex'; });
+        });
+
+        // LIVE STOCK CENTER LOGIC
+        let showOnlyOutOfStock = false; let pendingStockChanges = {};
+        function openStockSummaryModal() { document.getElementById('stock-summary-modal').classList.remove('hidden'); filterLiveStock(); }
+        function closeStockSummaryModal() { document.getElementById('stock-summary-modal').classList.add('hidden'); }
+        function toggleOutOfStock() { showOnlyOutOfStock = !showOnlyOutOfStock; const btn = document.getElementById('ls-oos-btn'); const btnText = document.getElementById('oos-btn-text'); if (showOnlyOutOfStock) { btn.classList.add('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); btn.classList.remove('bg-white'); btnText.innerText = "Clear Empty Filter"; } else { btn.classList.remove('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); btn.classList.add('bg-white'); btnText.innerText = "Filter Out of Stock"; } filterLiveStock(); }
+        function filterLiveStock() { const searchStr = document.getElementById('ls-search').value.toLowerCase(); const storeFilter = document.getElementById('ls-store-filter').value; const catFilter = document.getElementById('ls-cat-filter') ? document.getElementById('ls-cat-filter').value : 'all'; document.querySelectorAll('.ls-item').forEach(item => { const name = item.dataset.name || ''; const store = item.dataset.store || ''; const stock = parseInt(item.dataset.stock) || 0; const cats = item.dataset.categories || ''; const matchesSearch = name.includes(searchStr); const matchesStore = storeFilter === 'all' || store === storeFilter; const matchesCat = catFilter === 'all' || cats.includes(catFilter); const matchesOOS = !showOnlyOutOfStock || stock <= 0; if (matchesSearch && matchesStore && matchesCat && matchesOOS) { item.style.display = 'flex'; } else { item.style.display = 'none'; } }); }
+        function updateStockBadgeUI(rowElement, newStockVal) { rowElement.dataset.stock = newStockVal; const store = rowElement.dataset.store; let badge = rowElement.querySelector('.stock-badge'); if(newStockVal <= 0) { if(store === 'lego') { badge.innerText = 'PRE-ORDER'; badge.style.backgroundColor = '#ff5000'; } else { badge.innerText = 'EMPTY'; badge.style.backgroundColor = '#dc2626'; } badge.style.display = 'block'; } else { badge.style.display = 'none'; } if(showOnlyOutOfStock && newStockVal > 0) filterLiveStock(); }
+        function queueStockUpdate(productId, variantIndex, change, btnElement) { const inputEl = document.getElementById(`quick-stock-${productId}-${variantIndex}`); let currentVal = parseInt(inputEl.value) || 0; let newStock = currentVal + change; if (newStock < 0) newStock = 0; inputEl.value = newStock; const itemRow = btnElement.closest('.ls-item'); itemRow.classList.add('bg-orange-50/40', 'border-orange-200'); inputEl.parentElement.classList.add('border-[#ff5000]', 'ring-1', 'ring-orange-200'); updateStockBadgeUI(itemRow, newStock); const key = `${productId}-${variantIndex}`; pendingStockChanges[key] = { productId, variantIndex, stock: newStock, rowElement: itemRow, inputContainer: inputEl.parentElement }; document.getElementById('save-stock-btn').disabled = false; }
+        function queueExactStock(productId, variantIndex, inputElement) { let newStock = parseInt(inputElement.value) || 0; if(newStock < 0) inputElement.value = 0; const itemRow = inputElement.closest('.ls-item'); const key = `${productId}-${variantIndex}`; itemRow.classList.add('bg-orange-50/40', 'border-orange-200'); inputElement.parentElement.classList.add('border-[#ff5000]', 'ring-1', 'ring-orange-200'); updateStockBadgeUI(itemRow, parseInt(inputElement.value)); pendingStockChanges[key] = { productId, variantIndex, stock: parseInt(inputElement.value), rowElement: itemRow, inputContainer: inputElement.parentElement }; document.getElementById('save-stock-btn').disabled = false; }
+        async function saveAllStockChanges() { const changes = Object.values(pendingStockChanges); if(changes.length === 0) return; const btn = document.getElementById('save-stock-btn'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...'; btn.disabled = true; let errCount = 0; for (let change of changes) { try { await fetch('/admin/product/quick_stock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: change.productId, variant_index: change.variantIndex, stock: change.stock }) }); change.rowElement.classList.remove('bg-orange-50/40', 'border-orange-200'); change.inputContainer.classList.remove('border-[#ff5000]', 'ring-1', 'ring-orange-200'); } catch(e) { errCount++; } } pendingStockChanges = {}; if (errCount > 0) { showClientToast(`Saved with ${errCount} errors`, true); } else { showClientToast("Stock Updated Automatically"); } btn.innerHTML = '<i class="fa-solid fa-save mr-1.5 md:mr-2"></i> Save Changes'; btn.disabled = true; }
+    </script>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <script>document.addEventListener('DOMContentLoaded', () => { {% for category, message in messages %} showClientToast("{{ message }}", {{ 'true' if category == 'error' else 'false' }}); {% endfor %} });</script>
+      {% endif %}
+    {% endwith %}
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

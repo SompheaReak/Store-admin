@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Hanuman', sans-serif; margin: 0; background: #f4f6f8; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border-radius: 8px; text-decoration: none; color: white; font-weight: bold; border: none; cursor: pointer; }
+        .btn-add { background: #28a745; }
+        .btn-logout { background: #dc3545; }
+        
+        .product-list { display: grid; gap: 10px; }
+        .product-item { background: white; padding: 15px; border-radius: 10px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .product-item img { width: 50px; height: 50px; border-radius: 5px; object-fit: cover; }
+        .info { flex-grow: 1; }
+        .actions { display: flex; gap: 10px; }
+        
+        h3 { margin: 0; font-size: 16px; }
+        p { margin: 0; color: #666; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>📦 Product Manager</h2>
+        <a href="/" class="btn btn-logout" style="background:#666; margin-right: 10px;">View Shop</a>
+    </div>
+
+    <a href="/admin/add-product" class="btn btn-add" style="display:block; text-align:center; margin-bottom: 20px;">+ Add New Product</a>
+
+    <div class="product-list">
+        {% for p in products %}
+        <div class="product-item">
+            <img src="{{ p.image }}" onerror="this.src='https://via.placeholder.com/50'">
+            <div class="info">
+                <h3>{{ p.name_kh }}</h3>
+                <p>{{ "{:,}".format(p.price) }}៛ | Stock: {{ p.stock }}</p>
+            </div>
+            <div class="actions">
+                <form action="/admin/delete-product/{{ p.id }}" method="POST" onsubmit="return confirm('Delete this product?');">
+                    <button type="submit" class="btn btn-logout" style="padding: 5px 10px; font-size: 12px;">Delete</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
+

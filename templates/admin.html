@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Stock Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4 sm:p-8 font-sans">
+
+    <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gray-900 px-6 py-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-white text-lg font-bold">Stock Control Panel</h1>
+                <p class="text-gray-400 text-xs mt-1">Turn charm availability ON/OFF</p>
+            </div>
+            <div class="bg-gray-800 text-white px-3 py-1 rounded-lg text-xs font-mono">
+                Admin
+            </div>
+        </div>
+
+        <!-- Charm List -->
+        <div class="p-6">
+            <div id="admin-charm-list" class="space-y-3">
+                <!-- Charms will be injected here via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NOTE: Paste your EXACT allCharms array from custom_bracelet.html here
+        // I am adding some dummy data so the panel works out of the box for testing.
+        const allCharms = [
+            { id: 1, categories: ["Love"], price: 5000, image: "https://cdn-icons-png.flaticon.com/512/833/833472.png" },
+            { id: 2, categories: ["Space"], price: 6000, image: "https://cdn-icons-png.flaticon.com/512/116/116867.png" },
+            { id: 3, categories: ["Animals"], price: 4500, image: "https://cdn-icons-png.flaticon.com/512/616/616408.png" }
+        ];
+
+        // Load existing stock settings from Local Storage (defaults to empty object)
+        let stockStatus = JSON.parse(localStorage.getItem('admin_charm_stock')) || {};
+
+        function renderAdminPanel() {
+            const listContainer = document.getElementById('admin-charm-list');
+            
+            listContainer.innerHTML = allCharms.map(charm => {
+                // If not explicitly set to false, it is assumed to be IN STOCK (true)
+                const inStock = stockStatus[charm.id] !== false; 
+                
+                return `
+                    <div class="flex items-center justify-between p-4 border border-slate-100 rounded-xl hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 bg-white rounded-lg shadow-sm border border-slate-100 flex items-center justify-center p-2">
+                                <img src="${charm.image}" alt="Charm ${charm.id}" class="w-full h-full object-contain">
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800">Charm #${charm.id}</h3>
+                                <p class="text-xs text-slate-500">${charm.categories.join(', ')} • ${charm.price}៛</p>
+                            </div>
+                        </div>
+
+                        <!-- Toggle Switch -->
+                        <button onclick="toggleStock(${charm.id})" 
+                                class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${inStock ? 'bg-green-500' : 'bg-slate-300'}" 
+                                role="switch" 
+                                aria-checked="${inStock}">
+                            <span class="sr-only">Toggle Stock</span>
+                            <!-- Toggle Knob -->
+                            <span class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${inStock ? 'translate-x-5' : 'translate-x-0'}"></span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleStock(id) {
+            // Flip the status
+            if (stockStatus[id] === false) {
+                stockStatus[id] = true; // Turn ON
+            } else {
+                stockStatus[id] = false; // Turn OFF
+            }
+            
+            // Save back to local storage
+            localStorage.setItem('admin_charm_stock', JSON.stringify(stockStatus));
+            
+            // Re-render UI
+            renderAdminPanel();
+        }
+
+        // Initialize
+        renderAdminPanel();
+    </script>
+</body>
+</html>
+

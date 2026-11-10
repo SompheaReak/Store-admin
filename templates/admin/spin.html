@@ -1,0 +1,466 @@
+
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+    <section class="lg:col-span-4 space-y-4 md:space-y-6">
+        
+        <!-- Smart Auto-Sync Panel -->
+        <div class="bg-gradient-to-br from-[#ff9000] to-[#ff5000] p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm text-white relative overflow-hidden border border-orange-400">
+            <i class="fa-solid fa-wand-magic-sparkles absolute -right-2 -bottom-2 text-7xl text-white/10"></i>
+            <h2 class="font-black text-base md:text-lg mb-1 flex items-center relative z-10"><i class="fa-solid fa-tags text-white mr-2"></i>Smart Auto-Sync</h2>
+            <p class="text-[9px] md:text-[10px] font-bold text-orange-100 uppercase tracking-widest mb-4 relative z-10">Found items tagged with "Lucky Draw"? Link them instantly to the prize pool.</p>
+            <button type="button" onclick="syncLuckyDrawTags(this)" class="w-full bg-white text-[#ff5000] hover:bg-gray-100 py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg active:scale-95 transition-all relative z-10">
+                <i class="fa-solid fa-rotate mr-1.5"></i> Sync "Lucky Draw" Tag
+            </button>
+        </div>
+
+        <!-- ==================== RESTORED: ADD TO PRIZE POOL ==================== -->
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-indigo-500">
+            <h2 class="font-black text-base md:text-lg mb-3 flex items-center"><i class="fa-solid fa-link text-indigo-500 mr-2 text-lg md:text-xl"></i>Add to Prize Pool</h2>
+            
+            <div class="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl">
+                <button type="button" onclick="toggleSpinAddMode('catalog')" id="btn-mode-catalog" class="flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all">Link Toy Stock</button>
+                <button type="button" onclick="toggleSpinAddMode('custom')" id="btn-mode-custom" class="flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all">Custom Prize</button>
+            </div>
+
+            <form id="form-spin-catalog" action="/admin/spin/add_pool_catalog" method="POST" class="space-y-3 md:space-y-4 submit-form">
+                <div>
+                    <div class="flex justify-between items-end ml-1 mb-1">
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest">1. Select Toys (Multi-Select)</label>
+                        <span id="multi-sel-count" class="text-[8px] md:text-[9px] font-black text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full">0 Selected</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 p-2 bg-indigo-50/30 border border-indigo-200 rounded-xl max-h-[220px] overflow-y-auto hide-scrollbar">
+                        {% for p in global_products %}
+                            {% if p.store == 'toy' or p.store == 'lego' %}
+                                {% if p.parsed_variants %}
+                                    {% for v in p.parsed_variants %}
+                                        <label class="cursor-pointer relative group aspect-square">
+                                            <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|{{ loop.index0 }}" class="hidden peer" onchange="updateMultiCount()">
+                                            <img src="{{ v.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                            <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                            <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ v.stock }}</div>
+                                        </label>
+                                    {% endfor %}
+                                {% else %}
+                                    <label class="cursor-pointer relative group aspect-square">
+                                        <input type="checkbox" name="catalog_items[]" value="{{ p.id }}|-1" class="hidden peer" onchange="updateMultiCount()">
+                                        <img src="{{ p.image }}" class="w-full h-full object-cover rounded-lg border-2 border-transparent peer-checked:border-indigo-600 peer-checked:opacity-100 opacity-60 hover:opacity-100 transition-all bg-white shadow-sm">
+                                        <div class="absolute top-1 right-1 hidden peer-checked:flex items-center justify-center w-4 h-4 text-white bg-indigo-600 rounded-full shadow-sm text-[10px]"><i class="fa-solid fa-check"></i></div>
+                                        <div class="absolute bottom-1 left-1 right-1 hidden peer-checked:block text-[8px] text-center font-black text-white bg-indigo-600/80 rounded backdrop-blur-sm truncate px-1">Stock: {{ p.stock|default(0) }}</div>
+                                    </label>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">2. Drop Chance</label>
+                    <select name="rarity" class="input-box bg-gray-50 cursor-pointer font-black text-[10px] md:text-xs py-2 md:py-2.5">
+                        <option value="Common" class="text-gray-500">Common (50%)</option>
+                        <option value="Rare" class="text-blue-500">Rare (30%)</option>
+                        <option value="Epic" class="text-purple-500">Epic (15%)</option>
+                        <option value="Legendary" class="text-yellow-600">Legendary (5%)</option>
+                    </select>
+                </div>
+                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-2 flex gap-2 items-center">
+                    <i class="fa-solid fa-circle-info text-indigo-400 text-sm"></i>
+                    <p class="text-[8px] font-bold text-indigo-800 leading-tight">Stock is managed automatically. When won, it will deduct directly from Toy Store inventory.</p>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg shadow-indigo-500/30 active:scale-95 transition-all mt-2 md:mt-4"><i class="fa-solid fa-link mr-1.5"></i> Link to Engine</button>
+            </form>
+
+            <form id="form-spin-custom" action="/admin/spin/add_pool" method="POST" enctype="multipart/form-data" class="space-y-3 md:space-y-4 submit-form hidden">
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Custom Image</label>
+                    <input type="file" name="images" multiple id="custom-image-input" class="block w-full text-[10px] md:text-xs text-gray-500 file:mr-3 file:py-2 md:file:py-3 file:px-3 md:file:px-4 file:rounded-lg md:file:rounded-xl file:border-0 file:text-[9px] md:file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200 cursor-pointer border border-gray-200 rounded-lg md:rounded-xl p-1 bg-gray-50">
+                </div>
+                <div>
+                    <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Prize Name</label>
+                    <input type="text" name="name" placeholder="E.g. $5 Cash Voucher" class="input-box bg-gray-50 py-2 md:py-2.5 text-xs" required>
+                </div>
+                <div class="grid grid-cols-2 gap-2 md:gap-3">
+                    <div>
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Drop Chance</label>
+                        <select name="rarity" class="input-box bg-gray-50 cursor-pointer font-black text-[10px] md:text-xs py-2 md:py-2.5">
+                            <option value="Common" class="text-gray-500">Common (50%)</option>
+                            <option value="Rare" class="text-blue-500">Rare (30%)</option>
+                            <option value="Epic" class="text-purple-500">Epic (15%)</option>
+                            <option value="Legendary" class="text-yellow-600">Legendary (5%)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Initial Stock</label>
+                        <input type="number" name="stock" value="1" min="1" class="input-box bg-gray-50 py-2 md:py-2.5 text-xs text-center font-black">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] md:text-[11px] tracking-widest shadow-lg active:scale-95 transition-all mt-2 md:mt-4">Inject Custom Prize</button>
+            </form>
+        </div>
+        
+        <!-- 5x SPIN CASH BONUS SETTINGS -->
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-green-500">
+            <h2 class="font-black text-base md:text-lg mb-1 md:mb-2 flex items-center"><i class="fa-solid fa-money-bill-wave text-green-500 mr-2 text-lg md:text-xl"></i>5x Spin Cash Bonus</h2>
+            <p class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Set pop-up chance (Must total 100%).</p>
+            <form action="/admin/spin/update_rewards" method="POST" class="space-y-3 submit-form">
+                <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                    <div><label class="text-[9px] font-black text-gray-500 uppercase tracking-widest block">0 ៛ (Nothing) %</label><input type="number" step="any" name="pct_0" value="{{ reward_config['0'] }}" class="input-box bg-gray-50 font-black py-2 text-gray-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">500 ៛ %</label><input type="number" step="any" name="pct_500" value="{{ reward_config['500'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">1,000 ៛ %</label><input type="number" step="any" name="pct_1000" value="{{ reward_config['1000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">2,000 ៛ %</label><input type="number" step="any" name="pct_2000" value="{{ reward_config['2000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">5,000 ៛ %</label><input type="number" step="any" name="pct_5000" value="{{ reward_config['5000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">10,000 ៛ %</label><input type="number" step="any" name="pct_10000" value="{{ reward_config['10000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                    <div class="col-span-2"><label class="text-[9px] font-black text-green-600 uppercase tracking-widest block">50,000 ៛ (Jackpot) %</label><input type="number" step="any" name="pct_50000" value="{{ reward_config['50000'] }}" class="input-box bg-green-50 font-black py-2 text-green-700"></div>
+                </div>
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95">Save Probabilities</button>
+            </form>
+        </div>
+
+        <!-- MINT PLAY PINS -->
+        <div class="bg-white p-4 md:p-6 rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 border-t-4 border-t-yellow-400">
+            <h2 class="font-black text-base md:text-lg mb-1 md:mb-2 flex items-center"><i class="fa-solid fa-bolt text-yellow-500 mr-2 text-lg md:text-xl"></i>Mint Play PINs</h2>
+            <form action="/admin/spin/generate_codes" method="POST" class="space-y-3 md:space-y-4">
+                <div class="grid grid-cols-2 gap-2 md:gap-3">
+                    <div><label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Qty</label><input type="number" name="quantity" value="5" min="1" class="input-box bg-gray-50 text-center font-black py-2 md:py-2.5"></div>
+                    <div><label class="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1 mb-1 block">Value</label>
+                        <select name="value" class="input-box bg-gray-50 cursor-pointer font-black text-indigo-600 text-[10px] md:text-xs py-2 md:py-2.5"><option value="1000">1,000 ៛ (1x)</option><option value="5000">5,000 ៛ (5x)</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 md:py-4 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95">Generate Batch</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="lg:col-span-8 space-y-4 md:space-y-6">
+        
+        <!-- ACTIVE PRIZE MATRIX -->
+        <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3 md:gap-4">
+                <div>
+                    <h2 class="font-black text-base md:text-lg text-gray-900">Active Prize Matrix</h2>
+                    <p class="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Algorithm draws from this pool</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <button id="save-matrix-btn" onclick="submitMatrixChanges()" class="w-full sm:w-auto bg-slate-900 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black active:scale-95" disabled>
+                        <i class="fa-solid fa-save mr-1.5"></i> Save Matrix Changes
+                    </button>
+                    
+                    <div class="flex items-center gap-1.5 md:gap-2 bg-gray-50 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-gray-200 shadow-inner shrink-0 w-full sm:w-auto">
+                        <label class="flex items-center gap-1.5 md:gap-2 cursor-pointer px-2 py-1 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-800 transition-colors flex-1 sm:flex-none justify-center">
+                            <input type="checkbox" onchange="toggleAllPool(this)" class="w-3 h-3 md:w-4 md:h-4 accent-indigo-600 cursor-pointer rounded"> <span class="whitespace-nowrap">Select All</span>
+                        </label>
+                        <div class="w-px h-4 md:h-5 bg-gray-300"></div>
+                        <form id="bulk-delete-pool-form" action="/admin/spin/pool/bulk_delete" method="POST" class="m-0 flex-1 sm:flex-none">
+                            <input type="hidden" name="item_ids" id="bulk-pool-ids">
+                            <button type="button" onclick="submitBulkPoolDelete()" class="w-full text-[9px] md:text-[10px] px-3 py-1.5 md:px-4 md:py-2 bg-white text-red-600 border border-gray-200 rounded-md md:rounded-lg font-black hover:bg-red-50 hover:border-red-300 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4 max-h-[400px] overflow-y-auto pr-1 md:pr-2 hide-scrollbar pb-2">
+                {% for item in pool|default([]) %}
+                <div class="matrix-item-container border border-gray-200 rounded-xl md:rounded-2xl p-2 md:p-3 flex flex-col items-center relative shadow-sm {% if item.stock <= 0 %}bg-red-50/50 grayscale-[0.3] border-red-200{% else %}bg-gray-50{% endif %} transition-all group">
+                    
+                    <input type="checkbox" class="pool-checkbox absolute top-2 right-2 md:top-3 md:right-3 z-20 w-4 h-4 cursor-pointer accent-indigo-600 rounded opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity" value="{{ item.id }}">
+
+                    <form action="/admin/spin/pool/update_rarity/{{ item.id }}" method="POST" class="absolute top-2 left-2 md:top-3 md:left-3 z-10 matrix-update-form">
+                        <div class="relative group/sel bg-white border border-gray-200 rounded text-[8px] md:text-[9px] shadow-sm overflow-hidden flex items-center hover:border-indigo-300 transition-colors">
+                            <div class="bg-gray-100 p-0.5 px-1 md:p-1 md:px-1.5 border-r border-gray-200 text-gray-400"><i class="fa-solid fa-star text-[7px] md:text-[8px]"></i></div>
+                            <select name="rarity" onchange="markMatrixDirty(this)" class="pl-1 pr-3 py-0.5 md:pl-1.5 md:pr-4 md:py-1 font-black uppercase tracking-wider outline-none cursor-pointer appearance-none border-none
+                                {% if item.rarity == 'Legendary' %}bg-yellow-50 text-yellow-700
+                                {% elif item.rarity == 'Epic' %}bg-purple-50 text-purple-700
+                                {% elif item.rarity == 'Rare' %}bg-blue-50 text-blue-700
+                                {% else %}bg-white text-gray-600{% endif %}">
+                                <option value="Common" {% if item.rarity == 'Common' %}selected{% endif %}>Common</option>
+                                <option value="Rare" {% if item.rarity == 'Rare' %}selected{% endif %}>Rare</option>
+                                <option value="Epic" {% if item.rarity == 'Epic' %}selected{% endif %}>Epic</option>
+                                <option value="Legendary" {% if item.rarity == 'Legendary' %}selected{% endif %}>Legendary</option>
+                            </select>
+                            <i class="fa-solid fa-caret-down absolute right-1 md:right-1.5 top-1/2 -translate-y-1/2 text-[7px] md:text-[8px] pointer-events-none text-gray-400 group-hover/sel:text-indigo-500"></i>
+                        </div>
+                    </form>
+
+                    <div class="w-12 h-12 md:w-16 md:h-16 bg-white border border-gray-100 shadow-sm rounded-lg md:rounded-xl mb-2 mt-6 md:mt-8 flex items-center justify-center p-1"><img src="{{ item.image }}" class="max-w-full max-h-full object-contain"></div>
+                    <h4 class="text-[9px] md:text-[10px] font-black text-center leading-tight mb-1 h-6 overflow-hidden text-gray-800 uppercase tracking-widest px-1" title="{{ item.name }}">{{ item.name }}</h4>
+                    
+                    <div class="text-[7px] md:text-[8px] font-black text-indigo-500 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded mb-2 text-center w-full uppercase tracking-widest" title="This stock is shared with the main Toy Store inventory"><i class="fa-solid fa-link mr-1"></i> Shared Stock</div>
+                    
+                    <div class="flex items-center gap-1 w-full mt-auto">
+                        <form action="/admin/spin/pool/update_order/{{ item.id }}" method="POST" class="w-10 md:w-12 shrink-0 m-0 matrix-update-form">
+                            <input type="number" name="sort_order" value="{{ item.sort_order | default(loop.index) }}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none border border-gray-300 rounded-lg md:rounded-xl bg-white shadow-sm focus:border-indigo-500 h-[32px] md:h-[36px]" title="Sort Position (1 shows first)">
+                        </form>
+                        <form action="/admin/spin/update_stock/{{ item.id }}" method="POST" class="w-full m-0 flex items-center border border-gray-300 rounded-lg md:rounded-xl p-1 bg-white shadow-sm focus-within:border-indigo-500 transition-colors h-[32px] md:h-[36px] matrix-update-form">
+                            <button type="button" onclick="let i=this.nextElementSibling; i.value=Math.max(0, parseInt(i.value)-1); markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-red-200">-</button>
+                            <input type="number" name="stock" value="{{ item.stock }}" onchange="markMatrixDirty(this)" class="w-full text-center text-[10px] md:text-xs font-black outline-none hide-scrollbar text-indigo-700 bg-transparent">
+                            <button type="button" onclick="let i=this.previousElementSibling; i.value=parseInt(i.value)+1; markMatrixDirty(this)" class="w-6 h-full md:w-7 bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded md:rounded-lg text-gray-400 font-black transition-colors border border-transparent hover:border-green-200">+</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ENGINE HISTORY WITH SEARCH & IMAGES -->
+        <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3">
+                <div class="flex flex-col items-start gap-1">
+                    <div class="flex items-center gap-2">
+                        <h2 class="font-black text-base md:text-lg text-gray-900">Live Engine History</h2>
+                        <span class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 md:gap-2 shadow-sm"><span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 animate-pulse"></span>Feed Active</span>
+                    </div>
+                    <!-- SEARCH BAR ADDED HERE -->
+                    <div class="relative w-full sm:w-64 mt-2">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <input type="text" id="history-search" oninput="filterHistory()" placeholder="Search Player ID..." class="input-box pl-9 py-2 text-xs shadow-sm border-gray-200 bg-gray-50">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 md:gap-2 bg-gray-50 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-gray-200 shadow-inner shrink-0 w-full sm:w-auto mt-3 sm:mt-0">
+                    <label class="flex items-center gap-1.5 md:gap-2 cursor-pointer px-2 py-1 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-800 transition-colors flex-1 sm:flex-none justify-center">
+                        <input type="checkbox" onchange="toggleAllHistory(this)" class="w-3 h-3 md:w-4 md:h-4 accent-indigo-600 cursor-pointer rounded"> <span class="whitespace-nowrap">Select All</span>
+                    </label>
+                    <div class="w-px h-4 md:h-5 bg-gray-300"></div>
+                    <form id="bulk-delete-history-form" action="/admin/spin/history/bulk_delete" method="POST" class="m-0 flex-1 sm:flex-none">
+                        <input type="hidden" name="history_ids" id="bulk-history-ids">
+                        <button type="button" onclick="submitBulkHistoryDelete()" class="w-full text-[9px] md:text-[10px] px-3 py-1.5 md:px-4 md:py-2 bg-white text-red-600 border border-gray-200 rounded-md md:rounded-lg font-black hover:bg-red-50 hover:border-red-300 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto max-h-[350px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full relative">
+                <table class="enterprise-table min-w-[500px]">
+                    <thead>
+                        <tr>
+                            <th class="w-10 text-center"><i class="fa-solid fa-check-double text-gray-400"></i></th>
+                            <th>Time (KH)</th>
+                            <th>Player ID</th>
+                            <th>Prize Drawn</th>
+                            <th>Rarity</th>
+                            <th class="text-right"><i class="fa-solid fa-trash-can"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="live-history-tbody" class="text-[11px] md:text-sm font-semibold text-gray-700 divide-y divide-gray-100">
+                        {% for draw in history|default([]) %}
+                        <tr class="history-row hover:bg-indigo-50/30 transition-colors">
+                            <td class="text-center p-2">
+                                <input type="checkbox" class="history-checkbox w-4 h-4 cursor-pointer accent-indigo-600 rounded" value="{{ draw.id }}">
+                            </td>
+                            <td class="font-mono text-[9px] text-gray-500">{{ draw.cambodia_time }}</td>
+                            <td class="player-id-cell"><span class="bg-gray-100 border border-gray-200 px-2 py-1 rounded font-mono text-[9px] text-gray-600">{{ draw.player_id }}</span></td>
+                            
+                            <!-- IMAGES ADDED HERE -->
+                            <td>
+                                {% set draw_img = namespace(src='') %}
+                                {% for p in pool if p.name == draw.item_name %}{% set draw_img.src = p.image %}{% endfor %}
+                                <div class="flex items-center gap-2">
+                                    {% if draw_img.src %}
+                                    <div class="w-8 h-8 rounded-lg bg-gray-50 border border-gray-200 p-0.5 shrink-0"><img src="{{ draw_img.src }}" class="w-full h-full object-contain mix-blend-multiply"></div>
+                                    {% else %}
+                                    <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-orange-400 shrink-0"><i class="fa-solid fa-gift text-xs"></i></div>
+                                    {% endif %}
+                                    <span class="font-black text-[10px] md:text-xs leading-tight line-clamp-2 max-w-[180px]">{{ draw.item_name }}</span>
+                                </div>
+                            </td>
+                            
+                            <td>
+                                <span class="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest shadow-sm border {% if draw.rarity == 'Legendary' %}bg-yellow-50 text-yellow-600 border-yellow-200{% elif draw.rarity == 'Epic' %}bg-purple-50 text-purple-600 border-purple-200{% elif draw.rarity == 'Rare' %}bg-blue-50 text-blue-600 border-blue-200{% else %}bg-gray-100 text-gray-600 border-gray-200{% endif %}">
+                                    {{ draw.rarity }}
+                                </span>
+                            </td>
+                            <td class="text-right"><form action="/admin/spin/history/delete/{{ draw.id }}" method="POST" class="m-0" onsubmit="return confirm('Delete record?')"><button type="submit" class="w-6 h-6 rounded bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 border border-gray-200"><i class="fa-solid fa-xmark text-[10px]"></i></button></form></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="p-8 text-center text-gray-300 text-[9px] md:text-[10px] font-black uppercase tracking-widest"><i class="fa-solid fa-ghost text-3xl md:text-4xl mb-2 md:mb-3 block opacity-20"></i>No plays yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CODE DATABASE -->
+        <div class="bg-white rounded-2xl md:rounded-[32px] shadow-sm border border-gray-100 p-4 md:p-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 md:mb-5 gap-3 md:gap-4">
+                <div><h2 class="font-black text-base md:text-lg">Code Database</h2></div>
+                <div class="flex items-center gap-1.5 md:gap-2 bg-gray-50 p-1 md:p-1.5 rounded-lg md:rounded-xl border border-gray-200 shadow-inner shrink-0 w-full sm:w-auto">
+                    <label class="flex items-center gap-1.5 md:gap-2 cursor-pointer px-2 py-1 md:px-3 md:py-1 text-[8px] md:text-[9px] font-black text-gray-500 uppercase tracking-widest hover:text-gray-800 transition-colors flex-1 sm:flex-none justify-center">
+                        <input type="checkbox" onchange="toggleAllCodes(this)" class="w-3 h-3 md:w-4 md:h-4 accent-indigo-600 cursor-pointer rounded"> <span class="whitespace-nowrap">Select All</span>
+                    </label>
+                    <div class="w-px h-4 md:h-5 bg-gray-300"></div>
+                    <form id="bulk-delete-code-form" action="/admin/spin/code/bulk_delete" method="POST" class="m-0 flex-1 sm:flex-none">
+                        <input type="hidden" name="code_ids" id="bulk-code-ids">
+                        <button type="button" onclick="submitBulkCodeDelete()" class="w-full text-[9px] md:text-[10px] px-3 py-1.5 md:px-4 md:py-2 bg-white text-red-600 border border-gray-200 rounded-md md:rounded-lg font-black hover:bg-red-50 hover:border-red-300 transition-all uppercase tracking-widest shadow-sm flex items-center justify-center"><i class="fa-solid fa-trash-can mr-1"></i>Delete</button>
+                    </form>
+                </div>
+            </div>
+            <div class="overflow-x-auto max-h-[300px] overflow-y-auto hide-scrollbar border border-gray-100 rounded-xl md:rounded-2xl w-full">
+                <table class="enterprise-table min-w-[500px]">
+                    <thead><tr><th class="w-10 text-center"><i class="fa-solid fa-check-double text-gray-400"></i></th><th>Secure Code</th><th>Value</th><th>Status</th><th>Claimed By</th></tr></thead>
+                    <tbody class="text-[11px] md:text-xs">
+                        {% for code in codes|default([]) %}
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="text-center p-2"><input type="checkbox" class="code-checkbox w-4 h-4 cursor-pointer accent-indigo-600 rounded" value="{{ code.id }}"></td>
+                            <td class="font-mono font-black tracking-widest text-indigo-600">{{ code.code }}</td>
+                            <td class="font-black">{{ code.value }} ៛</td>
+                            <td>{% if code.status == 'Active' %}<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Active</span>{% else %}<span class="bg-gray-100 text-gray-400 border border-gray-200 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest">Redeemed</span>{% endif %}</td>
+                            <td class="font-mono text-[9px] text-gray-400">{{ code.redeemed_by if code.redeemed_by else '---' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const allInventoryItems = [ {% for p in global_products %} { id: "{{ p.id }}", category: "{{ p.category|lower if p.category else '' }}", variants: [ {% for v in p.parsed_variants %} { index: {{ loop.index0 }}, category: "{{ v.category|lower if v.category else '' }}" }, {% endfor %} ] }, {% endfor %} ];
+
+    async function syncLuckyDrawTags(btn) {
+        const originalHtml = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Syncing...'; btn.disabled = true;
+        const itemsToSync = [];
+        allInventoryItems.forEach(product => {
+            const pCats = product.category ? product.category.split(',').map(c => c.trim().toLowerCase()) : [];
+            if (product.variants && product.variants.length > 0) {
+                product.variants.forEach(v => {
+                    const vCats = v.category ? v.category.split(',').map(c => c.trim().toLowerCase()) : [];
+                    if (pCats.includes('lucky draw') || vCats.includes('lucky draw')) itemsToSync.push({ id: product.id, variantIndex: v.index });
+                });
+            } else { if (pCats.includes('lucky draw')) itemsToSync.push({ id: product.id, variantIndex: -1 }); }
+        });
+
+        if(itemsToSync.length === 0) { alert("No tags found."); btn.innerHTML = originalHtml; btn.disabled = false; return; }
+
+        let successCount = 0;
+        for (let item of itemsToSync) {
+            try {
+                let formData = new FormData(); formData.append('catalog_items[]', `${item.id}|${item.variantIndex}`); formData.append('rarity', 'Common');
+                await fetch('/admin/spin/add_pool_catalog', { method: 'POST', body: formData });
+                successCount++;
+            } catch(e) {}
+        }
+        btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Synced ${successCount} Items`; setTimeout(() => { window.location.reload(); }, 1000);
+    }
+
+    // --- SEARCH BAR LOGIC FOR HISTORY ---
+    function filterHistory() {
+        const term = document.getElementById('history-search').value.toLowerCase();
+        const rows = document.querySelectorAll('.history-row');
+        
+        rows.forEach(row => {
+            const playerId = row.querySelector('.player-id-cell').innerText.toLowerCase();
+            if (playerId.includes(term)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // --- JS FOR ADD POOL TOGGLES ---
+    function toggleSpinAddMode(mode) {
+        const btnCat = document.getElementById('btn-mode-catalog');
+        const btnCust = document.getElementById('btn-mode-custom');
+        const formCat = document.getElementById('form-spin-catalog');
+        const formCust = document.getElementById('form-spin-custom');
+        const inputCustom = document.getElementById('custom-image-input');
+        
+        if(mode === 'catalog') {
+            btnCat.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+            btnCust.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+            formCat.classList.remove('hidden'); formCust.classList.add('hidden');
+            if(inputCustom) inputCustom.removeAttribute('required');
+        } else {
+            btnCust.className = "flex-1 bg-white shadow-sm py-2 rounded-lg text-[9px] font-black uppercase text-indigo-600 transition-all";
+            btnCat.className = "flex-1 py-2 rounded-lg text-[9px] font-black uppercase text-gray-500 hover:text-gray-700 transition-all";
+            formCust.classList.remove('hidden'); formCat.classList.add('hidden');
+            if(inputCustom) inputCustom.setAttribute('required', 'required');
+        }
+    }
+    
+    function updateMultiCount() {
+        const count = document.querySelectorAll('input[name="catalog_items[]"]:checked').length;
+        document.getElementById('multi-sel-count').innerText = count + ' Selected';
+    }
+
+    // --- JS FOR MATRIX UPDATES & BULK DELETE ---
+    let matrixDirtyItems = new Set();
+    function markMatrixDirty(inputElement) {
+        const container = inputElement.closest('.matrix-item-container');
+        container.classList.add('border-[#ff5000]', 'ring-2', 'ring-orange-100');
+        matrixDirtyItems.add(container);
+        document.getElementById('save-matrix-btn').disabled = false;
+    }
+
+    async function submitMatrixChanges() {
+        if(matrixDirtyItems.size === 0) return;
+        const btn = document.getElementById('save-matrix-btn');
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Saving...';
+        btn.disabled = true;
+
+        const formsToSubmit = [];
+        matrixDirtyItems.forEach(container => {
+            const forms = container.querySelectorAll('form.matrix-update-form');
+            forms.forEach(f => formsToSubmit.push(f));
+        });
+
+        for(let form of formsToSubmit) {
+            try {
+                const formData = new FormData(form);
+                await fetch(form.action, { method: 'POST', body: formData });
+            } catch (err) {}
+        }
+
+        matrixDirtyItems.forEach(container => {
+            container.classList.remove('border-[#ff5000]', 'ring-2', 'ring-orange-100');
+            container.classList.add('border-green-400', 'bg-green-50');
+            setTimeout(() => container.classList.remove('border-green-400', 'bg-green-50'), 1000);
+        });
+        matrixDirtyItems.clear();
+
+        btn.innerHTML = '<i class="fa-solid fa-check mr-1.5"></i> Matrix Saved';
+        btn.classList.replace('bg-slate-900', 'bg-green-600');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fa-solid fa-save mr-1.5"></i> Save Matrix Changes';
+            btn.classList.replace('bg-green-600', 'bg-slate-900');
+            btn.disabled = true;
+        }, 2000);
+    }
+
+    function toggleAllPool(source) { document.querySelectorAll('.pool-checkbox').forEach(cb => cb.checked = source.checked); }
+    function submitBulkPoolDelete() {
+        const selected = Array.from(document.querySelectorAll('.pool-checkbox:checked')).map(cb => cb.value);
+        if(selected.length === 0) return alert('No items selected.');
+        if(confirm('Permanently delete ' + selected.length + ' items?')) {
+            document.getElementById('bulk-pool-ids').value = selected.join(',');
+            document.getElementById('bulk-delete-pool-form').submit();
+        }
+    }
+
+    function toggleAllHistory(source) { document.querySelectorAll('.history-checkbox').forEach(cb => cb.checked = source.checked); }
+    function submitBulkHistoryDelete() {
+        const selected = Array.from(document.querySelectorAll('.history-checkbox:checked')).map(cb => cb.value);
+        if(selected.length === 0) return alert('No records selected.');
+        if(confirm('Permanently delete ' + selected.length + ' records?')) {
+            document.getElementById('bulk-history-ids').value = selected.join(',');
+            document.getElementById('bulk-delete-history-form').submit();
+        }
+    }
+
+    function toggleAllCodes(source) { document.querySelectorAll('.code-checkbox').forEach(cb => cb.checked = source.checked); }
+    function submitBulkCodeDelete() {
+        const selected = Array.from(document.querySelectorAll('.code-checkbox:checked')).map(cb => cb.value);
+        if(selected.length === 0) return alert('No codes selected.');
+        if(confirm('Permanently delete ' + selected.length + ' codes?')) {
+            document.getElementById('bulk-code-ids').value = selected.join(',');
+            document.getElementById('bulk-delete-code-form').submit();
+        }
+    }
+</script>
+{% endblock %}
+
