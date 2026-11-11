@@ -2,6 +2,37 @@ import os
 import json
 from datetime import timedelta
 from flask import Flask, render_template, redirect, url_for, request, session
+import cloudinary
+import cloudinary.uploader
+
+# Load .env variables
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+def _load_env_fallback(filepath='.env'):
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, val = line.split('=', 1)
+                    key = key.strip()
+                    val = val.strip().strip("'\"")
+                    os.environ.setdefault(key, val)
+
+_load_env_fallback()
+
+# Cloudinary config
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME", "dwwearehy"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY", "dummy_key"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET", "dummy_secret"),
+    secure=True
+)
+
 from models import db, Product, Category, PromoCode, Order
 from admin_routes import admin_bp
 
