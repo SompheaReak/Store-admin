@@ -48,7 +48,11 @@ if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER') or os
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
 # Database Configuration (Point to the same Database as the storefront)
-db_url = os.environ.get('DATABASE_URL', 'sqlite:///fallback.db')
+DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+db_url = os.environ.get('DATABASE_URL', '').strip()
+if not db_url or 'fallback.db' in db_url:
+    db_url = DEFAULT_NEON_DB
+
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
