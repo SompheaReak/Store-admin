@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import timedelta
-from flask import Flask, render_template, redirect, url_for, request, session
+from flask import Flask, render_template, redirect, url_for, request, session, jsonify
 import cloudinary
 import cloudinary.uploader
 
@@ -97,6 +97,40 @@ def home():
     if session.get('admin'):
         return redirect(url_for('admin_dashboard'))
     return redirect(url_for('login'))
+
+@app.route('/admin/db-status')
+def db_status():
+    if not session.get('admin'):
+        return jsonify({"error": "unauthorized"}), 401
+    
+    db_uri = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    masked_uri = db_uri
+    if '@' in db_uri:
+        prefix = db_uri.split('@')[0]
+        host = db_uri.split('@')[1]
+        masked_uri = f"{prefix.split(':')[0]}://****@{host}"
+        
+    try:
+        from models import Product, Category, Order
+        prod_count = Product.query.count()
+        cat_count = Category.query.count()
+        order_count = Order.query.count()
+        first_prod = Product.query.first()
+        return jsonify({
+            "status": "connected",
+            "db_type": "postgres" if "postgres" in db_uri else "sqlite",
+            "masked_uri": masked_uri,
+            "product_count": prod_count,
+            "category_count": cat_count,
+            "order_count": order_count,
+            "sample_product": first_prod.title if first_prod else None
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "db_uri": masked_uri,
+            "error": str(e)
+        }), 500
 
 # Security headers middleware
 @app.after_request
