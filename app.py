@@ -39,7 +39,7 @@ from admin_routes import admin_bp
 app = Flask(__name__)
 
 # Security & Session Settings
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_admin_ultra_pro_2026')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
