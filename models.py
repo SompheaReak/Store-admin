@@ -22,6 +22,51 @@ class Product(db.Model):
     use_custom_thumbnail = db.Column(db.Boolean, default=False)
     detail_images = db.Column(db.Text, nullable=True)
 
+    @property
+    def parsed_variants(self):
+        if hasattr(self, '_parsed_variants'):
+            return self._parsed_variants
+        if not self.variants:
+            return []
+        try:
+            return json.loads(self.variants) if isinstance(self.variants, str) else self.variants
+        except Exception:
+            return []
+
+    @parsed_variants.setter
+    def parsed_variants(self, value):
+        self._parsed_variants = value
+
+    def to_dict(self):
+        variants_list = []
+        if self.variants:
+            try:
+                variants_list = json.loads(self.variants) if isinstance(self.variants, str) else self.variants
+            except Exception:
+                variants_list = []
+        detail_imgs = []
+        if self.detail_images:
+            try:
+                detail_imgs = json.loads(self.detail_images) if isinstance(self.detail_images, str) else self.detail_images
+            except Exception:
+                detail_imgs = []
+        return {
+            'id': self.id,
+            'product_code': self.product_code or '',
+            'title': self.title or '',
+            'price': float(self.price or 0.0),
+            'stock': int(self.stock or 0),
+            'image': self.image or '',
+            'category': self.category or '',
+            'store': self.store or 'toy',
+            'sort_order': self.sort_order or 0,
+            'is_visible': bool(self.is_visible),
+            'discount_percent': float(self.discount_percent or 0.0),
+            'use_custom_thumbnail': bool(self.use_custom_thumbnail),
+            'detail_images': detail_imgs,
+            'variants': variants_list
+        }
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)

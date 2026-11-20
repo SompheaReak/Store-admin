@@ -77,13 +77,15 @@ db.init_app(app)
 @app.context_processor
 def inject_global_data():
     if request.path.startswith('/admin') and session.get('admin'):
-        products = Product.query.order_by(Product.sort_order.asc(), Product.id.desc()).all()
-        for p in products: 
-            p.parsed_variants = json.loads(p.variants) if p.variants else []
-        categories = Category.query.order_by(Category.sort_order).all()
-        promo_codes = PromoCode.query.order_by(PromoCode.timestamp.desc()).all()
-        pending_count = Order.query.filter_by(status='Pending').count()
-        return dict(global_products=products, global_categories=categories, global_redeem_codes=promo_codes, pending_count=pending_count)
+        if request.path.startswith('/admin/api/') or request.path.startswith('/admin/product/quick_stock'):
+            return dict()
+        try:
+            categories = Category.query.order_by(Category.sort_order).all()
+            pending_count = Order.query.filter_by(status='Pending').count()
+            return dict(global_categories=categories, pending_count=pending_count)
+        except Exception as e:
+            print(f"Warning in inject_global_data: {e}")
+            return dict()
     return dict()
 
 # Helper for blueprint URL lookups

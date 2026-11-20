@@ -125,39 +125,7 @@
             </div>
 
             <div class="overflow-y-auto flex-1 bg-gray-50 p-2 touch-pan-y hide-scrollbar w-full grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 content-start" id="live-stock-list">
-                {% for p in global_products %}
-                    {% set group_cats = [] %}
-                    {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
-                    {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
-                    {% set lower_cats = group_cats | join(',') | lower %}
-
-                    {% if p.parsed_variants|length > 0 %}
-                        {% for v in p.parsed_variants %}
-                            {% set is_gallery = ('building sets' in lower_cats and loop.index0 > 0) or (v.category and 'gallery' in v.category|lower) %}
-                            {% if not is_gallery %}
-                                <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ v.stock }}" data-name="{{ v.name|lower }} {{ p.title|lower }}" data-categories="{{ lower_cats }}">
-                                    <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if v.stock|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">{% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}</span>
-                                    <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ v.image }}')"><img src="{{ v.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
-                                    <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
-                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
-                                        <input type="number" id="quick-stock-{{p.id}}-{{loop.index0}}" value="{{ v.stock }}" onchange="queueExactStock({{ p.id }}, {{ loop.index0 }}, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
-                                        <button type="button" onclick="queueStockUpdate({{ p.id }}, {{ loop.index0 }}, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
-                                    </div>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="{{ p.store }}" data-stock="{{ p.stock|default(0) }}" data-name="{{ p.title|lower }}" data-categories="{{ lower_cats }}">
-                            <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="{% if p.stock|default(0)|int > 0 %}display:none;{% endif %} {% if p.store == 'lego' %}background-color:#ff5000;{% else %}background-color:#dc2626;{% endif %}">{% if p.store == 'lego' %}PRE-ORDER{% else %}EMPTY{% endif %}</span>
-                            <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('{{ p.image }}')"><img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply"></div>
-                            <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
-                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
-                                <input type="number" id="quick-stock-{{p.id}}--1" value="{{ p.stock|default(0) }}" onchange="queueExactStock({{ p.id }}, -1, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
-                                <button type="button" onclick="queueStockUpdate({{ p.id }}, -1, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
-                            </div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+                <!-- Dynamically populated on demand for fast initial page load -->
             </div>
         </div>
     </div>
@@ -169,6 +137,7 @@
     <script>
         function showClientToast(msg, isError = false) {
             const toast = document.getElementById('client-toast');
+            if(!toast) return;
             const icon = toast.querySelector('i');
             document.getElementById('client-toast-msg').innerText = msg;
             icon.className = isError ? "fa-solid fa-triangle-exclamation text-red-400 text-sm" : "fa-solid fa-circle-check text-green-400 text-sm";
@@ -184,10 +153,94 @@
             form.addEventListener('submit', () => { document.getElementById('loading-overlay').style.display = 'flex'; });
         });
 
-        // LIVE STOCK CENTER LOGIC
-        let showOnlyOutOfStock = false; let pendingStockChanges = {};
-        function openStockSummaryModal() { document.getElementById('stock-summary-modal').classList.remove('hidden'); filterLiveStock(); }
+        // LIVE STOCK CENTER LOGIC (Optimized On-Demand Loading)
+        let showOnlyOutOfStock = false; 
+        let pendingStockChanges = {};
+        let liveStockLoaded = false;
+
+        async function openStockSummaryModal() { 
+            document.getElementById('stock-summary-modal').classList.remove('hidden'); 
+            if (!liveStockLoaded) {
+                await fetchAndRenderLiveStock();
+            } else {
+                filterLiveStock(); 
+            }
+        }
         function closeStockSummaryModal() { document.getElementById('stock-summary-modal').classList.add('hidden'); }
+
+        async function fetchAndRenderLiveStock() {
+            const container = document.getElementById('live-stock-list');
+            if(!container) return;
+            container.innerHTML = '<div class="col-span-full py-16 flex flex-col items-center justify-center text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin text-3xl text-[#ff5000] mb-3"></i><span>Loading live stock items...</span></div>';
+            
+            try {
+                let products = [];
+                if (window.ADMIN_PRODUCTS && window.ADMIN_PRODUCTS.length > 0) {
+                    products = window.ADMIN_PRODUCTS;
+                } else {
+                    const res = await fetch('/admin/api/live_stock');
+                    const data = await res.json();
+                    products = data.products || [];
+                }
+                
+                let html = '';
+                for (let p of products) {
+                    const groupCats = (p.categories || (p.category ? p.category.split(',').map(s=>s.trim()) : [])).join(',').toLowerCase();
+                    const variants = p.variants || [];
+                    
+                    if (variants.length > 0) {
+                        for (let vIdx = 0; vIdx < variants.length; vIdx++) {
+                            const v = variants[vIdx];
+                            const isGallery = (groupCats.includes('building sets') && vIdx > 0) || (v.category && v.category.toLowerCase().includes('gallery'));
+                            if (isGallery) continue;
+                            
+                            const vStock = parseInt(v.stock) || 0;
+                            const isLego = p.store === 'lego';
+                            const badgeStyle = vStock > 0 ? 'display:none;' : (isLego ? 'background-color:#ff5000;' : 'background-color:#dc2626;');
+                            const badgeText = isLego ? 'PRE-ORDER' : 'EMPTY';
+                            const vImg = v.image || p.image;
+                            const vName = (v.name || '').toLowerCase() + ' ' + (p.title || '').toLowerCase();
+                            
+                            html += `
+                                <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="${p.store}" data-stock="${vStock}" data-name="${vName}" data-categories="${groupCats}">
+                                    <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="${badgeStyle}">${badgeText}</span>
+                                    <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('${vImg}')"><img src="${vImg}" class="max-w-full max-h-full object-contain mix-blend-multiply" loading="lazy"></div>
+                                    <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                        <button type="button" onclick="queueStockUpdate(${p.id}, ${vIdx}, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                        <input type="number" id="quick-stock-${p.id}-${vIdx}" value="${vStock}" onchange="queueExactStock(${p.id}, ${vIdx}, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                        <button type="button" onclick="queueStockUpdate(${p.id}, ${vIdx}, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        const pStock = parseInt(p.stock) || 0;
+                        const isLego = p.store === 'lego';
+                        const badgeStyle = pStock > 0 ? 'display:none;' : (isLego ? 'background-color:#ff5000;' : 'background-color:#dc2626;');
+                        const badgeText = isLego ? 'PRE-ORDER' : 'EMPTY';
+                        const pName = (p.title || '').toLowerCase();
+                        
+                        html += `
+                            <div class="ls-item bg-white border border-gray-200 rounded-lg p-1.5 flex flex-col gap-1.5 shadow-sm relative transition-colors" data-store="${p.store}" data-stock="${pStock}" data-name="${pName}" data-categories="${groupCats}">
+                                <span class="stock-badge absolute top-0 right-0 text-white text-[7px] font-black px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg z-10 shadow-sm" style="${badgeStyle}">${badgeText}</span>
+                                <div class="w-full aspect-square bg-gray-50 rounded border border-gray-100 flex items-center justify-center p-1 cursor-zoom-in hover:opacity-80 transition-opacity" onclick="openImageViewer('${p.image}')"><img src="${p.image}" class="max-w-full max-h-full object-contain mix-blend-multiply" loading="lazy"></div>
+                                <div class="flex items-center justify-between w-full bg-white border border-gray-300 rounded-md focus-within:border-[#ff5000] focus-within:ring-1 focus-within:ring-orange-200 transition-all h-8">
+                                    <button type="button" onclick="queueStockUpdate(${p.id}, -1, -1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-red-50 hover:text-red-600 rounded-l-md font-black text-sm border-r border-gray-200 transition-colors">-</button>
+                                    <input type="number" id="quick-stock-${p.id}--1" value="${pStock}" onchange="queueExactStock(${p.id}, -1, this)" class="w-full text-center text-[11px] font-black outline-none hide-scrollbar text-gray-900 bg-transparent px-0">
+                                    <button type="button" onclick="queueStockUpdate(${p.id}, -1, 1, this)" class="w-7 h-full flex items-center justify-center bg-gray-50 hover:bg-green-50 hover:text-green-600 rounded-r-md font-black text-sm border-l border-gray-200 transition-colors">+</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                container.innerHTML = html;
+                liveStockLoaded = true;
+                filterLiveStock();
+            } catch(e) {
+                container.innerHTML = '<div class="col-span-full py-10 text-center text-red-500 font-bold">Failed to load live stock matrix. Please retry.</div>';
+            }
+        }
+
         function toggleOutOfStock() { showOnlyOutOfStock = !showOnlyOutOfStock; const btn = document.getElementById('ls-oos-btn'); const btnText = document.getElementById('oos-btn-text'); if (showOnlyOutOfStock) { btn.classList.add('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); btn.classList.remove('bg-white'); btnText.innerText = "Clear Empty Filter"; } else { btn.classList.remove('bg-red-600', 'text-white', 'border-red-700', 'hover:bg-red-700'); btn.classList.add('bg-white'); btnText.innerText = "Filter Out of Stock"; } filterLiveStock(); }
         function filterLiveStock() { const searchStr = document.getElementById('ls-search').value.toLowerCase(); const storeFilter = document.getElementById('ls-store-filter').value; const catFilter = document.getElementById('ls-cat-filter') ? document.getElementById('ls-cat-filter').value : 'all'; document.querySelectorAll('.ls-item').forEach(item => { const name = item.dataset.name || ''; const store = item.dataset.store || ''; const stock = parseInt(item.dataset.stock) || 0; const cats = item.dataset.categories || ''; const matchesSearch = name.includes(searchStr); const matchesStore = storeFilter === 'all' || store === storeFilter; const matchesCat = catFilter === 'all' || cats.includes(catFilter); const matchesOOS = !showOnlyOutOfStock || stock <= 0; if (matchesSearch && matchesStore && matchesCat && matchesOOS) { item.style.display = 'flex'; } else { item.style.display = 'none'; } }); }
         function updateStockBadgeUI(rowElement, newStockVal) { rowElement.dataset.stock = newStockVal; const store = rowElement.dataset.store; let badge = rowElement.querySelector('.stock-badge'); if(newStockVal <= 0) { if(store === 'lego') { badge.innerText = 'PRE-ORDER'; badge.style.backgroundColor = '#ff5000'; } else { badge.innerText = 'EMPTY'; badge.style.backgroundColor = '#dc2626'; } badge.style.display = 'block'; } else { badge.style.display = 'none'; } if(showOnlyOutOfStock && newStockVal > 0) filterLiveStock(); }

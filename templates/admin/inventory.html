@@ -55,7 +55,7 @@
 
 {% block content %}
 
-<!-- IMAGE VIEWER MODAL (Crucial for fullscreen view) -->
+<!-- IMAGE VIEWER MODAL (Fullscreen view) -->
 <div id="image-viewer-modal" class="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm hidden flex-col items-center justify-center transition-opacity" onclick="closeImageViewer()">
     <button type="button" onclick="closeImageViewer()" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
         <i class="fa-solid fa-xmark text-xl"></i>
@@ -84,7 +84,7 @@
 
             <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-4 submit-form">
                 
-                <!-- ✨ PRODUCT CODE INPUT (ADD FORM) ✨ -->
+                <!-- PRODUCT CODE INPUT (ADD FORM) -->
                 <div class="space-y-1">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1 flex justify-between">
                         <span>Product Code (SKU)</span>
@@ -149,54 +149,61 @@
                     
                     <input type="hidden" name="use_custom_thumbnail" id="use-custom-thumbnail" value="false">
 
-                    <div id="thumbnail-upload-container" class="hidden animate-fadeIn">
-                        <div onclick="document.getElementById('thumbnail-input').click()" class="border-2 border-dashed border-blue-400/60 rounded-xl p-3 text-center bg-blue-50/40 hover:bg-blue-50 transition-all cursor-pointer group">
+                    <div id="thumbnail-upload-container" class="hidden">
+                        <label class="border-2 border-dashed border-orange-200 hover:border-[#ff5000] bg-orange-50/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+                            <i class="fa-solid fa-arrow-up-from-bracket text-lg text-[#ff5000] mb-1 group-hover:-translate-y-0.5 transition-transform"></i>
+                            <span class="text-xs font-extrabold text-slate-800">Select Custom Cover</span>
+                            <span class="text-[9px] font-bold text-slate-400 mt-0.5" id="thumbnail-count-text">Upload cover photo</span>
                             <input type="file" name="thumbnail" id="thumbnail-input" accept="image/*" class="hidden" onchange="handleThumbnailSelect(this)">
-                            <div class="w-9 h-9 bg-white rounded-lg border border-slate-200 flex items-center justify-center mx-auto mb-1.5 shadow-sm overflow-hidden">
-                                <img id="quick-thumbnail-preview-img" src="" class="max-w-full max-h-full object-contain hidden mix-blend-multiply">
-                                <i id="quick-thumbnail-placeholder-icon" class="fa-solid fa-camera text-blue-500 text-sm group-hover:scale-110 transition-transform"></i>
+                        </label>
+                        <div class="mt-2 flex items-center gap-2 p-1.5 bg-white rounded-xl border border-slate-200">
+                            <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
+                                <img id="quick-thumbnail-preview-img" class="w-full h-full object-cover hidden">
+                                <i id="quick-thumbnail-placeholder-icon" class="fa-regular fa-image text-slate-400 text-xs"></i>
                             </div>
-                            <p class="text-[9px] font-black text-blue-600 uppercase tracking-wider">Select Thumbnail</p>
-                            <p class="text-[8px] text-slate-400 mt-0.5" id="thumbnail-count-text">No image selected</p>
+                            <span class="text-[9px] font-bold text-slate-500">Live preview active</span>
                         </div>
                     </div>
 
-                    <div id="quick-thumbnail-default-notice" class="text-[9px] text-slate-400 font-semibold italic flex items-center gap-1">
-                        <i class="fa-solid fa-circle-info text-[#ff5000]"></i> Displays 1st variant if no thumbnail added.
+                    <div id="quick-thumbnail-default-notice" class="flex items-center gap-2 p-2.5 bg-white rounded-xl border border-slate-200">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs text-[#ff5000]"></i>
+                        <p class="text-[9px] font-bold text-slate-500 leading-tight">Using 1st variant image as default thumbnail.</p>
                     </div>
                 </div>
 
-                <!-- 3. Photo Upload Areas -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <!-- Purchasable Variants -->
-                    <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#ff5000]/60 rounded-2xl p-4 text-center bg-orange-50/50 hover:bg-orange-50 transition-all cursor-pointer group flex flex-col items-center justify-center h-full min-h-[140px]">
-                        <input type="file" name="images" id="file-input" accept="image/*" multiple required class="hidden">
-                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm border border-orange-100 group-hover:scale-110 transition-transform">
-                            <i class="fa-solid fa-box-open text-lg text-[#ff5000]"></i>
-                        </div>
-                        <p class="text-[9px] font-black text-[#ff5000] mt-2.5 uppercase tracking-wider flex items-center justify-center gap-1">
-                            <span class="w-3.5 h-3.5 rounded-full bg-[#ff5000] text-white text-[7px] flex items-center justify-center font-bold">3</span>
-                            Variant Options
-                        </p>
-                        <p class="text-[8px] font-semibold text-slate-400 mt-0.5" id="file-count-text">Upload purchasable styles</p>
-                    </div>
+                <!-- 3. Photos Upload -->
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1 flex items-center gap-1">
+                        <span class="w-4 h-4 rounded-full bg-[#ff5000] text-white text-[8px] flex items-center justify-center font-bold">3</span>
+                        Variants & Gallery Photos
+                    </label>
 
-                    <!-- View-Only Detail Images -->
-                    <div onclick="document.getElementById('detail-file-input').click()" class="border-2 border-dashed border-purple-400/60 rounded-2xl p-4 text-center bg-purple-50/50 hover:bg-purple-50 transition-all cursor-pointer group flex flex-col items-center justify-start h-full min-h-[140px]">
-                        <input type="file" name="detail_images" id="detail-file-input" accept="image/*" multiple class="hidden" onchange="handleDetailSelect(this)">
-                        <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center mx-auto shadow-sm border border-purple-100 group-hover:scale-110 transition-transform mt-2">
-                            <i class="fa-regular fa-images text-lg text-purple-500"></i>
+                    <label class="border-2 border-dashed border-slate-200 hover:border-[#ff5000] bg-slate-50/50 hover:bg-orange-50/20 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all group">
+                        <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-[#ff5000] mb-1.5 transition-colors"></i>
+                        <span class="text-xs font-black text-slate-800">Choose Variant Photos</span>
+                        <span class="text-[9px] font-bold text-slate-400 mt-0.5" id="file-count-text">Upload purchasable styles</span>
+                        <input type="file" id="file-input" name="images" multiple accept="image/*" class="hidden" required>
+                    </label>
+
+                    <div class="bg-purple-50/50 p-2.5 rounded-xl border border-purple-100/80 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-black text-purple-600 uppercase tracking-wider flex items-center gap-1">
+                                <i class="fa-regular fa-images"></i> View-Only Gallery
+                            </span>
+                            <span class="text-[8px] font-bold text-slate-400">Non-purchasable</span>
                         </div>
-                        <p class="text-[9px] font-black text-purple-600 mt-2.5 uppercase tracking-wider flex items-center justify-center gap-1">
-                            Detail Images
-                        </p>
-                        <p class="text-[8px] font-semibold text-slate-400 mt-0.5" id="detail-count-text">Upload view-only gallery pics</p>
-                        <!-- Container for mini thumbnails previews -->
-                        <div id="detail-preview-container" class="flex flex-wrap gap-1.5 mt-3 justify-center hidden pointer-events-none w-full px-2"></div>
+                        <label class="block cursor-pointer">
+                            <input type="file" name="detail_images" id="detail-images-input" multiple accept="image/*" class="hidden" onchange="handleDetailSelect(this)">
+                            <div class="flex items-center justify-center gap-1.5 py-1.5 px-3 bg-white border border-purple-200 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors">
+                                <i class="fa-solid fa-plus text-[10px]"></i>
+                                <span class="text-[9px] font-extrabold uppercase" id="detail-count-text">Upload view-only gallery pics</span>
+                            </div>
+                        </label>
+                        <div id="detail-preview-container" class="flex flex-wrap gap-1 mt-1 hidden"></div>
                     </div>
                 </div>
-                
-                <!-- 4. Variant Settings List & Magic Batch Tool -->
+
+                <!-- 4. Variant Config Container -->
                 <div id="variant-config" class="hidden space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
                     <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
                     
@@ -263,7 +270,7 @@
 
                 <select id="category-filter" onchange="filterCategory()" class="input-field py-1.5 text-[9px] font-extrabold uppercase cursor-pointer shrink-0">
                     <option value="All">All Categories</option>
-                    {% for cat in global_categories %}
+                    {% for cat in categories %}
                     <option value="{{cat.name|lower}}">{{cat.name}}</option>
                     {% endfor %}
                 </select>
@@ -277,27 +284,22 @@
 
         <div class="flex items-center justify-between px-1">
             <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-                Showing <span id="visible-item-count" class="text-slate-900 font-black">{{ global_products|length }}</span> Catalog Item(s)
+                Showing <span id="visible-item-count" class="text-slate-900 font-black">{{ products|length }}</span> Catalog Item(s)
             </span>
             <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down"></i> Drag cards to reorder</span>
         </div>
 
         <!-- Product Cards Grid (DRAGGABLE) -->
         <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
-            {% for p in global_products %}
-            
-            {% set group_cats = [] %}
-            {% if p.category %}{% for mc in p.category.split(',') %}{% set trimmed = mc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}
-            {% for v in p.parsed_variants %}{% if v.category %}{% for vc in v.category.split(',') %}{% set trimmed = vc.strip() %}{% if trimmed and trimmed not in group_cats %}{% set _ = group_cats.append(trimmed) %}{% endif %}{% endfor %}{% endif %}{% endfor %}
-            
-            <!-- ✨ PRODUCT CODE ADDED FOR JS SEARCH FILTERING ✨ -->
-            <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ group_cats | join(',') | lower }}">
+            {% for p in products %}
+            {% set p_variants = p.parsed_variants %}
+            <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ (p.category or '')|lower }}">
                 
                 <!-- VIEW CARD MODE -->
                 <div class="view-mode flex flex-col h-full">
                     
                     <div class="relative h-36 md:h-44 w-full bg-slate-50 p-3 flex items-center justify-center border-b border-slate-100 group cursor-pointer" onclick="openImageViewer('{{ p.image }}')">
-                        <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300">
+                        <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300" loading="lazy">
                         
                         <div class="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center transition-all">
                             <i class="fa-solid fa-expand text-white text-3xl opacity-80"></i>
@@ -306,7 +308,6 @@
                         <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start pointer-events-none z-10">
                             <span class="text-[7px] font-black text-white bg-slate-900/85 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm max-w-[80px] truncate">{{ p.store }}</span>
                             
-                            <!-- ✨ PRODUCT CODE BADGE ON CARD ✨ -->
                             {% if p.product_code %}
                                 <span class="text-[8px] font-black font-mono text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded shadow-sm">#{{ p.product_code }}</span>
                             {% endif %}
@@ -319,7 +320,7 @@
                             {% endif %}
                         </div>
 
-                        <!-- ✨ PRODUCT DRAG HANDLE ✨ -->
+                        <!-- PRODUCT DRAG HANDLE -->
                         <div class="product-drag-handle absolute top-2 right-2 bg-white/95 backdrop-blur px-2 py-1 rounded-lg border border-slate-200/80 shadow-sm z-10 cursor-grab hover:bg-[#ff5000] hover:text-white hover:border-[#ff5000] transition-colors flex items-center gap-1.5 text-slate-500" title="Drag to reorder catalog" onclick="event.stopPropagation()">
                             <i class="fa-solid fa-grip-vertical text-[10px]"></i>
                             <span class="font-mono text-[9px] font-bold">#{{ p.id }}</span>
@@ -329,7 +330,7 @@
                     <div class="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
                             <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
-                            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ p.parsed_variants|length }} Variant(s)</p>
+                            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ p_variants|length }} Variant(s)</p>
                         </div>
                         
                         <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
@@ -355,248 +356,8 @@
                     </div>
                 </div>
 
-                <!-- FULL EXPANDABLE EDIT MODE -->
-                <div class="edit-mode">
-                     <form action="/admin/product/update/{{p.id}}" method="POST" enctype="multipart/form-data" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full edit-product-form" data-product-id="{{p.id}}">
-                        
-                        <!-- Header -->
-                        <div class="flex justify-between items-center border-b border-slate-200 pb-3.5 mb-4">
-                            <div class="flex items-center gap-2">
-                                <div class="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#ff5000]">
-                                    <i class="fa-solid fa-pen-to-square text-xs"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-sm font-black text-slate-900 uppercase tracking-wider">Edit Product</h5>
-                                    <p class="text-[9px] text-slate-400 font-bold">Product ID: #{{ p.id }}</p>
-                                </div>
-                            </div>
-                            <button type="button" onclick="toggleEdit('{{p.id}}')" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-3.5 py-1.5 rounded-xl shadow-sm transition-all uppercase tracking-wider flex items-center gap-1">
-                                <i class="fa-solid fa-xmark"></i> Close
-                            </button>
-                        </div>
-
-                        <!-- Basic Details Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-                            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                
-                                <!-- ✨ PRODUCT CODE INPUT (EDIT FORM) ✨ -->
-                                <div class="space-y-1 sm:col-span-3">
-                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Product Code (SKU)</label>
-                                    <div class="relative mt-1">
-                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">#</span>
-                                        <input type="text" name="product_code" value="{{ p.product_code or '' }}" placeholder="ABC01" class="input-field w-full pl-7 uppercase font-mono tracking-wider font-extrabold text-slate-950">
-                                    </div>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stores</label>
-                                    <div class="grid grid-cols-2 gap-1.5 bg-white p-2 rounded-xl border border-slate-200 mt-1">
-                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="toy" class="accent-[#ff5000]" {% if 'toy' in (p.store or '') %}checked{% endif %}> Toy</label>
-                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="lego" class="accent-[#ff5000]" {% if 'lego' in (p.store or '') %}checked{% endif %}> LEGO</label>
-                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="minifigure" class="accent-[#ff5000]" {% if 'minifigure' in (p.store or '') %}checked{% endif %}> Minifig</label>
-                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="bracelet" class="accent-[#ff5000]" {% if 'bracelet' in (p.store or '') %}checked{% endif %}> Bracelet</label>
-                                        <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer col-span-2"><input type="checkbox" name="stores[]" value="custom_bracelet" class="accent-[#ff5000]" {% if 'custom_bracelet' in (p.store or '') %}checked{% endif %}> Custom Charms</label>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Categories</label>
-                                    <div class="tag-wrapper mt-1">
-                                        <input type="hidden" name="category" class="hidden-category-input" value="{{p.category}}">
-                                        <div class="tag-container bg-white border border-slate-200 rounded-xl p-1.5 min-h-[38px] flex flex-wrap items-center gap-1 shadow-sm h-full content-start">
-                                            {% if p.category %}{% for pc in p.category.split(',') %}{% if pc.strip() != "" %}
-                                            <span class="tag-badge bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">{{ pc.strip() }} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>
-                                            {% endif %}{% endfor %}{% endif %}
-                                            <input type="text" list="edit-cats-{{p.id}}" class="tag-input text-xs bg-transparent outline-none flex-1 min-w-[80px]" placeholder="Add Tag..." autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <datalist id="edit-cats-{{p.id}}"></datalist>
-                                </div>
-                                
-                                <div class="col-span-1 grid grid-cols-1 gap-2">
-                                    <div class="space-y-1">
-                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Title</label>
-                                        <input type="text" name="title" value="{{p.title}}" class="input-field w-full font-bold text-slate-900 mt-1" placeholder="Title">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Master Discount</label>
-                                        <div class="relative mt-1">
-                                            <input type="number" step="any" name="discount_percent" value="{{p.discount_percent|default(0)}}" class="input-field w-full font-black text-[#ff5000] text-center pr-6" placeholder="%">
-                                            <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Custom Thumbnail Edit Panel -->
-                            <div class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-col justify-between">
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <span class="text-[9px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
-                                        <i class="fa-solid fa-image-portrait text-[#ff5000]"></i> Catalog Thumbnail
-                                    </span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" name="use_custom_thumbnail" value="true" class="sr-only peer edit-thumbnail-toggle" data-product-id="{{p.id}}" onchange="toggleExistingProductThumbnail('{{p.id}}')" {% if p.use_custom_thumbnail %}checked{% endif %}>
-                                        <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#ff5000]"></div>
-                                    </label>
-                                </div>
-
-                                <div id="edit-thumbnail-upload-wrapper-{{p.id}}" class="{% if not p.use_custom_thumbnail %}hidden{% endif %}">
-                                    <div class="flex items-center gap-2.5 bg-slate-50 p-2 rounded-xl border border-slate-200">
-                                        <div class="w-10 h-10 bg-white rounded-lg p-0.5 border border-slate-200 flex items-center justify-center shrink-0">
-                                            <img id="edit-thumbnail-img-preview-{{p.id}}" src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <input type="file" name="thumbnail" accept="image/*" class="block w-full text-[8px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:font-black file:bg-blue-500 file:text-white file:uppercase hover:file:bg-blue-600 cursor-pointer" onchange="previewExistingThumbnail(this, '{{p.id}}')">
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="edit-thumbnail-default-notice-{{p.id}}" class="{% if p.use_custom_thumbnail %}hidden{% endif %} flex items-center gap-2.5 bg-orange-50/60 p-2 rounded-xl border border-orange-100">
-                                    <div class="w-10 h-10 bg-white rounded-lg p-0.5 border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
-                                        <img id="edit-thumbnail-img-auto-{{p.id}}" src="" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                                    </div>
-                                    <div class="flex-1">
-                                        <span class="text-[8px] font-black text-orange-600 uppercase tracking-wider block">Auto Thumbnail</span>
-                                        <p class="text-[8px] text-slate-400 font-semibold italic">Syncs with 1st variant.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Variants Table -->
-                        <div class="space-y-3 pt-3 border-t border-slate-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-black text-slate-900 uppercase tracking-wider">Product Variants Matrix</span>
-                                <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down mr-1"></i> Drag handle to reorder</span>
-                            </div>
-
-                            <div id="sortable-variants-{{p.id}}" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 hide-scrollbar sortable-container">
-                                {% for v in p.parsed_variants %}
-                                <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors" data-variant-image="{{v.image}}">
-                                    
-                                    <!-- Compact Visible Row -->
-                                    <div class="flex items-center gap-3">
-                                        <!-- Drag & Image -->
-                                        <div class="flex items-center gap-2 shrink-0">
-                                            <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
-                                                <i class="fa-solid fa-grip-vertical text-sm"></i>
-                                            </div>
-                                            <div class="relative w-12 h-12 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('{{v.image}}')" title="Click to view image">
-                                                <img src="{{v.image}}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
-                                                <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
-                                                    <i class="fa-solid fa-eye text-white text-[11px]"></i>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Code & Stepper -->
-                                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-                                            <div class="relative flex-1 min-w-[100px]">
-                                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
-                                                <input type="text" name="v_codes[]" value="{{v.code or ''}}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
-                                            </div>
-                                            
-                                            <div class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shrink-0">
-                                                <button type="button" onclick="updateVarQty(this, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                                <input type="number" name="v_stocks[]" value="{{v.stock}}" class="w-12 text-center text-sm font-black bg-transparent outline-none hide-scrollbar">
-                                                <button type="button" onclick="updateVarQty(this, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                                            </div>
-                                        </div>
-
-                                        <!-- Actions -->
-                                        <div class="flex items-center gap-1.5 shrink-0">
-                                            <button type="button" onclick="toggleVariantDetails(this)" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-sm" title="Advanced Settings">
-                                                <i class="fa-solid fa-sliders"></i>
-                                            </button>
-                                            <button type="button" onclick="removeVariantRow(this, '{{p.id}}')" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm">
-                                                <i class="fa-solid fa-trash-can text-xs"></i>
-                                            </button>
-                                        </div>
-
-                                        <input type="hidden" name="v_ids[]" value="{{v.id}}">
-                                        <input type="hidden" name="v_images[]" value="{{v.image}}" class="variant-image-hidden">
-                                    </div>
-
-                                    <!-- Expanded Details (Hidden by default) -->
-                                    <div class="variant-details hidden border-t border-slate-100 pt-2.5 mt-0.5">
-                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 price-sync-group items-center bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                                            <div class="col-span-2 md:col-span-1">
-                                                <input type="text" name="v_names[]" value="{{v.name}}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
-                                            </div>
-                                            <div class="relative">
-                                                <input type="number" step="any" name="v_discounts[]" value="{{v.discount_percent|default(0)}}" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5 bg-white">
-                                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400">%</span>
-                                            </div>
-                                            <div class="relative">
-                                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
-                                                <input type="number" step="any" name="v_prices[]" value="{{v.price}}" placeholder="USD" class="usd-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
-                                            </div>
-                                            <div class="relative">
-                                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">៛</span>
-                                                <input type="number" step="any" value="{{ (v.price * 4000) | int }}" placeholder="KHR" class="khr-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
-                                            </div>
-                                            <div class="col-span-2 md:col-span-4 tag-wrapper">
-                                                <input type="hidden" name="v_categories[]" class="hidden-category-input" value="{{v.category}}">
-                                                <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex items-center bg-white w-full cursor-text">
-                                                    {% if v.category %}{% for single_cat in v.category.split(',') %}{% if single_cat.strip() != "" %}
-                                                    <span class="tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5">{{ single_cat.strip() }} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>
-                                                    {% endif %}{% endfor %}{% endif %}
-                                                    <input type="text" list="edit-cats-{{p.id}}" class="tag-input variant-tag-input text-[10px] w-full bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <!-- Add Extra Images Area -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                            <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100 flex flex-col justify-between gap-3">
-                                <label class="text-[10px] font-black text-blue-600 uppercase tracking-wider"><i class="fa-solid fa-box-open mr-1"></i> Add Purchasable Variants</label>
-                                <input type="file" name="new_images" multiple class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase hover:file:bg-blue-700 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl">
-                            </div>
-                            
-                            <!-- Detail Image Gallery Viewer Block -->
-                            <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 flex flex-col gap-3 h-full">
-                                <label class="text-[10px] font-black text-purple-600 uppercase tracking-wider"><i class="fa-regular fa-images mr-1"></i> View-Only Detail Images</label>
-                                
-                                {% set raw_details = [] %}
-                                {% if p.detail_images and p.detail_images != '[]' and p.detail_images != 'null' %}
-                                    {% set cleaned = p.detail_images | replace('[', '') | replace(']', '') | replace('"', '') | replace(' ', '') %}
-                                    {% if cleaned %}
-                                        {% set raw_details = cleaned.split(',') %}
-                                    {% endif %}
-                                {% endif %}
-                                
-                                {% if raw_details|length > 0 %}
-                                <div class="flex flex-wrap gap-1.5 border-b border-purple-200/50 pb-2">
-                                    {% for img_url in raw_details %}
-                                    <div class="relative w-11 h-11 bg-white border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-purple-400 transition-colors group flex items-center justify-center shadow-sm" onclick="openImageViewer('{{img_url}}')" title="Click to View Image">
-                                        <img src="{{img_url}}" class="max-w-full max-h-full object-contain mix-blend-multiply">
-                                        <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition-all">
-                                            <i class="fa-solid fa-eye text-white text-[11px]"></i>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                        
-                                <div class="mt-auto">
-                                    <input type="file" name="new_detail_images" multiple accept="image/*" onchange="previewEditDetailImages(this, '{{p.id}}')" class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-purple-500 file:text-white file:uppercase hover:file:bg-purple-600 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
-                                    <!-- Container for JS Previews of new picks -->
-                                    <div id="edit-detail-preview-{{p.id}}" class="flex flex-wrap gap-1.5 mt-2 hidden pointer-events-none"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Submit Individual Product -->
-                        <div class="pt-4 mt-4 border-t border-slate-200">
-                            <button type="submit" class="w-full btn-taobao py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-save mr-1.5"></i> Save Product Changes</button>
-                        </div>
-                     </form>
-                </div>
+                <!-- DYNAMIC EDIT CONTAINER (built on-demand when clicked) -->
+                <div class="edit-mode" id="edit-mode-{{p.id}}"></div>
             </div>
             {% endfor %}
         </div>
@@ -621,24 +382,18 @@
             </p>
             
             <div id="category-sortable" class="overflow-y-auto space-y-2.5 pr-1 hide-scrollbar flex-1 pb-3 touch-pan-y">
-                {% for cat in global_categories %}
-                
-                <!-- INDIVIDUAL CATEGORY ROW -->
+                {% for cat in categories %}
                 <div class="cat-modal-item flex gap-3 items-center bg-white p-2.5 rounded-2xl border border-slate-200 shadow-sm relative group hover:border-blue-400 transition-colors" data-store="{{cat.store}}">
-                    
-                    <!-- DRAG HANDLE BUTTON -->
                     <div class="handle cursor-grab flex items-center justify-center w-8 h-10 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-slate-400 hover:text-blue-500 transition-colors shrink-0 shadow-sm" title="Drag to reorder">
                         <i class="fa-solid fa-grip-vertical text-lg"></i>
                     </div>
                     
-                    <!-- POSITION NUMBER BADGE -->
                     <div class="cat-order-badge w-6 h-6 shrink-0 flex items-center justify-center bg-slate-900 text-white font-black text-[10px] rounded-md shadow-sm">
                         {{ loop.index }}
                     </div>
 
                     <input type="hidden" name="cat_ids[]" value="{{cat.id}}">
                     
-                    <!-- IMAGE -->
                     <div class="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 cursor-pointer flex items-center justify-center shrink-0 hover:border-blue-500 transition-colors" onclick="document.getElementById('cat-file-{{cat.id}}').click()" title="Click to replace image">
                         <img src="{{cat.image}}" class="max-w-full max-h-full object-cover">
                         <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center transition-all">
@@ -647,16 +402,13 @@
                         <input type="file" name="cat_image_{{cat.id}}" id="cat-file-{{cat.id}}" accept="image/*" class="hidden">
                     </div>
                     
-                    <!-- TEXT FIELDS -->
                     <div class="flex-1 min-w-0">
                         <input type="text" name="cat_names[]" value="{{cat.name}}" class="text-xs font-black border-b border-slate-200 outline-none w-full pb-1 focus:border-[#ff5000] text-slate-900 transition-colors bg-transparent">
                         <span class="text-[8px] font-extrabold text-slate-400 uppercase block mt-1">{{cat.store}}</span>
                     </div>
                     
-                    <!-- DELETE BUTTON -->
                     <button type="button" onclick="deleteCategory({{cat.id}})" class="w-8 h-8 shrink-0 flex items-center justify-center text-slate-400 bg-slate-50 border border-slate-200 rounded-xl hover:text-red-600 hover:bg-red-50 transition-colors shadow-sm"><i class="fa-solid fa-trash-can text-xs"></i></button>
                 </div>
-                
                 {% endfor %}
             </div>
             
@@ -677,11 +429,9 @@
     </div>
     <div class="flex gap-2 shrink-0">
         <button type="button" onclick="cancelAllEdits()" class="px-3 py-2 border border-slate-700 hover:bg-slate-800 rounded-xl text-[10px] font-extrabold uppercase transition-colors">Discard</button>
-        <!-- Save Changes Button (Multiple Uses) -->
         <button type="button" id="save-all-btn" onclick="saveAllProductEdits()" class="hidden px-4 py-2 bg-[#ff5000] hover:bg-orange-600 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-lg shadow-orange-950/20">
             <i class="fa-solid fa-cloud-arrow-up text-xs"></i> Save Edits
         </button>
-        <!-- Save Reorder Button -->
         <button type="button" id="save-order-btn" onclick="saveProductOrder()" class="hidden px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl text-[10px] font-extrabold uppercase tracking-wider transition-colors flex items-center gap-1.5 shadow-lg shadow-blue-950/20">
             <i class="fa-solid fa-sort text-xs"></i> Save New Order
         </button>
@@ -716,20 +466,320 @@
 
 {% block scripts %}
 <script>
-    // State Tracking
+    // State Tracking & Preloaded Clean JSON Models
     let productOrderChanged = false;
+    window.ADMIN_PRODUCTS = {{ products_json | safe }};
+    window.ADMIN_PRODUCTS_MAP = {};
+    window.ADMIN_PRODUCTS.forEach(p => { window.ADMIN_PRODUCTS_MAP[p.id] = p; });
+    const allSystemCats = {{ all_system_cats_json | safe }};
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // ================= ON-DEMAND EDIT FORM BUILDER =================
+    function renderProductEditForm(id) {
+        const p = window.ADMIN_PRODUCTS_MAP[id];
+        const container = document.getElementById(`edit-mode-${id}`);
+        if (!p || !container) return;
+
+        const stores = p.store ? p.store.split(',') : [];
+        const isToy = stores.includes('toy');
+        const isLego = stores.includes('lego');
+        const isMinifig = stores.includes('minifigure');
+        const isBracelet = stores.includes('bracelet');
+        const isCustom = stores.includes('custom_bracelet');
+
+        // Product category tags
+        const pCats = p.category ? p.category.split(',').map(c => c.trim()).filter(c => c) : [];
+        let pCatBadges = '';
+        pCats.forEach(c => {
+            pCatBadges += `<span class="tag-badge bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">${escapeHtml(c)} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
+        });
+
+        // Variant rows
+        let variantRowsHtml = '';
+        const variants = p.variants || [];
+        variants.forEach(v => {
+            const vCats = v.category ? v.category.split(',').map(c => c.trim()).filter(c => c) : [];
+            let vCatBadges = '';
+            vCats.forEach(vc => {
+                vCatBadges += `<span class="tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5">${escapeHtml(vc)} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
+            });
+            const vPrice = parseFloat(v.price) || 0;
+            const vPriceKhr = Math.round(vPrice * 4000);
+
+            variantRowsHtml += `
+            <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors" data-variant-image="${escapeHtml(v.image || '')}">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
+                            <i class="fa-solid fa-grip-vertical text-sm"></i>
+                        </div>
+                        <div class="relative w-12 h-12 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('${escapeHtml(v.image || '')}')" title="Click to view image">
+                            <img src="${escapeHtml(v.image || '')}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
+                            <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
+                                <i class="fa-solid fa-eye text-white text-[11px]"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+                        <div class="relative flex-1 min-w-[100px]">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
+                            <input type="text" name="v_codes[]" value="${escapeHtml(v.code || '')}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
+                        </div>
+                        
+                        <div class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shrink-0">
+                            <button type="button" onclick="updateVarQty(this, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                            <input type="number" name="v_stocks[]" value="${v.stock !== undefined ? v.stock : 0}" class="w-12 text-center text-sm font-black bg-transparent outline-none hide-scrollbar">
+                            <button type="button" onclick="updateVarQty(this, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button type="button" onclick="toggleVariantDetails(this)" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-sm" title="Advanced Settings">
+                            <i class="fa-solid fa-sliders"></i>
+                        </button>
+                        <button type="button" onclick="removeVariantRow(this, '${p.id}')" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+
+                    <input type="hidden" name="v_ids[]" value="${escapeHtml(v.id || '')}">
+                    <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
+                </div>
+
+                <div class="variant-details hidden border-t border-slate-100 pt-2.5 mt-0.5">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 price-sync-group items-center bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
+                        <div class="col-span-2 md:col-span-1">
+                            <input type="text" name="v_names[]" value="${escapeHtml(v.name || '')}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                        </div>
+                        <div class="relative">
+                            <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5 bg-white">
+                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400">%</span>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+                            <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="USD" class="usd-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
+                        </div>
+                        <div class="relative">
+                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">៛</span>
+                            <input type="number" step="any" value="${vPriceKhr}" placeholder="KHR" class="khr-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
+                        </div>
+                        <div class="col-span-2 md:col-span-4 tag-wrapper">
+                            <input type="hidden" name="v_categories[]" class="hidden-category-input" value="${escapeHtml(v.category || '')}">
+                            <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex items-center bg-white w-full cursor-text">
+                                ${vCatBadges}
+                                <input type="text" list="edit-cats-${p.id}" class="tag-input variant-tag-input text-[10px] w-full bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        // Detail images gallery
+        const detailImgs = Array.isArray(p.detail_images) ? p.detail_images : [];
+        let detailImgsHtml = '';
+        if (detailImgs.length > 0) {
+            detailImgsHtml += `<div class="flex flex-wrap gap-1.5 border-b border-purple-200/50 pb-2">`;
+            detailImgs.forEach(imgUrl => {
+                detailImgsHtml += `
+                <div class="relative w-11 h-11 bg-white border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-purple-400 transition-colors group flex items-center justify-center shadow-sm" onclick="openImageViewer('${escapeHtml(imgUrl)}')" title="Click to View Image">
+                    <img src="${escapeHtml(imgUrl)}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                    <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-lg transition-all">
+                        <i class="fa-solid fa-eye text-white text-[11px]"></i>
+                    </div>
+                </div>`;
+            });
+            detailImgsHtml += `</div>`;
+        }
+
+        const firstVarImg = variants.length > 0 ? (variants[0].image || p.image) : p.image;
+
+        container.innerHTML = `
+        <form action="/admin/product/update/${p.id}" method="POST" enctype="multipart/form-data" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full edit-product-form" data-product-id="${p.id}">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3.5 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#ff5000]">
+                        <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-sm font-black text-slate-900 uppercase tracking-wider">Edit Product</h5>
+                        <p class="text-[9px] text-slate-400 font-bold">Product ID: #${p.id}</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleEdit('${p.id}')" class="text-[10px] font-black text-slate-600 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 px-3.5 py-1.5 rounded-xl shadow-sm transition-all uppercase tracking-wider flex items-center gap-1">
+                    <i class="fa-solid fa-xmark"></i> Close
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+                <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="space-y-1 sm:col-span-3">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Product Code (SKU)</label>
+                        <div class="relative mt-1">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">#</span>
+                            <input type="text" name="product_code" value="${escapeHtml(p.product_code || '')}" placeholder="ABC01" class="input-field w-full pl-7 uppercase font-mono tracking-wider font-extrabold text-slate-950">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Stores</label>
+                        <div class="grid grid-cols-2 gap-1.5 bg-white p-2 rounded-xl border border-slate-200 mt-1">
+                            <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="toy" class="accent-[#ff5000]" ${isToy ? 'checked' : ''}> Toy</label>
+                            <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="lego" class="accent-[#ff5000]" ${isLego ? 'checked' : ''}> LEGO</label>
+                            <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="minifigure" class="accent-[#ff5000]" ${isMinifig ? 'checked' : ''}> Minifig</label>
+                            <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer"><input type="checkbox" name="stores[]" value="bracelet" class="accent-[#ff5000]" ${isBracelet ? 'checked' : ''}> Bracelet</label>
+                            <label class="flex items-center gap-1 text-[9px] font-extrabold cursor-pointer col-span-2"><input type="checkbox" name="stores[]" value="custom_bracelet" class="accent-[#ff5000]" ${isCustom ? 'checked' : ''}> Custom Charms</label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Categories</label>
+                        <div class="tag-wrapper mt-1">
+                            <input type="hidden" name="category" class="hidden-category-input" value="${escapeHtml(p.category || '')}">
+                            <div class="tag-container bg-white border border-slate-200 rounded-xl p-1.5 min-h-[38px] flex flex-wrap items-center gap-1 shadow-sm h-full content-start">
+                                ${pCatBadges}
+                                <input type="text" list="edit-cats-${p.id}" class="tag-input text-xs bg-transparent outline-none flex-1 min-w-[80px]" placeholder="Add Tag..." autocomplete="off">
+                            </div>
+                        </div>
+                        <datalist id="edit-cats-${p.id}"></datalist>
+                    </div>
+
+                    <div class="col-span-1 grid grid-cols-1 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Title</label>
+                            <input type="text" name="title" value="${escapeHtml(p.title || '')}" class="input-field w-full font-bold text-slate-900 mt-1" placeholder="Title">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Master Discount</label>
+                            <div class="relative mt-1">
+                                <input type="number" step="any" name="discount_percent" value="${p.discount_percent || 0}" class="input-field w-full font-black text-[#ff5000] text-center pr-6" placeholder="%">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[9px] font-black text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fa-solid fa-image-portrait text-[#ff5000]"></i> Catalog Thumbnail
+                        </span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="use_custom_thumbnail" value="true" class="sr-only peer edit-thumbnail-toggle" data-product-id="${p.id}" onchange="toggleExistingProductThumbnail('${p.id}')" ${p.use_custom_thumbnail ? 'checked' : ''}>
+                            <div class="w-8 h-4.5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-[#ff5000]"></div>
+                        </label>
+                    </div>
+
+                    <div id="edit-thumbnail-upload-wrapper-${p.id}" class="${p.use_custom_thumbnail ? '' : 'hidden'}">
+                        <div class="flex items-center gap-2.5 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <div class="w-10 h-10 bg-white rounded-lg p-0.5 border border-slate-200 flex items-center justify-center shrink-0">
+                                <img id="edit-thumbnail-img-preview-${p.id}" src="${escapeHtml(p.image || '')}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <input type="file" name="thumbnail" accept="image/*" class="block w-full text-[8px] text-slate-400 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:font-black file:bg-blue-500 file:text-white file:uppercase hover:file:bg-blue-600 cursor-pointer" onchange="previewExistingThumbnail(this, '${p.id}')">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="edit-thumbnail-default-notice-${p.id}" class="${p.use_custom_thumbnail ? 'hidden' : ''} flex items-center gap-2.5 bg-orange-50/60 p-2 rounded-xl border border-orange-100">
+                        <div class="w-10 h-10 bg-white rounded-lg p-0.5 border border-slate-200 flex items-center justify-center shrink-0 shadow-sm">
+                            <img id="edit-thumbnail-img-auto-${p.id}" src="${escapeHtml(firstVarImg)}" class="max-w-full max-h-full object-contain mix-blend-multiply">
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-[8px] font-black text-orange-600 uppercase tracking-wider block">Auto Thumbnail</span>
+                            <p class="text-[8px] text-slate-400 font-semibold italic">Syncs with 1st variant.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3 pt-3 border-t border-slate-200">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-black text-slate-900 uppercase tracking-wider">Product Variants Matrix</span>
+                    <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down mr-1"></i> Drag handle to reorder</span>
+                </div>
+
+                <div id="sortable-variants-${p.id}" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 hide-scrollbar sortable-container">
+                    ${variantRowsHtml}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                <div class="bg-blue-50/50 p-3.5 rounded-2xl border border-blue-100 flex flex-col justify-between gap-3">
+                    <label class="text-[10px] font-black text-blue-600 uppercase tracking-wider"><i class="fa-solid fa-box-open mr-1"></i> Add Purchasable Variants</label>
+                    <input type="file" name="new_images" multiple class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-blue-600 file:text-white file:uppercase hover:file:bg-blue-700 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl">
+                </div>
+
+                <div class="bg-purple-50/50 p-3.5 rounded-2xl border border-purple-100 flex flex-col gap-3 h-full">
+                    <label class="text-[10px] font-black text-purple-600 uppercase tracking-wider"><i class="fa-regular fa-images mr-1"></i> View-Only Detail Images</label>
+                    ${detailImgsHtml}
+                    <div class="mt-auto">
+                        <input type="file" name="new_detail_images" multiple accept="image/*" onchange="previewEditDetailImages(this, '${p.id}')" class="block w-full text-[9px] text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:font-black file:bg-purple-500 file:text-white file:uppercase hover:file:bg-purple-600 cursor-pointer bg-white border border-slate-200 p-1 rounded-xl shadow-sm">
+                        <div id="edit-detail-preview-${p.id}" class="flex flex-wrap gap-1.5 mt-2 hidden pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-4 mt-4 border-t border-slate-200">
+                <button type="submit" class="w-full btn-taobao py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-save mr-1.5"></i> Save Product Changes</button>
+            </div>
+        </form>`;
+
+        // Populate category datalist for this product
+        const dl = document.getElementById(`edit-cats-${p.id}`);
+        if (dl) {
+            const uniqueCatNames = [...new Set(allSystemCats.map(c => c.name))].filter(n => n && n.trim() !== "");
+            uniqueCatNames.forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n;
+                dl.appendChild(opt);
+            });
+        }
+
+        // Initialize Tag Inputs for this form
+        container.querySelectorAll('.tag-container').forEach(setupTagInput);
+
+        // Initialize Variant Drag Sorting
+        const sortableContainer = document.getElementById(`sortable-variants-${p.id}`);
+        if (sortableContainer && typeof Sortable !== 'undefined') {
+            new Sortable(sortableContainer, {
+                handle: '.handle',
+                animation: 180,
+                ghostClass: 'bg-orange-50',
+                onEnd: function() {
+                    syncFirstVariantThumbnail(p.id);
+                    updateGlobalSaveBar();
+                }
+            });
+        }
+    }
 
     // ================= 1. UI HELPERS & EDIT MODE ACTIONS =================
     function toggleEdit(id) { 
         const item = document.getElementById(`item-${id}`); 
-        if(item) {
-            item.classList.toggle('is-editing'); 
-            if (item.classList.contains('is-editing')) {
-                syncFirstVariantThumbnail(id);
-                setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
-            }
-            updateGlobalSaveBar();
+        if(!item) return;
+
+        const editModeContainer = document.getElementById(`edit-mode-${id}`);
+        if(editModeContainer && editModeContainer.children.length === 0) {
+            renderProductEditForm(id);
         }
+
+        item.classList.toggle('is-editing'); 
+        if (item.classList.contains('is-editing')) {
+            syncFirstVariantThumbnail(id);
+            setTimeout(() => item.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+        }
+        updateGlobalSaveBar();
     }
     
     function openCatModal() { document.getElementById('cat-modal').classList.remove('hidden'); }
@@ -780,26 +830,6 @@
     }
 
     // ================= 2. FILTERING & LIVE SEARCH =================
-    const allSystemCats = [
-        {% for cat in global_categories %}
-        { name: `{{ cat.name|replace('"', '\\"')|replace("'", "\\'") }}`, store: `{{ cat.store }}` },
-        {% endfor %}
-        {% for p in global_products %}
-            {% if p.category %}
-                {% for c in p.category.split(',') %}
-                { name: `{{ c.strip()|replace('"', '\\"')|replace("'", "\\'") }}`, store: `{{ p.store }}` },
-                {% endfor %}
-            {% endif %}
-            {% for v in p.parsed_variants %}
-                {% if v.category %}
-                    {% for c in v.category.split(',') %}
-                    { name: `{{ c.strip()|replace('"', '\\"')|replace("'", "\\'") }}`, store: `{{ p.store }}` },
-                    {% endfor %}
-                {% endif %}
-            {% endfor %}
-        {% endfor %}
-    ];
-
     function filterStore(store) {
         document.querySelectorAll('.store-flt').forEach(btn => { 
             btn.classList.remove('bg-slate-900', 'text-white', 'shadow-sm'); 
@@ -825,7 +855,7 @@
         select.innerHTML = '<option value="All">All Categories</option>';
 
         const validStoreCats = allSystemCats.filter(c => store === 'All' || c.store.includes(store));
-        const uniqueNames = [...new Set(validStoreCats.map(c => c.name))].filter(name => name.trim() !== "");
+        const uniqueNames = [...new Set(validStoreCats.map(c => c.name))].filter(name => name && name.trim() !== "");
 
         uniqueNames.sort().forEach(name => {
             const opt = document.createElement('option');
@@ -838,7 +868,6 @@
         });
     }
 
-    // ✨ SEARCH FILTER CHECKS DATA-CODE ✨
     function filterProducts() {
         const activeStoreBtn = document.querySelector('.store-flt.bg-slate-900');
         const storeFlt = activeStoreBtn ? activeStoreBtn.id.replace('flt-', '') : 'All';
@@ -1011,7 +1040,6 @@
         let isVisible = false;
         let messages = [];
 
-        // Check if any product forms are being edited
         if (count > 0) {
             messages.push(`Editing ${count} product(s).`);
             saveAllBtn.classList.remove('hidden');
@@ -1020,7 +1048,6 @@
             saveAllBtn.classList.add('hidden');
         }
 
-        // Check if product order was changed
         if (productOrderChanged) {
             messages.push(`New display order.`);
             saveOrderBtn.classList.remove('hidden');
@@ -1041,11 +1068,9 @@
 
     function cancelAllEdits() {
         if (confirm("Discard all unsaved edits?")) {
-            // Revert product edits
             document.querySelectorAll('.product-item.is-editing').forEach(item => {
                 item.classList.remove('is-editing');
             });
-            // Revert order if changed by just refreshing
             if(productOrderChanged) {
                 window.location.reload();
                 return;
@@ -1054,7 +1079,6 @@
         }
     }
 
-    // Send the new sequence of Product IDs to the backend
     async function saveProductOrder() {
         const items = document.querySelectorAll('.product-item');
         const orderedIds = Array.from(items).map(item => item.dataset.id);
@@ -1079,7 +1103,6 @@
             const formData = new FormData();
             formData.append('product_order', JSON.stringify(orderedIds));
             
-            // Send to app.py
             const response = await fetch('/admin/product/reorder', {
                 method: 'POST',
                 body: formData
@@ -1095,7 +1118,7 @@
             
         } catch (e) {
             console.error(e);
-            alert("Failed to save the new order. Please check your app.py implementation.");
+            alert("Failed to save the new order. Please check your connection.");
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
         }
@@ -1203,23 +1226,20 @@
         });
 
         initializeProductSortable(); 
-        initializeSortableVariants();
         initializeCategorySortable(); 
     });
 
     // ================= 7. DRAG & DROP INITIALIZATIONS =================
-    
-    // Product Reordering
     function initializeProductSortable() {
         const productList = document.getElementById('main-inventory-list');
         if (productList && typeof Sortable !== 'undefined') {
             new Sortable(productList, {
                 handle: '.product-drag-handle',
                 animation: 250,
-                ghostClass: 'opacity-40', // Fades the card you are dragging
+                ghostClass: 'opacity-40',
                 onEnd: function() {
                     productOrderChanged = true;
-                    updateGlobalSaveBar(); // Prompts the Save Order button
+                    updateGlobalSaveBar();
                 }
             });
         }
@@ -1238,23 +1258,6 @@
                         badge.innerText = index + 1;
                     });
                 }
-            });
-        }
-    }
-
-    function initializeSortableVariants() {
-        if (typeof Sortable !== 'undefined') {
-            document.querySelectorAll('.sortable-container').forEach(el => {
-                new Sortable(el, { 
-                    handle: '.handle', 
-                    animation: 180,
-                    ghostClass: 'bg-orange-50',
-                    onEnd: function(evt) {
-                        const pId = el.id.replace('sortable-variants-', '');
-                        syncFirstVariantThumbnail(pId);
-                        updateGlobalSaveBar();
-                    }
-                });
             });
         }
     }
@@ -1292,7 +1295,6 @@
         }
     }
     
-    // ✨ NEW HELPERS: Quick Stock Stepper & Code Sequencer ✨
     window.updateVarQty = function(btn, delta) {
         const input = btn.parentElement.querySelector('input[type="number"]');
         if(!input) return;
@@ -1363,7 +1365,6 @@
         }
     };
 
-    // ✨ NEW: RENDER UPLOAD VARIANTS WITH COMPACT AUTO-SKU ✨
     function renderUploadVariants() {
         if(!variantList) return;
         variantList.innerHTML = '';
@@ -1395,14 +1396,13 @@
             if(defaultCat) {
                 defaultCat.split(',').forEach(tag => {
                     if(tag.trim() !== '') {
-                        tagBadgesHtml += `<span class="tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5">${tag.trim()} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
+                        tagBadgesHtml += `<span class="tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5">${escapeHtml(tag.trim())} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
                     }
                 });
             }
 
             const html = `
                 <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors">
-                    
                     <div class="flex items-center gap-3">
                         <div class="flex items-center gap-2 shrink-0">
                             <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
@@ -1416,7 +1416,7 @@
                         <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
                             <div class="relative flex-1 min-w-[100px]">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
-                                <input type="text" name="variant_codes[]" value="${defaultCode}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
+                                <input type="text" name="variant_codes[]" value="${escapeHtml(defaultCode)}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
                             </div>
                             
                             <div class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shrink-0">
@@ -1439,7 +1439,7 @@
                     <div class="variant-details hidden border-t border-slate-100 pt-2.5 mt-0.5">
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 price-sync-group items-center bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
                             <div class="col-span-2 md:col-span-1">
-                                <input type="text" name="variant_names[]" value="${defaultName}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                                <input type="text" name="variant_names[]" value="${escapeHtml(defaultName)}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
                             </div>
                             <div class="relative">
                                 <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5 bg-white">
@@ -1454,7 +1454,7 @@
                                 <input type="number" step="any" value="0" placeholder="KHR" class="khr-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
                             </div>
                             <div class="col-span-2 md:col-span-4 tag-wrapper">
-                                <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${defaultCat}">
+                                <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${escapeHtml(defaultCat)}">
                                 <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex items-center bg-white w-full cursor-text">
                                     ${tagBadgesHtml}
                                     <input type="text" list="add-cats" class="tag-input variant-tag-input text-[10px] w-full bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
@@ -1532,7 +1532,7 @@
                 const badgeClass = isVariant ? 'tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5' : 'tag-badge bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1';
                 const span = document.createElement('span');
                 span.className = badgeClass;
-                span.innerHTML = `${tag} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i>`;
+                span.innerHTML = `${escapeHtml(tag)} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i>`;
                 container.insertBefore(span, input);
             });
             input.value = '';
