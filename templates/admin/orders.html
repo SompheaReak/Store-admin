@@ -194,6 +194,23 @@
                             {% endif %}
                         </div>
                     </div>
+                    {% elif order.telegram_name %}
+                    <div class="flex items-center pt-2.5 mt-2.5 border-t border-slate-200/70">
+                        <span class="font-extrabold text-[#0088cc] w-28 shrink-0 uppercase tracking-wider text-[10px] flex items-center gap-1">
+                            <i class="fa-brands fa-telegram text-xs"></i> Telegram :
+                        </span>
+                        <div class="flex items-center gap-2">
+                            {% if order.telegram_name.startswith('@') %}
+                                <a href="https://t.me/{{ order.telegram_name[1:] }}" target="_blank" class="font-black text-[#0088cc] hover:underline text-sm flex items-center gap-1">
+                                    <i class="fa-brands fa-telegram text-xs"></i> {{ order.telegram_name }} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mb-0.5"></i>
+                                </a>
+                            {% else %}
+                                <span class="font-bold text-slate-800 text-xs flex items-center gap-1">
+                                    <i class="fa-brands fa-telegram text-xs text-[#0088cc]"></i> {{ order.telegram_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
 

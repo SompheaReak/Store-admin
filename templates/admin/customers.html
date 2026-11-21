@@ -52,7 +52,8 @@
                 <thead>
                     <tr class="bg-slate-100/75 text-slate-500 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
                         <th class="py-3.5 px-4">Customer Phone</th>
-                        <th class="py-3.5 px-4">Full Name</th>
+                        <th class="py-3.5 px-4">User Name</th>
+                        <th class="py-3.5 px-4">Telegram</th>
                         <th class="py-3.5 px-4">Joined Date</th>
                         <th class="py-3.5 px-4 text-center">Orders</th>
                         <th class="py-3.5 px-4 text-right">Total Spent</th>
@@ -67,8 +68,23 @@
                         <td class="py-3 px-4 font-mono font-bold text-slate-900">
                             {{ c.phone }}
                         </td>
-                        <td class="py-3 px-4 text-slate-800">
+                        <td class="py-3 px-4 text-slate-800 font-bold">
                             {{ c.full_name or '—' }}
+                        </td>
+                        <td class="py-3 px-4 text-blue-600 font-bold">
+                            {% if c.telegram %}
+                                {% if c.telegram.startswith('@') %}
+                                    <a href="https://t.me/{{ c.telegram[1:] }}" target="_blank" class="hover:underline flex items-center gap-1">
+                                        <i class="fa-brands fa-telegram text-xs text-[#0088cc]"></i> {{ c.telegram }}
+                                    </a>
+                                {% else %}
+                                    <span class="flex items-center gap-1 text-slate-700 font-mono">
+                                        <i class="fa-brands fa-telegram text-xs text-[#0088cc]"></i> {{ c.telegram }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-slate-300 font-normal">—</span>
+                            {% endif %}
                         </td>
                         <td class="py-3 px-4 text-slate-400 text-[11px]">
                             {{ c.created_at.strftime('%d %b %Y, %I:%M %p') if c.created_at else '—' }}

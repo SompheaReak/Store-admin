@@ -116,6 +116,7 @@ class CustomerUser(db.Model):
     phone = db.Column(db.String(20), unique=True, index=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     full_name = db.Column(db.String(100), nullable=True)
+    telegram = db.Column(db.String(100), nullable=True)
     credit_balance = db.Column(db.Integer, default=0)
     reset_otp = db.Column(db.String(10), nullable=True)
     reset_otp_expires_at = db.Column(db.DateTime, nullable=True)
@@ -146,6 +147,7 @@ class CustomerUser(db.Model):
             'id': self.id,
             'phone': self.phone,
             'full_name': self.full_name or '',
+            'telegram': self.telegram or '',
             'credit_balance': self.credit_balance,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else ''
         }
