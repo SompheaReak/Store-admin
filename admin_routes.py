@@ -4,6 +4,7 @@ import random
 import string
 import uuid
 import hmac
+import time
 from datetime import datetime
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, flash
@@ -169,15 +170,30 @@ def _deduct_order_stock(order):
     except Exception:
         pass
 
+admin_failed_logins = {}
+
 # --- ADMIN AUTH & NAVIGATION ROUTES ---
 @admin_bp.route('/admin/login', methods=['GET', 'POST'])
 def login():
+    forwarded = request.headers.get('X-Forwarded-For')
+    client_ip = forwarded.split(',')[0].strip() if forwarded else (request.remote_addr or '127.0.0.1')
+    now = time.time()
+
+    attempts = [ts for ts in admin_failed_logins.get(client_ip, []) if now - ts < 300]
+    if len(attempts) >= 5:
+        retry_after = max(1, int(300 - (now - attempts[0])))
+        flash(f'Too many failed admin login attempts. Please wait {retry_after} seconds.', 'error')
+        return render_template('admin_login.html'), 429
+
     if request.method == 'POST':
         user_input = request.form.get('username', '')
         pass_input = request.form.get('password', '')
         if hmac.compare_digest(user_input, ADMIN_USERNAME) and hmac.compare_digest(pass_input, ADMIN_PASS):
+            admin_failed_logins.pop(client_ip, None)
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
+        attempts.append(now)
+        admin_failed_logins[client_ip] = attempts
         flash('Invalid Username or Password', 'error')
     return render_template('admin_login.html')
 
@@ -755,7 +771,13 @@ def bulk_delete_orders():
     if raw_ids:
         ids_to_delete = [int(x) for x in raw_ids.split(',') if x.isdigit()]
         if ids_to_delete: 
-            Order.query.filter(Order.id.in_(ids_to_delete)).delete(synchronize_session=False)
+            orders = Order.query.filter(Order.id.in_(ids_to_delete)).all()
+            for o in orders:
+                if o.promo_code_used:
+                    promo = PromoCode.query.filter_by(code=o.promo_code_used).first()
+                    if promo and promo.current_uses > 0:
+                        promo.current_uses -= 1
+                db.session.delete(o)
             db.session.commit()
     return redirect(url_for('admin_orders'))
 
