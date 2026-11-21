@@ -190,6 +190,7 @@ def login():
         pass_input = request.form.get('password', '')
         if hmac.compare_digest(user_input, ADMIN_USERNAME) and hmac.compare_digest(pass_input, ADMIN_PASS):
             admin_failed_logins.pop(client_ip, None)
+            session.clear()
             session['admin'] = True
             return redirect(url_for('admin_dashboard'))
         attempts.append(now)
@@ -199,7 +200,7 @@ def login():
 
 @admin_bp.route('/admin/logout')
 def logout():
-    session.pop('admin', None)
+    session.clear()
     return redirect(url_for('login'))
 
 @admin_bp.route('/admin/panel')

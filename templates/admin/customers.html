@@ -74,7 +74,7 @@
                         <td class="py-3 px-4 text-blue-600 font-bold">
                             {% if c.telegram %}
                                 {% if c.telegram.startswith('@') %}
-                                    <a href="https://t.me/{{ c.telegram[1:] }}" target="_blank" class="hover:underline flex items-center gap-1">
+                                    <a href="https://t.me/{{ c.telegram[1:] }}" target="_blank" rel="noopener noreferrer" class="hover:underline flex items-center gap-1">
                                         <i class="fa-brands fa-telegram text-xs text-[#0088cc]"></i> {{ c.telegram }}
                                     </a>
                                 {% else %}

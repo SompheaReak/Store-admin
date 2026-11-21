@@ -185,8 +185,8 @@
                         <div class="flex items-center gap-2">
                             <img src="{{ order.telegram_user.photo_url | default('https://ui-avatars.com/api/?name=TG&background=0284c7&color=fff', true) }}" class="w-6 h-6 rounded-full border border-blue-100 shadow-sm object-cover">
                             {% if order.telegram_user.username %}
-                                <a href="https://t.me/{{ order.telegram_user.username }}" target="_blank" class="font-black text-[#0088cc] hover:underline text-sm flex items-center gap-1">
-                                    @{{ order.telegram_user.username }} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mb-0.5"></i>
+                                <a href="https://t.me/{{ order.telegram_user.username }}" target="_blank" rel="noopener noreferrer" class="font-black text-[#0088cc] hover:underline text-sm flex items-center gap-1">
+                                     @{{ order.telegram_user.username }} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mb-0.5"></i>
                                 </a>
                             {% else %}
                                 <span class="font-black text-slate-700 text-sm">{{ order.telegram_user.first_name }} {{ order.telegram_user.last_name | default('') }}</span>
@@ -201,7 +201,7 @@
                         </span>
                         <div class="flex items-center gap-2">
                             {% if order.telegram_name.startswith('@') %}
-                                <a href="https://t.me/{{ order.telegram_name[1:] }}" target="_blank" class="font-black text-[#0088cc] hover:underline text-sm flex items-center gap-1">
+                                <a href="https://t.me/{{ order.telegram_name[1:] }}" target="_blank" rel="noopener noreferrer" class="font-black text-[#0088cc] hover:underline text-sm flex items-center gap-1">
                                     <i class="fa-brands fa-telegram text-xs"></i> {{ order.telegram_name }} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] mb-0.5"></i>
                                 </a>
                             {% else %}
