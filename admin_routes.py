@@ -42,7 +42,7 @@ def optimize_and_upload(file):
 admin_bp = Blueprint('admin', __name__, template_folder='templates')
 
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASS = os.environ.get('ADMIN_PASS', 'Thesong_Admin@2022?!$')
+ADMIN_PASS = os.environ.get('ADMIN_PASS', '')
 
 def login_required(f):
     @wraps(f)

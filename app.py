@@ -6,15 +6,17 @@ import cloudinary
 import cloudinary.uploader
 
 # Load .env variables
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(os.path.join(BASE_DIR, '.env'))
 except ImportError:
     pass
 
-def _load_env_fallback(filepath='.env'):
-    if os.path.exists(filepath):
-        with open(filepath, 'r') as f:
+def _load_env_fallback():
+    env_path = os.path.join(BASE_DIR, '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith('#') and '=' in line:
@@ -39,7 +41,7 @@ from admin_routes import admin_bp
 app = Flask(__name__)
 
 # Security & Session Settings
-app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
+app.secret_key = os.environ.get('SECRET_KEY', 'change_in_production_env')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -48,10 +50,9 @@ if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER') or os
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
 # Database Configuration (Point to the same Database as the storefront)
-DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 db_url = os.environ.get('DATABASE_URL', '').strip()
-if not db_url or 'fallback.db' in db_url:
-    db_url = DEFAULT_NEON_DB
+if not db_url:
+    db_url = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'fallback.db')}"
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
