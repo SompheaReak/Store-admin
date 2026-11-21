@@ -22,7 +22,7 @@
     .edit-mode { display: none; }
     .is-editing .view-mode { display: none; }
     .is-editing .edit-mode { display: block; animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
-    .is-editing { grid-column: 1 / -1 !important; }
+    .is-editing { grid-column: 1 / -1 !important; overflow: visible !important; }
     
     @keyframes slideDown { 
         from { opacity: 0; transform: translateY(-12px); } 
@@ -50,6 +50,27 @@
     /* Scrollbar Utility */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom Admin Scrollbar for Sticky Add Box, Edit Box, and Variants */
+    .custom-admin-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .custom-admin-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 9999px;
+    }
+    .custom-admin-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 9999px;
+    }
+    .custom-admin-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #ff5000;
+    }
+    .custom-admin-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
 </style>
 {% endblock %}
 
@@ -67,7 +88,7 @@
     
     <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
     <section class="lg:col-span-4 xl:col-span-3">
-        <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-24 space-y-5">
+        <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-20 space-y-5 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto custom-admin-scrollbar overscroll-contain">
             
             <!-- Section Header -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -225,7 +246,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="variant-list" class="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1 hide-scrollbar"></div>
+                    <div id="variant-list" class="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1 custom-admin-scrollbar"></div>
                 </div>
 
                 <!-- Pricing & Profit Setup (Cost Price vs Selling Price) -->
@@ -663,8 +684,8 @@
         const firstVarImg = variants.length > 0 ? (variants[0].image || p.image) : p.image;
 
         container.innerHTML = `
-        <form action="/admin/product/update/${p.id}" method="POST" enctype="multipart/form-data" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full h-full edit-product-form" data-product-id="${p.id}">
-            <div class="flex justify-between items-center border-b border-slate-200 pb-3.5 mb-4">
+        <form action="/admin/product/update/${p.id}" method="POST" enctype="multipart/form-data" class="bg-slate-50 p-5 md:p-6 rounded-3xl border-2 border-[#ff5000] ring-4 ring-orange-500/10 shadow-2xl relative w-full max-h-[85vh] overflow-y-auto custom-admin-scrollbar overscroll-contain edit-product-form" data-product-id="${p.id}">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-3.5 mb-4 sticky top-0 bg-slate-50/95 backdrop-blur z-20 pt-1 -mt-1">
                 <div class="flex items-center gap-2">
                     <div class="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-[#ff5000]">
                         <i class="fa-solid fa-pen-to-square text-xs"></i>
@@ -817,7 +838,7 @@
                     <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down mr-1"></i> Drag handle to reorder</span>
                 </div>
 
-                <div id="sortable-variants-${p.id}" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1 hide-scrollbar sortable-container">
+                <div id="sortable-variants-${p.id}" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-admin-scrollbar sortable-container">
                     ${variantRowsHtml}
                 </div>
             </div>
@@ -838,7 +859,7 @@
                 </div>
             </div>
 
-            <div class="pt-4 mt-4 border-t border-slate-200">
+            <div class="pt-4 mt-4 border-t border-slate-200 sticky bottom-0 bg-slate-50/95 backdrop-blur z-20 pb-1 -mb-1">
                 <button type="submit" class="w-full btn-taobao py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider shadow-lg"><i class="fa-solid fa-save mr-1.5"></i> Save Product Changes</button>
             </div>
         </form>`;
