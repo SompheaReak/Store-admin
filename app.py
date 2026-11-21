@@ -30,8 +30,8 @@ _load_env_fallback()
 # Cloudinary config
 cloudinary.config(
     cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME", "dwwearehy"),
-    api_key=os.environ.get("CLOUDINARY_API_KEY", "dummy_key"),
-    api_secret=os.environ.get("CLOUDINARY_API_SECRET", "dummy_secret"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY", "998136922585551"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET", "mL1MT4pxmbzUiWsW9BagJNtlhh8"),
     secure=True
 )
 
@@ -41,7 +41,7 @@ from admin_routes import admin_bp
 app = Flask(__name__)
 
 # Security & Session Settings
-app.secret_key = os.environ.get('SECRET_KEY', 'change_in_production_env')
+app.secret_key = os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -50,9 +50,10 @@ if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER') or os
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
 
 # Database Configuration (Point to the same Database as the storefront)
+DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
 db_url = os.environ.get('DATABASE_URL', '').strip()
-if not db_url:
-    db_url = f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'fallback.db')}"
+if not db_url or 'fallback.db' in db_url:
+    db_url = DEFAULT_NEON_DB
 
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
