@@ -72,6 +72,15 @@
                 {% endif %}
 
             </a>
+            <a href="{{ url_for('admin_customers') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_customers', 'admin.admin_customers'] %}active{% endif %}">
+                <i class="fa-solid fa-users mr-1 md:mr-1.5"></i> Customers
+            </a>
+            <a href="{{ url_for('admin_profit_analysis') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_profit_analysis', 'admin.admin_profit_analysis'] %}active{% endif %}">
+                <i class="fa-solid fa-coins mr-1 md:mr-1.5"></i> Profit Analysis
+            </a>
+            <a href="{{ url_for('admin_settings') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_settings', 'admin.admin_settings'] %}active{% endif %}">
+                <i class="fa-solid fa-gear mr-1 md:mr-1.5"></i> Settings
+            </a>
             <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_redeem' %}active{% endif %}">
                 <i class="fa-solid fa-ticket mr-1 md:mr-1.5"></i> Promo Codes
             </a>

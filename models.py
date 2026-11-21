@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -11,6 +12,7 @@ class Product(db.Model):
     product_code = db.Column(db.String(50), nullable=True) # Product SKU Code
     title = db.Column(db.String(200), nullable=False)
     price = db.Column(db.Float, nullable=False)
+    cost_price = db.Column(db.Float, default=0.0) # Cost/purchase price for profit calculation
     stock = db.Column(db.Integer, default=0) 
     image = db.Column(db.String(500), nullable=False) 
     category = db.Column(db.String(100), nullable=False)
@@ -55,6 +57,7 @@ class Product(db.Model):
             'product_code': self.product_code or '',
             'title': self.title or '',
             'price': float(self.price or 0.0),
+            'cost_price': float(getattr(self, 'cost_price', 0.0) or 0.0),
             'stock': int(self.stock or 0),
             'image': self.image or '',
             'category': self.category or '',
@@ -90,8 +93,11 @@ class Order(db.Model):
     telegram_id = db.Column(db.String(100), nullable=True)
     telegram_name = db.Column(db.String(200), nullable=True)
     telegram_user_payload = db.Column(db.Text, nullable=True) 
-    
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def is_confirmed(self):
+        return (self.status or '') in ('Processing', 'Completed')
 
 class PromoCode(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,6 +109,91 @@ class PromoCode(db.Model):
     current_uses = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class CustomerUser(db.Model):
+    __tablename__ = 'customer_user'
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20), unique=True, index=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    full_name = db.Column(db.String(100), nullable=True)
+    credit_balance = db.Column(db.Integer, default=0)
+    reset_otp = db.Column(db.String(10), nullable=True)
+    reset_otp_expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    transactions = db.relationship('CreditTransaction', backref='user', lazy=True, cascade="all, delete-orphan", order_by="desc(CreditTransaction.timestamp)")
+
+    def __init__(self, **kwargs):
+        if 'phone' in kwargs and kwargs['phone']:
+            import re
+            cleaned = re.sub(r'[\s\-\(\)\.]+', '', str(kwargs['phone']).strip())
+            if cleaned.startswith('+855'):
+                cleaned = '0' + cleaned[4:]
+            elif cleaned.startswith('855') and len(cleaned) >= 11:
+                cleaned = '0' + cleaned[3:]
+            kwargs['phone'] = cleaned
+        super().__init__(**kwargs)
+        if self.credit_balance is None:
+            self.credit_balance = 0
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'phone': self.phone,
+            'full_name': self.full_name or '',
+            'credit_balance': self.credit_balance,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else ''
+        }
+
+class CreditTransaction(db.Model):
+    __tablename__ = 'credit_transaction'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('customer_user.id'), nullable=False)
+    amount = db.Column(db.Integer, nullable=False) # e.g. +50 or -100
+    description = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'amount': self.amount,
+            'description': self.description,
+            'timestamp': self.timestamp.strftime('%Y-%m-%d %H:%M:%S') if self.timestamp else ''
+        }
+
+class SystemSetting(db.Model):
+    __tablename__ = 'system_setting'
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True, nullable=False)
+    value = db.Column(db.Text, nullable=False) # JSON encoded data
+
+    @classmethod
+    def get_val(cls, key, default=None):
+        setting = cls.query.filter_by(key=key).first()
+        if not setting:
+            return default
+        try:
+            return json.loads(setting.value)
+        except Exception:
+            return setting.value
+
+    @classmethod
+    def set_val(cls, key, value):
+        setting = cls.query.filter_by(key=key).first()
+        val_str = json.dumps(value) if not isinstance(value, str) else value
+        if setting:
+            setting.value = val_str
+        else:
+            setting = cls(key=key, value=val_str)
+            db.session.add(setting)
+        db.session.commit()
+        return setting
 
 class PlayerSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -86,13 +86,16 @@
                 
                 <!-- PRODUCT CODE INPUT (ADD FORM) -->
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1 flex justify-between">
-                        <span>Product Code (SKU)</span>
-                        <span class="text-slate-300 lowercase">E.g. #ABC01</span>
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider pl-1 flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-barcode text-[#ff5000]"></i> Product Code (SKU)</span>
+                        <span class="text-emerald-600 font-extrabold text-[9px] uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-shield-check"></i> Auto Unique Guaranteed</span>
                     </label>
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">#</span>
-                        <input type="text" name="product_code" id="main-product-code-input" oninput="handleMainProductCodeChange()" placeholder="ABC01" class="input-field w-full pl-7 uppercase font-mono tracking-wider font-extrabold text-slate-900">
+                        <input type="text" name="product_code" id="main-product-code-input" value="{{ next_product_code }}" oninput="handleMainProductCodeChange()" placeholder="SKU-1001" class="input-field w-full pl-7 pr-24 uppercase font-mono tracking-wider font-black text-slate-900">
+                        <button type="button" onclick="refreshAutoProductCode()" class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200/80 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1 shadow-sm" title="Generate New Unique Code">
+                            <i class="fa-solid fa-arrows-rotate text-[9px]"></i> New Code
+                        </button>
                     </div>
                 </div>
 
@@ -182,7 +185,7 @@
                         <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-400 group-hover:text-[#ff5000] mb-1.5 transition-colors"></i>
                         <span class="text-xs font-black text-slate-800">Choose Variant Photos</span>
                         <span class="text-[9px] font-bold text-slate-400 mt-0.5" id="file-count-text">Upload purchasable styles</span>
-                        <input type="file" id="file-input" name="images" multiple accept="image/*" class="hidden" required>
+                        <input type="file" id="file-input" name="images" multiple accept="image/*" class="hidden">
                     </label>
 
                     <div class="bg-purple-50/50 p-2.5 rounded-xl border border-purple-100/80 space-y-1.5">
@@ -223,6 +226,53 @@
                         </div>
                     </div>
                     <div id="variant-list" class="space-y-2.5 max-h-[40vh] overflow-y-auto pr-1 hide-scrollbar"></div>
+                </div>
+
+                <!-- Pricing & Profit Setup (Cost Price vs Selling Price) -->
+                <div class="bg-gradient-to-br from-slate-50 to-orange-50/40 p-3.5 rounded-2xl border border-orange-200/80 space-y-2.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-coins text-[#ff5000]"></i> Pricing & Profit Margins
+                        </span>
+                        <span class="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                            USD ($)
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block">
+                                <i class="fa-solid fa-lock text-slate-400 mr-1"></i> Cost Price
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
+                                <input type="number" step="0.01" name="cost_price" placeholder="0.00" class="input-field w-full pl-6 font-bold text-slate-700 bg-white" title="Admin only - hidden from customers">
+                            </div>
+                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Original cost</span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block">
+                                <i class="fa-solid fa-tag mr-1"></i> Selling Price
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#ff5000] font-black text-xs">$</span>
+                                <input type="number" step="0.01" name="price" placeholder="0.00" class="input-field w-full pl-6 font-black text-slate-900 bg-white">
+                            </div>
+                            <span class="text-[8px] font-bold text-emerald-600 block pl-0.5">Storefront price</span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block">
+                                <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock Qty
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
+                                <input type="number" name="stock" placeholder="1" min="0" class="input-field w-full pl-7 font-black text-slate-900 bg-white">
+                            </div>
+                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Inventory count</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Group Title & Master Discount -->
@@ -330,11 +380,19 @@
                     <div class="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
                             <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
-                            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ p_variants|length }} Variant(s)</p>
+                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                <span class="text-[10px] font-bold text-slate-400">{{ p_variants|length }} Variant(s)</span>
+                                <span class="text-[10px] font-extrabold {% if p.stock > 0 %}text-emerald-600 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-500 bg-rose-50 border border-rose-200/60{% endif %} px-1.5 py-0.5 rounded">
+                                    <i class="fa-solid fa-boxes-stacked text-[9px] mr-0.5"></i> {{ p.stock }} in stock
+                                </span>
+                            </div>
                         </div>
                         
                         <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
-                            <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                            <div>
+                                <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                <span class="text-[10px] text-slate-400 font-bold block mt-0.5">Cost: $ {{ "%.2f"|format(p.cost_price or 0.0) }}</span>
+                            </div>
                             <span class="text-[10px] font-bold text-slate-400">{{ (p.price * 4000) | int }} ៛</span>
                         </div>
                     </div>
@@ -552,7 +610,7 @@
                         </button>
                     </div>
 
-                    <input type="hidden" name="v_ids[]" value="${escapeHtml(v.id || '')}">
+                    <input type="hidden" name="v_ids[]" value="${escapeHtml(v.id !== undefined && v.id !== null ? v.id : 0)}">
                     <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
                 </div>
 
@@ -624,10 +682,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
                 <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div class="space-y-1 sm:col-span-3">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Product Code (SKU)</label>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-wider flex justify-between items-center">
+                            <span>Product Code (SKU)</span>
+                            <span class="text-slate-400 font-bold text-[8px] uppercase">Unique Code</span>
+                        </label>
                         <div class="relative mt-1">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">#</span>
-                            <input type="text" name="product_code" value="${escapeHtml(p.product_code || '')}" placeholder="ABC01" class="input-field w-full pl-7 uppercase font-mono tracking-wider font-extrabold text-slate-950">
+                            <input type="text" name="product_code" id="edit-product-code-${p.id}" value="${escapeHtml(p.product_code || '')}" placeholder="SKU-1001" class="input-field w-full pl-7 pr-24 uppercase font-mono tracking-wider font-extrabold text-slate-950">
+                            <button type="button" onclick="autoGenerateEditCode('${p.id}')" class="absolute right-1.5 top-1/2 -translate-y-1/2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200/80 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all flex items-center gap-1 shadow-sm" title="Generate New Unique Code">
+                                <i class="fa-solid fa-arrows-rotate text-[9px]"></i> Auto
+                            </button>
                         </div>
                     </div>
 
@@ -664,6 +728,50 @@
                             <div class="relative mt-1">
                                 <input type="number" step="any" name="discount_percent" value="${p.discount_percent || 0}" class="input-field w-full font-black text-[#ff5000] text-center pr-6" placeholder="%">
                                 <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pricing & Profit Margins (Cost Price vs Selling Price) -->
+                    <div class="sm:col-span-3 bg-gradient-to-br from-slate-50 to-orange-50/40 p-3 rounded-2xl border border-orange-200/80">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[9px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
+                                <i class="fa-solid fa-coins text-[#ff5000]"></i> Pricing &amp; Profit Margins
+                            </span>
+                            <span class="text-[8px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                USD ($)
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block">
+                                    <i class="fa-solid fa-lock text-slate-400 mr-1"></i> Cost Price (Original)
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
+                                    <input type="number" step="0.01" name="cost_price" value="${(parseFloat(p.cost_price) || 0).toFixed(2)}" placeholder="0.00" class="input-field w-full pl-6 font-bold text-slate-700 bg-white" title="Admin only - hidden from customers">
+                                </div>
+                                <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Never visible on storefront</span>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block">
+                                    <i class="fa-solid fa-tag mr-1"></i> Selling Price ($)
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#ff5000] font-black text-xs">$</span>
+                                    <input type="number" step="0.01" name="price" value="${(parseFloat(p.price) || 0).toFixed(2)}" placeholder="0.00" class="input-field w-full pl-6 font-black text-slate-900 bg-white">
+                                </div>
+                                <span class="text-[8px] font-bold text-emerald-600 block pl-0.5">Displayed storefront price</span>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block">
+                                    <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock Quantity
+                                </label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[11px]"></i></span>
+                                    <input type="number" name="stock" value="${p.stock !== undefined ? p.stock : 0}" min="0" placeholder="0" class="input-field w-full pl-7 font-black text-slate-900 bg-white">
+                                </div>
+                                <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Editable total inventory</span>
                             </div>
                         </div>
                     </div>
@@ -1547,5 +1655,32 @@
     }
 
     document.querySelectorAll('.tag-container').forEach(setupTagInput);
+
+    function refreshAutoProductCode() {
+        fetch('/admin/api/next-product-code')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.code) {
+                    const inp = document.getElementById('main-product-code-input');
+                    if (inp) {
+                        inp.value = data.code;
+                        if (typeof handleMainProductCodeChange === 'function') handleMainProductCodeChange();
+                    }
+                }
+            })
+            .catch(err => console.error('Error fetching next product code:', err));
+    }
+
+    function autoGenerateEditCode(id) {
+        fetch('/admin/api/next-product-code')
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.code) {
+                    const inp = document.getElementById(`edit-product-code-${id}`);
+                    if (inp) inp.value = data.code;
+                }
+            })
+            .catch(err => console.error('Error generating edit product code:', err));
+    }
 </script>
 {% endblock %}
