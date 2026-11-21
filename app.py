@@ -66,7 +66,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 if 'sqlite' not in db_url:
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30
+        "pool_pre_ping": True, "pool_recycle": 300, "pool_timeout": 30,
+        "pool_size": 3, "max_overflow": 5
     }
 else:
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {

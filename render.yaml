@@ -3,4 +3,5 @@ services:
     name: store-admin
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    startCommand: "gunicorn app:app --workers 2 --threads 4 --worker-class gthread --max-requests 500 --max-requests-jitter 50 --timeout 60"
+
