@@ -37,6 +37,22 @@
         {% endif %}
     {% endwith %}
 
+    <!-- ==================== SEARCH BAR TOOLBAR ==================== -->
+    <div class="bg-white border border-slate-200/80 p-3 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="relative w-full sm:w-96">
+            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="customer-search-input" oninput="filterCustomers()" value="{{ search_query or '' }}" placeholder="Search Phone, Telegram (@username), User Name..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-9 py-2.5 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-[#ff5000] focus:ring-2 focus:ring-orange-500/10 transition-all" autocomplete="off">
+            <button type="button" id="clear-customer-search" onclick="clearCustomerSearch()" class="{{ 'hidden' if not search_query else '' }} absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                <i class="fa-solid fa-circle-xmark text-xs"></i>
+            </button>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end text-xs font-bold text-slate-500">
+            <span id="customer-count-badge" class="px-3 py-1.5 bg-slate-100 rounded-xl text-slate-700 font-black text-[11px]">
+                Showing {{ customer_stats|length }} Accounts
+            </span>
+        </div>
+    </div>
+
     <!-- Customers Table Card -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
         <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
@@ -46,12 +62,19 @@
             </div>
         </div>
 
+        <!-- No Search Results Empty State -->
+        <div id="customer-no-search-results" class="hidden p-12 text-center text-slate-400">
+            <i class="fa-solid fa-magnifying-glass-minus text-4xl mb-3 text-slate-300"></i>
+            <p class="font-bold text-sm text-slate-600">No matching customer accounts found.</p>
+            <p class="text-xs mt-1">Try searching by a different phone number, Telegram handle, or name.</p>
+        </div>
+
         {% if customer_stats %}
         <!-- MOBILE CARDS VIEW (md:hidden) -->
-        <div class="md:hidden divide-y divide-slate-100 p-3 space-y-3">
+        <div class="md:hidden divide-y divide-slate-100 p-3 space-y-3" id="customer-mobile-list">
             {% for row in customer_stats %}
             {% set c = row.user %}
-            <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+            <div class="customer-item bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-3" data-phone="{{ (c.phone or '')|lower }}" data-telegram="{{ (c.telegram or '')|lower }}" data-name="{{ (c.full_name or '')|lower }}" data-search="{{ (c.phone or '')|lower }} {{ (c.telegram or '')|lower }} {{ (c.full_name or '')|lower }}">
                 <div class="flex items-start justify-between gap-2">
                     <div>
                         <span class="font-mono font-black text-slate-900 text-sm block">{{ c.phone }}</span>
@@ -104,7 +127,7 @@
         </div>
 
         <!-- DESKTOP TABLE VIEW (hidden md:block) -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto" id="customer-desktop-table">
             <table class="w-full text-left text-xs">
                 <thead>
                     <tr class="bg-slate-100/75 text-slate-500 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
@@ -121,7 +144,7 @@
                 <tbody class="divide-y divide-slate-100 font-semibold text-slate-700">
                     {% for row in customer_stats %}
                     {% set c = row.user %}
-                    <tr class="hover:bg-slate-50/80 transition-colors">
+                    <tr class="customer-item hover:bg-slate-50/80 transition-colors" data-phone="{{ (c.phone or '')|lower }}" data-telegram="{{ (c.telegram or '')|lower }}" data-name="{{ (c.full_name or '')|lower }}" data-search="{{ (c.phone or '')|lower }} {{ (c.telegram or '')|lower }} {{ (c.full_name or '')|lower }}">
                         <td class="py-3 px-4 font-mono font-bold text-slate-900">
                             {{ c.phone }}
                         </td>
@@ -335,6 +358,103 @@ function generateRandomPassword() {
     }
     document.getElementById('resetModalNewPassword').value = code;
 }
+
+const totalCustomerCount = {{ customer_stats|length }};
+
+function filterCustomers() {
+    const input = document.getElementById('customer-search-input');
+    const term = (input?.value || '').toLowerCase().trim();
+    const cleanTerm = term.replace('@', '');
+    const phoneDigits = term.replace(/[^0-9]/g, '');
+
+    const clearBtn = document.getElementById('clear-customer-search');
+    if (clearBtn) {
+        if (term) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+    }
+
+    let matchCount = 0;
+    const desktopRows = document.querySelectorAll('#customer-desktop-table .customer-item');
+    const mobileCards = document.querySelectorAll('#customer-mobile-list .customer-item');
+
+    function checkMatch(el) {
+        if (!term) return true;
+        const search = el.getAttribute('data-search') || '';
+        const phone = el.getAttribute('data-phone') || '';
+        const telegram = el.getAttribute('data-telegram') || '';
+        const name = el.getAttribute('data-name') || '';
+        const rawPhoneDigits = phone.replace(/[^0-9]/g, '');
+
+        return search.includes(term) ||
+               search.includes(cleanTerm) ||
+               telegram.includes(term) ||
+               telegram.includes(cleanTerm) ||
+               name.includes(term) ||
+               (phoneDigits.length >= 2 && rawPhoneDigits.includes(phoneDigits));
+    }
+
+    desktopRows.forEach(el => {
+        const matches = checkMatch(el);
+        if (matches) {
+            el.style.display = '';
+            matchCount++;
+        } else {
+            el.style.display = 'none';
+        }
+    });
+
+    mobileCards.forEach(el => {
+        const matches = checkMatch(el);
+        if (matches) {
+            el.style.display = '';
+        } else {
+            el.style.display = 'none';
+        }
+    });
+
+    const effectiveMatches = desktopRows.length > 0 ? matchCount : Array.from(mobileCards).filter(c => c.style.display !== 'none').length;
+
+    const countBadge = document.getElementById('customer-count-badge');
+    if (countBadge) {
+        if (term) {
+            countBadge.innerText = `${effectiveMatches} Found`;
+        } else {
+            countBadge.innerText = `Showing ${totalCustomerCount} Accounts`;
+        }
+    }
+
+    const noResults = document.getElementById('customer-no-search-results');
+    const mobileList = document.getElementById('customer-mobile-list');
+    const desktopTable = document.getElementById('customer-desktop-table');
+
+    if (noResults) {
+        if (effectiveMatches === 0 && term) {
+            noResults.classList.remove('hidden');
+            if (mobileList) mobileList.classList.add('hidden');
+            if (desktopTable) desktopTable.classList.add('hidden');
+        } else {
+            noResults.classList.add('hidden');
+            if (mobileList) mobileList.classList.remove('hidden');
+            if (desktopTable) desktopTable.classList.remove('hidden');
+        }
+    }
+}
+
+function clearCustomerSearch() {
+    const input = document.getElementById('customer-search-input');
+    if (input) {
+        input.value = '';
+        filterCustomers();
+        input.focus();
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    const input = document.getElementById('customer-search-input');
+    if (input && input.value.trim()) {
+        filterCustomers();
+    }
+});
 </script>
 
 <!-- RESET PASSWORD MODAL -->

@@ -225,7 +225,19 @@ def admin_dashboard():
 @admin_bp.route('/admin/customers')
 @login_required
 def admin_customers():
-    customers = CustomerUser.query.order_by(CustomerUser.created_at.desc()).all()
+    q = (request.args.get('q') or '').strip()
+    query = CustomerUser.query
+    if q:
+        clean_q = q.replace('@', '').strip()
+        query = query.filter(
+            db.or_(
+                CustomerUser.phone.ilike(f"%{clean_q}%"),
+                CustomerUser.telegram.ilike(f"%{q}%"),
+                CustomerUser.telegram.ilike(f"%{clean_q}%"),
+                CustomerUser.full_name.ilike(f"%{q}%")
+            )
+        )
+    customers = query.order_by(CustomerUser.created_at.desc()).all()
     customer_stats = []
     for c in customers:
         # Only calculate numbers from confirmed orders (Processing, Completed)
@@ -242,7 +254,14 @@ def admin_customers():
         "points_per_voucher_dollar": 20,
         "min_redeem_points": 100
     })
-    return render_template('admin/customers.html', customer_stats=customer_stats, credit_rules=credit_rules)
+    total_customers_count = CustomerUser.query.count()
+    return render_template(
+        'admin/customers.html',
+        customer_stats=customer_stats,
+        credit_rules=credit_rules,
+        search_query=q,
+        total_customers_count=total_customers_count
+    )
 
 @admin_bp.route('/admin/customers/<int:user_id>/adjust-credits', methods=['POST'])
 @login_required
