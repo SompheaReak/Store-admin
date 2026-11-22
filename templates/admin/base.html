@@ -2,26 +2,73 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
     <title>Enterprise Admin | Somphea Reak</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Moul&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
-        .input-box { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; font-size: 12px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a; appearance: none; }
+        html {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #f1f5f9; 
+            color: #1e293b; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        @media (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important; /* Prevents iOS Safari auto-zoom on focus */
+            }
+        }
+        button, a, [role="button"], .tab-btn {
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .input-box { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; font-size: 14px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a; appearance: none; }
         .input-box:focus { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
         .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 12px; transition: all 0.2s; border: none; box-shadow: 0 4px 6px rgba(255, 80, 0, 0.2); }
-        .btn-taobao:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 80, 0, 0.3); }
+        @media (hover: hover) and (pointer: fine) {
+            .btn-taobao:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 80, 0, 0.3); }
+        }
+        .btn-taobao:active { transform: scale(0.98); }
         .tab-btn { background: transparent; color: #64748b; transition: all 0.2s; border-bottom: 3px solid transparent; white-space: nowrap; }
         .tab-btn:hover { color: #0f172a; }
         .tab-btn.active { background: white; color: #ff5000; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-bottom: 3px solid #ff5000; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Mobile Bottom Nav Bar Styling */
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 6px 2px;
+            color: #64748b;
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .mobile-nav-item.active {
+            color: #ff5000;
+        }
+        .mobile-nav-item:active {
+            transform: scale(0.92);
+        }
     </style>
     {% block head %}{% endblock %}
 </head>
-<body class="pb-20 md:pb-10">
+<body class="pb-28 md:pb-12 min-h-[100dvh]">
 
     <div id="loading-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[5000] hidden flex-col items-center justify-center text-white">
         <i class="fa-solid fa-cloud-arrow-up text-4xl md:text-5xl mb-4 animate-bounce text-[#ff5000]"></i>
@@ -34,29 +81,32 @@
         <img id="viewer-img" src="" class="max-w-full max-h-[70dvh] object-contain rounded-2xl shadow-2xl mb-6 ring-1 ring-white/10">
     </div>
 
-    <div id="client-toast" class="fixed top-24 left-1/2 -translate-x-1/2 z-[9000] bg-gray-900 text-white px-5 py-3 rounded-full font-black text-[10px] tracking-widest uppercase flex items-center gap-2 transition-all duration-300 transform -translate-y-10 opacity-0 pointer-events-none shadow-xl border border-gray-700">
+    <div id="client-toast" class="fixed top-20 md:top-24 left-1/2 -translate-x-1/2 z-[9999] bg-gray-900 text-white px-5 py-3 rounded-full font-black text-[11px] tracking-wider uppercase flex items-center gap-2 transition-all duration-300 transform -translate-y-10 opacity-0 pointer-events-none shadow-2xl border border-gray-700 w-auto max-w-[90vw]">
         <i class="fa-solid fa-circle-check text-green-400 text-sm"></i><span id="client-toast-msg">Success</span>
     </div>
 
-    <header class="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-        <div class="flex items-center gap-3 md:gap-4">
-            <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
-            <div class="flex flex-col">
-                <h1 class="font-black text-gray-900 text-xs md:text-sm uppercase tracking-tight leading-none flex items-center gap-1.5 md:gap-2">Enterprise Admin <span class="bg-[#ff5000] text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded">PRO</span></h1>
-                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-widest">Somphea Reak Studio</span>
+    <header class="bg-white border-b border-gray-200 px-3 py-2.5 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+        <div class="flex items-center gap-2.5 md:gap-4 min-w-0">
+            <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner shrink-0" title="Go to Storefront"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
+            <div class="flex flex-col min-w-0">
+                <h1 class="font-black text-gray-900 text-xs md:text-sm uppercase tracking-tight leading-none flex items-center gap-1.5 md:gap-2 truncate">
+                    Enterprise Admin <span class="bg-[#ff5000] text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded shrink-0">PRO</span>
+                </h1>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-0.5 md:mt-1 uppercase tracking-widest truncate">Somphea Reak Studio</span>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="openStockSummaryModal()" class="px-3 py-2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
-                <i class="fa-solid fa-bolt"></i> Live Stock
+        <div class="flex items-center gap-1.5 md:gap-2 shrink-0">
+            <button type="button" onclick="openStockSummaryModal()" class="px-2.5 py-2 md:px-3.5 md:py-2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs">
+                <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">Live Stock</span>
             </button>
-            <a href="{{ url_for('logout') }}" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors">
-                <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            <a href="{{ url_for('logout') }}" class="px-2.5 py-2 md:px-3 md:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors shadow-xs" title="Logout">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
             </a>
         </div>
     </header>
 
-    <div class="max-w-[1400px] mx-auto px-2 md:px-4 mt-4 md:mt-6">
+    <!-- Top Navigation Tabs (Desktop / Tablet) -->
+    <div class="max-w-[1400px] mx-auto px-2 md:px-4 mt-3 md:mt-6 hidden md:block">
         <div class="bg-gray-200/60 p-1 md:p-1.5 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x">
             <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie mr-1 md:mr-1.5"></i> Overview
@@ -93,31 +143,31 @@
     <!-- LIVE STOCK SUMMARY MODAL (Global) -->
     <div id="stock-summary-modal" class="fixed inset-0 z-[5000] flex items-end md:items-center justify-center md:p-4 hidden overscroll-contain">
         <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity" onclick="closeStockSummaryModal()"></div>
-        <div class="bg-white w-full max-w-5xl rounded-t-[24px] md:rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col h-[85dvh] md:h-[90dvh] border-t md:border border-gray-200">
-            <div class="p-4 md:p-6 border-b border-gray-100 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 shadow-sm relative z-10">
+        <div class="bg-white w-full max-w-5xl rounded-t-[24px] md:rounded-[32px] overflow-hidden relative shadow-2xl flex flex-col h-[90dvh] md:h-[90dvh] border-t md:border border-gray-200">
+            <div class="p-4 md:p-6 border-b border-gray-100 bg-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4 shrink-0 shadow-sm relative z-10">
                 <div class="flex items-center gap-3 md:gap-4 w-full sm:w-auto">
                     <div class="w-10 h-10 md:w-14 md:h-14 bg-orange-50 rounded-xl md:rounded-2xl flex items-center justify-center text-[#ff5000] text-xl md:text-2xl shadow-inner border border-orange-100 shrink-0"><i class="fa-solid fa-bolt"></i></div>
-                    <div class="flex-1">
-                        <h2 class="font-black text-lg md:text-2xl text-gray-900 leading-tight">Live Stock Matrix</h2>
-                        <p class="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 md:mt-1">Edit quantities, then hit Save.</p>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="font-black text-base md:text-2xl text-gray-900 leading-tight truncate">Live Stock Matrix</h2>
+                        <p class="text-[8px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 md:mt-1 truncate">Edit quantities, then hit Save.</p>
                     </div>
-                    <button type="button" onclick="closeStockSummaryModal()" class="sm:hidden w-10 h-10 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 shadow-sm"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <button type="button" onclick="closeStockSummaryModal()" class="sm:hidden w-9 h-9 flex items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 shadow-sm shrink-0"><i class="fa-solid fa-xmark text-base"></i></button>
                 </div>
-                <div class="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                    <button id="save-stock-btn" onclick="saveAllStockChanges()" class="w-full sm:w-auto btn-taobao px-5 py-3 md:py-3.5 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center disabled:opacity-50" disabled>
+                <div class="flex items-center gap-2 w-full sm:w-auto mt-1 sm:mt-0">
+                    <button id="save-stock-btn" onclick="saveAllStockChanges()" class="w-full sm:w-auto btn-taobao px-5 py-3 md:py-3.5 rounded-xl font-black text-[11px] md:text-xs uppercase tracking-widest shadow-md transition-all flex items-center justify-center disabled:opacity-50" disabled>
                         <i class="fa-solid fa-save mr-1.5 md:mr-2"></i> Save Changes
                     </button>
                     <button type="button" onclick="closeStockSummaryModal()" class="hidden sm:flex w-10 h-10 md:w-12 md:h-12 items-center justify-center bg-gray-50 border border-gray-200 rounded-full text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors shadow-sm shrink-0"><i class="fa-solid fa-xmark text-lg md:text-xl"></i></button>
                 </div>
             </div>
             
-            <div class="bg-gray-50/80 p-3 md:p-5 border-b border-gray-200 flex flex-col sm:flex-row gap-3 md:gap-4 items-center shrink-0 shadow-inner">
+            <div class="bg-gray-50/80 p-3 md:p-5 border-b border-gray-200 flex flex-col sm:flex-row gap-2.5 md:gap-4 items-center shrink-0 shadow-inner">
                 <div class="relative w-full sm:w-1/3">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                    <input type="text" id="ls-search" oninput="filterLiveStock()" placeholder="Search Title, Variant..." class="input-box pl-9 md:pl-10 py-2.5 md:py-3 shadow-sm border-gray-200 text-xs">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="ls-search" oninput="filterLiveStock()" placeholder="Search Title, Variant..." class="input-box pl-9 md:pl-10 py-2.5 md:py-3 shadow-sm border-gray-200 text-xs md:text-xs">
                 </div>
                 <div class="flex flex-1 gap-2 md:gap-3 w-full">
-                    <select id="ls-store-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer text-[10px] md:text-xs">
+                    <select id="ls-store-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer text-xs md:text-xs flex-1">
                         <option value="all">All Storefronts</option>
                         <option value="toy">Toy Exclusives</option>
                         <option value="lego">LEGO Sets</option>
@@ -125,17 +175,19 @@
                         <option value="bracelet">Bracelets</option>
                         <option value="custom_bracelet">Custom</option>
                     </select>
-                    <select id="ls-cat-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer hidden md:block text-xs">
+                    <select id="ls-cat-filter" onchange="filterLiveStock()" class="input-box py-2.5 md:py-3 shadow-sm border-gray-200 cursor-pointer hidden md:block text-xs flex-1">
                         <option value="all">All Categories</option>
                         {% for cat in global_categories %}<option value="{{cat.name|lower}}">{{cat.name}}</option>{% endfor %}
                     </select>
                 </div>
-                <button id="ls-oos-btn" onclick="toggleOutOfStock()" class="px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 whitespace-nowrap shadow-sm w-full sm:w-auto justify-center bg-white border border-gray-300 rounded-xl"><i class="fa-solid fa-filter"></i> <span id="oos-btn-text">Filter Out of Stock</span></button>
+                <button id="ls-oos-btn" onclick="toggleOutOfStock()" class="px-4 py-2.5 md:px-6 md:py-3 font-black text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 whitespace-nowrap shadow-sm w-full sm:w-auto justify-center bg-white border border-gray-300 rounded-xl active:scale-95 transition-transform"><i class="fa-solid fa-filter"></i> <span id="oos-btn-text">Filter Out of Stock</span></button>
             </div>
 
-            <div class="overflow-y-auto flex-1 bg-gray-50 p-2 touch-pan-y hide-scrollbar w-full grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 content-start" id="live-stock-list">
+            <div class="overflow-y-auto flex-1 bg-gray-50 p-2 md:p-3 touch-pan-y hide-scrollbar w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 content-start" id="live-stock-list">
                 <!-- Dynamically populated on demand for fast initial page load -->
             </div>
+        </div>
+    </div>
         </div>
     </div>
 
@@ -258,11 +310,109 @@
         async function saveAllStockChanges() { const changes = Object.values(pendingStockChanges); if(changes.length === 0) return; const btn = document.getElementById('save-stock-btn'); btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving...'; btn.disabled = true; let errCount = 0; for (let change of changes) { try { await fetch('/admin/product/quick_stock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: change.productId, variant_index: change.variantIndex, stock: change.stock }) }); change.rowElement.classList.remove('bg-orange-50/40', 'border-orange-200'); change.inputContainer.classList.remove('border-[#ff5000]', 'ring-1', 'ring-orange-200'); } catch(e) { errCount++; } } pendingStockChanges = {}; if (errCount > 0) { showClientToast(`Saved with ${errCount} errors`, true); } else { showClientToast("Stock Updated Automatically"); } btn.innerHTML = '<i class="fa-solid fa-save mr-1.5 md:mr-2"></i> Save Changes'; btn.disabled = true; }
     </script>
     
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <script>document.addEventListener('DOMContentLoaded', () => { {% for category, message in messages %} showClientToast("{{ message }}", {{ 'true' if category == 'error' else 'false' }}); {% endfor %} });</script>
-      {% endif %}
-    {% endwith %}
+    <!-- MOBILE BOTTOM NAVIGATION BAR (Fixed Bottom for Phone) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around">
+        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-chart-pie text-base mb-1"></i>
+            <span>Overview</span>
+        </a>
+        <a href="{{ url_for('admin_inventory') }}" class="mobile-nav-item {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
+            <i class="fa-solid fa-box text-base mb-1"></i>
+            <span>Inventory</span>
+        </a>
+        <button type="button" onclick="openStockSummaryModal()" class="mobile-nav-item text-[#ff5000]">
+            <div class="w-10 h-10 rounded-full bg-orange-50 border border-orange-200 text-[#ff5000] flex items-center justify-center -mt-4 shadow-md shadow-orange-500/20 active:scale-95 transition-transform">
+                <i class="fa-solid fa-bolt text-lg"></i>
+            </div>
+            <span class="mt-0.5 font-black text-[#ff5000]">Stock</span>
+        </button>
+        <a href="{{ url_for('admin_orders') }}" class="mobile-nav-item {% if request.endpoint == 'admin_orders' %}active{% endif %} relative">
+            <i class="fa-solid fa-receipt text-base mb-1"></i>
+            <span>Orders</span>
+            {% if pending_count and pending_count > 0 %}
+            <span class="absolute top-0.5 right-3 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm animate-bounce">{{ pending_count }}</span>
+            {% endif %}
+        </a>
+        <button type="button" onclick="toggleMobileMoreSheet()" class="mobile-nav-item {% if request.endpoint in ['admin_customers', 'admin.admin_customers', 'admin_profit_analysis', 'admin.admin_profit_analysis', 'admin_settings', 'admin.admin_settings', 'admin_redeem', 'admin_spin'] %}active{% endif %}">
+            <i class="fa-solid fa-bars text-base mb-1"></i>
+            <span>More</span>
+        </button>
+    </nav>
+
+    <!-- MOBILE MORE MENU BOTTOM SHEET -->
+    <div id="mobile-more-sheet" class="md:hidden fixed inset-0 z-[6000] bg-slate-900/80 backdrop-blur-sm hidden flex-col justify-end transition-opacity" onclick="closeMobileMoreSheet(event)">
+        <div class="bg-white rounded-t-3xl p-5 shadow-2xl border-t border-slate-200 space-y-4 max-h-[80dvh] overflow-y-auto pb-[calc(2rem+env(safe-area-inset-bottom,0px))]" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-[#ff5000]"></span>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Management &amp; Tools</h3>
+                </div>
+                <button type="button" onclick="closeMobileMoreSheet()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center hover:bg-slate-200"><i class="fa-solid fa-xmark text-sm"></i></button>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2.5">
+                <a href="{{ url_for('admin_customers') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint in ['admin_customers', 'admin.admin_customers'] %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-users text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Customers</span>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">Accounts</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('admin_profit_analysis') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint in ['admin_profit_analysis', 'admin.admin_profit_analysis'] %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-coins text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Profit</span>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">Analytics</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('admin_settings') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint in ['admin_settings', 'admin.admin_settings'] %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-gear text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Settings</span>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">Alerts &amp; Rules</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('admin_redeem') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint == 'admin_redeem' %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-ticket text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Promos</span>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">Vouchers</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('admin_spin') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint == 'admin_spin' %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-gamepad text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Spin Game</span>
+                        <span class="text-[8px] font-bold text-slate-400 uppercase">Minifig</span>
+                    </div>
+                </a>
+                <a href="{{ url_for('logout') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-red-50 border border-red-200 active:bg-red-100 transition-colors text-red-600">
+                    <div class="w-8 h-8 rounded-xl bg-white border border-red-200 flex items-center justify-center text-red-600 shadow-xs"><i class="fa-solid fa-arrow-right-from-bracket text-xs"></i></div>
+                    <div class="min-w-0">
+                        <span class="text-xs font-black block truncate">Log Out</span>
+                        <span class="text-[8px] font-bold text-red-400 uppercase">Exit Admin</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleMobileMoreSheet() {
+            const sheet = document.getElementById('mobile-more-sheet');
+            if (sheet.classList.contains('hidden')) {
+                sheet.classList.remove('hidden');
+                sheet.classList.add('flex');
+            } else {
+                closeMobileMoreSheet();
+            }
+        }
+        function closeMobileMoreSheet(e) {
+            const sheet = document.getElementById('mobile-more-sheet');
+            sheet.classList.add('hidden');
+            sheet.classList.remove('flex');
+        }
+    </script>
 
     {% block scripts %}{% endblock %}
 </body>

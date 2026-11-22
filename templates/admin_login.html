@@ -2,21 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
     <title>Admin Login | Somphea Reak Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         
-        .input-box { border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; width: 100%; font-size: 14px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a;}
+        .input-box { border: 2px solid #e2e8f0; border-radius: 16px; padding: 16px 20px; width: 100%; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a; appearance: none; }
         .input-box:focus { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.1); }
         .input-box::placeholder { color: #94a3b8; font-weight: 600; }
         
-        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; transition: all 0.2s; }
-        .btn-taobao:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 80, 0, 0.2); }
-        .btn-taobao:active { transform: translateY(0); }
+        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; transition: all 0.2s; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+        @media (hover: hover) and (pointer: fine) {
+            .btn-taobao:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 80, 0, 0.2); }
+        }
+        .btn-taobao:active { transform: scale(0.98); }
 
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.4s ease-out forwards; }

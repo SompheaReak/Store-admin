@@ -88,7 +88,13 @@
     
     <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
     <section class="lg:col-span-4 xl:col-span-3">
-        <div class="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-20 space-y-5 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto custom-admin-scrollbar overscroll-contain">
+        <!-- Mobile Quick Add Accordion Trigger -->
+        <button type="button" onclick="toggleQuickAddAccordion()" class="lg:hidden w-full bg-gradient-to-r from-[#ff9000] to-[#ff5000] text-white py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-wider shadow-md shadow-orange-500/20 flex items-center justify-between active:scale-[0.99] transition-all mb-3">
+            <span class="flex items-center gap-2"><i class="fa-solid fa-plus-circle text-base"></i> Quick Add New Product</span>
+            <i id="quick-add-accordion-chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+        </button>
+
+        <div id="quick-add-form-container" class="hidden lg:block bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-20 space-y-4 md:space-y-5 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto custom-admin-scrollbar overscroll-contain">
             
             <!-- Section Header -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -376,25 +382,25 @@
                             <i class="fa-solid fa-expand text-white text-3xl opacity-80"></i>
                         </div>
 
-                        <div class="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start pointer-events-none z-10">
-                            <span class="text-[7px] font-black text-white bg-slate-900/85 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm max-w-[80px] truncate">{{ p.store }}</span>
+                        <div class="absolute top-2 left-2 flex flex-wrap gap-1 items-start max-w-[calc(100%-3.2rem)] pointer-events-none z-10">
+                            <span class="text-[7px] font-black text-white bg-slate-900/85 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm max-w-[70px] truncate">{{ p.store }}</span>
                             
                             {% if p.product_code %}
-                                <span class="text-[8px] font-black font-mono text-orange-600 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded shadow-sm">#{{ p.product_code }}</span>
+                                <span class="text-[7px] font-black font-mono text-orange-600 bg-orange-50 border border-orange-200 px-1 py-0.5 rounded shadow-sm">#{{ p.product_code }}</span>
                             {% endif %}
                             
                             {% if p.discount_percent and p.discount_percent > 0 %}
-                                <span class="text-[8px] font-black text-white bg-red-600 backdrop-blur px-1.5 py-0.5 rounded shadow-sm">MASTER -{{p.discount_percent|int}}%</span>
+                                <span class="text-[7px] font-black text-white bg-red-600 backdrop-blur px-1 py-0.5 rounded shadow-sm">-{{p.discount_percent|int}}%</span>
                             {% endif %}
                             {% if not p.is_visible %}
-                                <span class="text-[8px] font-black text-white bg-red-500/90 backdrop-blur px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm"><i class="fa-solid fa-eye-slash mr-0.5"></i> Hidden</span>
+                                <span class="text-[7px] font-black text-white bg-red-500/90 backdrop-blur px-1.5 py-0.5 rounded uppercase tracking-wider shadow-sm"><i class="fa-solid fa-eye-slash mr-0.5"></i> Hidden</span>
                             {% endif %}
                         </div>
 
                         <!-- PRODUCT DRAG HANDLE -->
-                        <div class="product-drag-handle absolute top-2 right-2 bg-white/95 backdrop-blur px-2 py-1 rounded-lg border border-slate-200/80 shadow-sm z-10 cursor-grab hover:bg-[#ff5000] hover:text-white hover:border-[#ff5000] transition-colors flex items-center gap-1.5 text-slate-500" title="Drag to reorder catalog" onclick="event.stopPropagation()">
-                            <i class="fa-solid fa-grip-vertical text-[10px]"></i>
-                            <span class="font-mono text-[9px] font-bold">#{{ p.id }}</span>
+                        <div class="product-drag-handle absolute top-2 right-2 bg-white/95 backdrop-blur px-1.5 py-0.5 rounded-lg border border-slate-200/80 shadow-sm z-10 cursor-grab hover:bg-[#ff5000] hover:text-white hover:border-[#ff5000] transition-colors flex items-center gap-1 text-slate-500 shrink-0" title="Drag to reorder catalog" onclick="event.stopPropagation()">
+                            <i class="fa-solid fa-grip-vertical text-[9px]"></i>
+                            <span class="font-mono text-[8px] font-bold">#{{ p.id }}</span>
                         </div>
                     </div>
 
@@ -501,7 +507,7 @@
 </div>
 
 <!-- ==================== STICKY GLOBAL SAVE BAR ==================== -->
-<div id="global-save-bar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-6 transition-all duration-300 translate-y-28 opacity-0 pointer-events-none max-w-md w-[calc(100%-2rem)]">
+<div id="global-save-bar" class="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[55] bg-slate-900/95 backdrop-blur-md border border-slate-800 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-6 transition-all duration-300 translate-y-28 opacity-0 pointer-events-none max-w-md w-[calc(100%-2rem)]">
     <div class="flex-1">
         <p class="text-[9px] font-black uppercase tracking-wider text-[#ff5000]">Unsaved Changes Detected</p>
         <p class="text-xs text-slate-300 font-bold" id="unsaved-count-text">You are editing products.</p>
@@ -545,6 +551,20 @@
 
 {% block scripts %}
 <script>
+    // Mobile Quick Add Collapsible
+    function toggleQuickAddAccordion() {
+        const el = document.getElementById('quick-add-form-container');
+        const chevron = document.getElementById('quick-add-accordion-chevron');
+        if (!el) return;
+        if (el.classList.contains('hidden')) {
+            el.classList.remove('hidden');
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            el.classList.add('hidden');
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+
     // State Tracking & Preloaded Clean JSON Models
     let productOrderChanged = false;
     window.ADMIN_PRODUCTS = {{ products_json | safe }};
