@@ -111,7 +111,7 @@
                 </div>
             </div>
 
-            <form action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-3 pt-2.5 submit-form flex-1 flex flex-col justify-between">
+            <form id="add-product-form" action="/admin/product/add" method="POST" enctype="multipart/form-data" class="space-y-3 pt-2.5 submit-form flex-1 flex flex-col justify-between">
                 <div class="space-y-3">
                 
                 <!-- PRODUCT CODE INPUT (ADD FORM) -->
@@ -238,7 +238,10 @@
 
                 <!-- 4. Variant Config Container -->
                 <div id="variant-config" class="hidden space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
-                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
+                        <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down text-orange-500 mr-0.5"></i> Drag to reorder</span>
+                    </div>
                     
                     <div class="bg-blue-50/60 p-2.5 rounded-2xl border border-blue-100 flex flex-col gap-2 mt-2 mb-2">
                         <div class="flex items-center justify-between">
@@ -260,7 +263,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="variant-list" class="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1 custom-admin-scrollbar"></div>
+                    <div id="variant-list" class="space-y-2.5 max-h-[35vh] overflow-y-auto pr-1 custom-admin-scrollbar sortable-container"></div>
                 </div>
 
                 <!-- Pricing & Profit Setup (Cost Price vs Selling Price) -->
@@ -1477,6 +1480,7 @@
 
         initializeProductSortable(); 
         initializeCategorySortable(); 
+        initializeUploadVariantSortable();
     });
 
     // ================= 7. DRAG & DROP INITIALIZATIONS =================
@@ -1511,6 +1515,81 @@
             });
         }
     }
+
+    let uploadVariantSortable = null;
+    function initializeUploadVariantSortable() {
+        const list = document.getElementById('variant-list');
+        if (list && typeof Sortable !== 'undefined') {
+            if (uploadVariantSortable) {
+                try { uploadVariantSortable.destroy(); } catch(e){}
+            }
+            uploadVariantSortable = new Sortable(list, { 
+                handle: '.handle', 
+                animation: 200,
+                ghostClass: 'bg-orange-100/70',
+                chosenClass: 'ring-2',
+                dragClass: 'shadow-2xl',
+                onEnd: function() {
+                    syncUploadedFilesOrder();
+                }
+            });
+        }
+    }
+
+    function syncUploadedFilesOrder() {
+        const list = document.getElementById('variant-list');
+        if (!list) return;
+        const rows = list.querySelectorAll('.variant-row');
+        if (!rows.length) {
+            uploadedFiles = [];
+            if (fileInput) fileInput.value = '';
+            if (variantConfig) variantConfig.classList.add('hidden');
+            const countText = document.getElementById('file-count-text');
+            if (countText) {
+                countText.innerText = "Upload purchasable styles";
+                countText.classList.remove('text-orange-600', 'font-bold');
+            }
+            return;
+        }
+
+        const newFiles = [];
+        rows.forEach(row => {
+            const idx = parseInt(row.getAttribute('data-file-idx'), 10);
+            if (!isNaN(idx) && uploadedFiles[idx]) {
+                newFiles.push(uploadedFiles[idx]);
+            }
+        });
+
+        // Re-index data-file-idx on each row to reflect new DOM order
+        rows.forEach((row, i) => {
+            row.setAttribute('data-file-idx', i);
+        });
+
+        uploadedFiles = newFiles;
+
+        // Keep native fileInput.files in sync using DataTransfer API
+        try {
+            if (window.DataTransfer) {
+                const dt = new DataTransfer();
+                uploadedFiles.forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+            }
+        } catch (err) {
+            console.warn('DataTransfer sync warning:', err);
+        }
+
+        const countText = document.getElementById('file-count-text');
+        if (countText) {
+            countText.innerText = `${uploadedFiles.length} variant photo(s)`;
+        }
+    }
+
+    window.removeUploadVariantRow = function(btn) {
+        const row = btn.closest('.variant-row');
+        if (!row) return;
+        row.remove();
+        syncUploadedFilesOrder();
+    };
 
     let uploadedFiles = [];
     if(fileInput) {
@@ -1658,10 +1737,10 @@
             }
 
             const html = `
-                <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors">
+                <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors" data-file-idx="${index}">
                     <div class="flex items-center gap-2">
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <div class="handle p-1 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
+                            <div class="handle p-1.5 cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#ff5000] hover:bg-orange-50 rounded-md transition-colors flex items-center justify-center touch-none select-none shrink-0" title="Drag up or down to reorder" style="touch-action: none;">
                                 <i class="fa-solid fa-grip-vertical text-xs"></i>
                             </div>
                             <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors flex items-center justify-center" onclick="openImageViewer('${tempUrl}')">
@@ -1686,7 +1765,7 @@
                             <button type="button" onclick="toggleVariantDetails(this)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-xs" title="Advanced Settings">
                                 <i class="fa-solid fa-sliders text-xs"></i>
                             </button>
-                            <button type="button" onclick="this.closest('.variant-row').remove()" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-xs">
+                            <button type="button" onclick="removeUploadVariantRow(this)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-xs" title="Remove item">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
                         </div>
@@ -1725,6 +1804,7 @@
         });
 
         variantList.querySelectorAll('.tag-container').forEach(setupTagInput);
+        initializeUploadVariantSortable();
     }
 
     // Auto-sync master price input to variants if variants are still 0.00
@@ -1751,6 +1831,9 @@
     // ================= 8. FORM & TAG LOGIC =================
     document.querySelectorAll('form.submit-form').forEach(form => {
         form.addEventListener('submit', () => {
+            if (form.id === 'add-product-form' || form.querySelector('#variant-list')) {
+                syncUploadedFilesOrder();
+            }
             const overlay = document.getElementById('loading-overlay');
             if(overlay) overlay.style.display = 'flex';
         });
