@@ -427,7 +427,17 @@
                         
                         <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
                             <div>
-                                <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                {% set p_prices = [] %}
+                                {% for v in p_variants %}
+                                    {% if v.price is defined and v.price is not none %}
+                                        {% set _ = p_prices.append(v.price|float) %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if p_prices|length > 1 and (p_prices|min) != (p_prices|max) %}
+                                    <span class="text-xs font-black text-[#ff5000] leading-none" title="Variants have individual pricing">$ {{ "%.2f"|format(p_prices|min) }} ~ $ {{ "%.2f"|format(p_prices|max) }}</span>
+                                {% else %}
+                                    <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                {% endif %}
                                 <span class="text-[10px] text-slate-400 font-bold block mt-0.5">Cost: $ {{ "%.2f"|format(p.cost_price or 0.0) }}</span>
                             </div>
                             <span class="text-[10px] font-bold text-slate-400">{{ (p.price * 4000) | int }} ៛</span>
@@ -684,23 +694,25 @@
                     <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
                 </div>
 
+                <!-- DIRECTLY VISIBLE INDIVIDUAL PRICE ROW -->
+                <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/80 p-1.5 rounded-xl border border-slate-200/70">
+                    <div class="relative min-w-0">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
+                        <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5" oninput="calcPrice(this, 'USD')" title="Item Price ($ USD)">
+                    </div>
+                    <div class="relative min-w-0">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
+                        <input type="number" step="any" value="${vPriceKhr}" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5" oninput="calcPrice(this, 'KHR')" title="Item Price (៛ KHR)">
+                    </div>
+                    <div class="relative min-w-0">
+                        <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-3.5 pl-1 bg-white h-7.5" title="Discount %">
+                        <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
+                    </div>
+                </div>
+
                 <div class="variant-details hidden border-t border-slate-100 pt-2 space-y-2">
                     <div>
                         <input type="text" name="v_names[]" value="${escapeHtml(v.name || '')}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
-                    </div>
-                    <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/70 p-2 rounded-xl border border-slate-100">
-                        <div class="relative min-w-0">
-                            <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white">
-                            <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
-                        </div>
-                        <div class="relative min-w-0">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
-                            <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
-                        </div>
-                        <div class="relative min-w-0">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
-                            <input type="number" step="any" value="${vPriceKhr}" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
-                        </div>
                     </div>
                     <div class="tag-wrapper">
                         <input type="hidden" name="v_categories[]" class="hidden-category-input" value="${escapeHtml(v.category || '')}">
@@ -886,6 +898,24 @@
                     <span class="text-[10px] font-black text-slate-900 uppercase tracking-wider">Product Variants Matrix</span>
                     <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down mr-1"></i> Drag handle to reorder</span>
                 </div>
+
+                ${variants.length > 1 ? `
+                <div class="bg-blue-50/70 p-2 rounded-xl border border-blue-100 flex items-center justify-between gap-2">
+                    <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Magic Batch
+                    </span>
+                    <div class="flex items-center gap-1.5 flex-1 max-w-[280px]">
+                        <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden shadow-xs flex-1">
+                            <span class="px-1.5 text-[9px] font-bold text-slate-400 bg-slate-50 border-r border-blue-100 shrink-0">$</span>
+                            <input type="number" step="any" id="edit-batch-price-${p.id}" placeholder="All Price" class="w-full min-w-0 p-1 text-xs font-black outline-none text-center">
+                            <button type="button" onclick="applyEditBatchPrice('${p.id}')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-2 py-1 text-[8px] font-black uppercase transition-all shrink-0">Apply</button>
+                        </div>
+                        <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden shadow-xs w-24 shrink-0">
+                            <input type="number" id="edit-batch-stock-${p.id}" placeholder="Qty" class="w-full min-w-0 p-1 text-xs font-black outline-none text-center">
+                            <button type="button" onclick="applyEditBatchStock('${p.id}')" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white px-2 py-1 text-[8px] font-black uppercase transition-all shrink-0">Apply</button>
+                        </div>
+                    </div>
+                </div>` : ''}
 
                 <div id="sortable-variants-${p.id}" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1 custom-admin-scrollbar sortable-container">
                     ${variantRowsHtml}
@@ -1366,6 +1396,10 @@
             input.value = val;
             calcPrice(input, 'USD');
         });
+        const masterPriceInput = document.querySelector('input[name="price"]');
+        if(masterPriceInput && (!masterPriceInput.value || parseFloat(masterPriceInput.value) <= 0)) {
+            masterPriceInput.value = val;
+        }
     }
 
     function applyBatchStock() {
@@ -1374,7 +1408,33 @@
         document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').forEach(input => {
             input.value = val;
         });
+        const masterStockInput = document.querySelector('input[name="stock"]');
+        if(masterStockInput) {
+            const count = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').length;
+            if(count > 0) {
+                masterStockInput.value = (parseInt(val) || 0) * count;
+            }
+        }
     }
+
+    window.applyEditBatchPrice = function(productId) {
+        const input = document.getElementById(`edit-batch-price-${productId}`);
+        if (!input || input.value === '') return;
+        const val = input.value;
+        document.querySelectorAll(`#sortable-variants-${productId} .usd-input`).forEach(usdIn => {
+            usdIn.value = val;
+            calcPrice(usdIn, 'USD');
+        });
+    };
+
+    window.applyEditBatchStock = function(productId) {
+        const input = document.getElementById(`edit-batch-stock-${productId}`);
+        if (!input || input.value === '') return;
+        const val = input.value;
+        document.querySelectorAll(`#sortable-variants-${productId} input[name="v_stocks[]"]`).forEach(stkIn => {
+            stkIn.value = val;
+        });
+    };
 
     // ================= 6. UPLOAD & VARIANTS SYSTEM =================
     const fileInput = document.getElementById('file-input');
@@ -1563,6 +1623,12 @@
         const defaultTagString = document.getElementById('main-category-input').value.trim();
         const mainProductCode = document.querySelector('input[name="product_code"]').value.trim().toUpperCase();
 
+        const masterSellingPrice = parseFloat(document.querySelector('input[name="price"]')?.value) || 0;
+        const magicBatchPrice = parseFloat(document.getElementById('batch-price-input')?.value) || 0;
+        const initPrice = magicBatchPrice > 0 ? magicBatchPrice : (masterSellingPrice > 0 ? masterSellingPrice : 0);
+        const defaultPriceStr = initPrice > 0 ? initPrice.toFixed(2) : '0.00';
+        const defaultPriceKhr = initPrice > 0 ? Math.round(initPrice * 4000) : 0;
+
         uploadedFiles.forEach((file, index) => {
             const tempUrl = URL.createObjectURL(file);
             let defaultName = `Variant ${index + 1}`;
@@ -1626,23 +1692,25 @@
                         </div>
                     </div>
 
+                    <!-- DIRECTLY VISIBLE INDIVIDUAL PRICE ROW -->
+                    <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/80 p-1.5 rounded-xl border border-slate-200/70">
+                        <div class="relative min-w-0">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
+                            <input type="number" step="any" name="variant_prices[]" value="${defaultPriceStr}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5" oninput="calcPrice(this, 'USD')" title="Item Price ($ USD)">
+                        </div>
+                        <div class="relative min-w-0">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
+                            <input type="number" step="any" value="${defaultPriceKhr}" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5" oninput="calcPrice(this, 'KHR')" title="Item Price (៛ KHR)">
+                        </div>
+                        <div class="relative min-w-0">
+                            <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-3.5 pl-1 bg-white h-7.5" title="Discount %">
+                            <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
+                        </div>
+                    </div>
+
                     <div class="variant-details hidden border-t border-slate-100 pt-2 space-y-2">
                         <div>
                             <input type="text" name="variant_names[]" value="${escapeHtml(defaultName)}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
-                        </div>
-                        <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/70 p-2 rounded-xl border border-slate-100">
-                            <div class="relative min-w-0">
-                                <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white">
-                                <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
-                            </div>
-                            <div class="relative min-w-0">
-                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
-                                <input type="number" step="any" name="variant_prices[]" value="0.00" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
-                            </div>
-                            <div class="relative min-w-0">
-                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
-                                <input type="number" step="any" value="0" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
-                            </div>
                         </div>
                         <div class="tag-wrapper">
                             <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${escapeHtml(defaultCat)}">
@@ -1657,6 +1725,27 @@
         });
 
         variantList.querySelectorAll('.tag-container').forEach(setupTagInput);
+    }
+
+    // Auto-sync master price input to variants if variants are still 0.00
+    const quickSellingPriceInput = document.querySelector('input[name="price"]');
+    if (quickSellingPriceInput) {
+        quickSellingPriceInput.addEventListener('input', function() {
+            const val = this.value;
+            if (!val || parseFloat(val) <= 0) return;
+            const batchInput = document.getElementById('batch-price-input');
+            if (batchInput && !batchInput.value) {
+                batchInput.placeholder = val;
+            }
+            const varUsdInputs = document.querySelectorAll('#variant-list .usd-input');
+            const allZero = Array.from(varUsdInputs).every(inp => !inp.value || parseFloat(inp.value) === 0);
+            if (allZero && varUsdInputs.length > 0) {
+                varUsdInputs.forEach(inp => {
+                    inp.value = val;
+                    calcPrice(inp, 'USD');
+                });
+            }
+        });
     }
 
     // ================= 8. FORM & TAG LOGIC =================

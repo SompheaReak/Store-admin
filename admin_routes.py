@@ -1034,11 +1034,14 @@ def update_product(id):
             vid = _safe_int(raw_vid, i)
             v_stock_raw = v_stocks[i] if i < len(v_stocks) else 0
             stock = _safe_int(v_stock_raw, 0)
-            v_pr = _safe_float(v_prices[i], p.price) if i < len(v_prices) else p.price
-            
-            # If admin edited main price and there is only 1 variant or variant price was 0, sync it
-            if request.form.get('price') and (v_pr == 0.0 or len(v_ids) == 1):
+            if i < len(v_prices) and v_prices[i] is not None and str(v_prices[i]).strip() != '':
+                v_pr = _safe_float(v_prices[i], p.price)
+            else:
                 v_pr = p.price
+            
+            # If admin edited main price and there is only 1 variant, sync it
+            if request.form.get('price') and len(v_ids) == 1:
+                v_pr = _safe_float(request.form.get('price'), p.price)
 
             # If admin explicitly entered a main stock and there is only 1 variant, sync it
             if user_stock is not None and len(v_ids) == 1:
@@ -1177,7 +1180,11 @@ def add_product():
             vars_json = []
             total_stock = 0
             for i, url in enumerate(uploaded_urls):
-                price = _safe_float(v_prices[i], selling_price_input) if (i < len(v_prices) and _safe_float(v_prices[i], 0.0) > 0) else selling_price_input
+                if i < len(v_prices) and v_prices[i] is not None and str(v_prices[i]).strip() != '':
+                    v_val = _safe_float(v_prices[i], -1.0)
+                    price = v_val if v_val >= 0 else selling_price_input
+                else:
+                    price = selling_price_input
                 stock = _safe_int(v_stocks[i], 0) if i < len(v_stocks) else 0
                 cat_str = v_categories[i] if i < len(v_categories) else category
                 v_disc = _safe_float(v_discounts[i], 0.0) if i < len(v_discounts) else 0.0
