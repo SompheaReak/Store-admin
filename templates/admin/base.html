@@ -68,7 +68,7 @@
     </style>
     {% block head %}{% endblock %}
 </head>
-<body class="pb-28 md:pb-12 min-h-[100dvh]">
+<body class="h-[100dvh] min-h-[100dvh] flex flex-col overflow-hidden bg-[#f1f5f9] text-[#1e293b]">
 
     <div id="loading-overlay" class="fixed inset-0 bg-black/90 backdrop-blur-sm z-[5000] hidden flex-col items-center justify-center text-white">
         <i class="fa-solid fa-cloud-arrow-up text-4xl md:text-5xl mb-4 animate-bounce text-[#ff5000]"></i>
@@ -85,36 +85,36 @@
         <i class="fa-solid fa-circle-check text-green-400 text-sm"></i><span id="client-toast-msg">Success</span>
     </div>
 
-    <header class="bg-white border-b border-gray-200 px-3 py-2.5 md:px-6 md:py-4 flex justify-between items-center sticky top-0 z-40 shadow-sm">
+    <header class="bg-white border-b border-gray-200 px-3 py-2 md:px-6 md:py-2.5 flex justify-between items-center shrink-0 z-40 shadow-xs">
         <div class="flex items-center gap-2.5 md:gap-4 min-w-0">
-            <a href="/" class="w-8 h-8 md:w-10 md:h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner shrink-0" title="Go to Storefront"><i class="fa-solid fa-store text-xs md:text-base"></i></a>
+            <a href="/" class="w-8 h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center text-gray-800 hover:bg-black hover:text-white transition-all shadow-inner shrink-0" title="Go to Storefront"><i class="fa-solid fa-store text-xs md:text-sm"></i></a>
             <div class="flex flex-col min-w-0">
                 <h1 class="font-black text-gray-900 text-xs md:text-sm uppercase tracking-tight leading-none flex items-center gap-1.5 md:gap-2 truncate">
                     Enterprise Admin <span class="bg-[#ff5000] text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded shrink-0">PRO</span>
                 </h1>
-                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-0.5 md:mt-1 uppercase tracking-widest truncate">Somphea Reak Studio</span>
+                <span class="text-[8px] md:text-[9px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest truncate">Somphea Reak Studio</span>
             </div>
         </div>
         <div class="flex items-center gap-1.5 md:gap-2 shrink-0">
-            <button type="button" onclick="openStockSummaryModal()" class="px-2.5 py-2 md:px-3.5 md:py-2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs">
+            <button type="button" onclick="openStockSummaryModal()" class="px-2.5 py-1.5 md:px-3 md:py-2 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-xs">
                 <i class="fa-solid fa-bolt"></i> <span class="hidden sm:inline">Live Stock</span>
             </button>
-            <a href="{{ url_for('logout') }}" class="px-2.5 py-2 md:px-3 md:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors shadow-xs" title="Logout">
+            <a href="{{ url_for('logout') }}" class="px-2.5 py-1.5 md:px-3 md:py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors shadow-xs" title="Logout">
                 <i class="fa-solid fa-arrow-right-from-bracket"></i> <span class="hidden sm:inline">Logout</span>
             </a>
         </div>
     </header>
 
     <!-- Top Navigation Tabs (Desktop / Tablet) -->
-    <div class="max-w-[1400px] mx-auto px-2 md:px-4 mt-3 md:mt-6 hidden md:block">
-        <div class="bg-gray-200/60 p-1 md:p-1.5 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x">
-            <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+    <div class="w-full max-w-[1400px] mx-auto px-2 md:px-4 mt-2 shrink-0 hidden md:block">
+        <div class="bg-gray-200/60 p-1 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x">
+            <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie mr-1 md:mr-1.5"></i> Overview
             </a>
-            <a href="{{ url_for('admin_inventory') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
+            <a href="{{ url_for('admin_inventory') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
                 <i class="fa-solid fa-box mr-1 md:mr-1.5"></i> Inventory
             </a>
-            <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center relative {% if request.endpoint == 'admin_orders' %}active{% endif %}">
+            <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center relative {% if request.endpoint == 'admin_orders' %}active{% endif %}">
                 <i class="fa-solid fa-receipt mr-1 md:mr-1.5"></i> Orders
                 
                 {% if pending_count and pending_count > 0 %}
@@ -122,19 +122,19 @@
                 {% endif %}
 
             </a>
-            <a href="{{ url_for('admin_customers') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_customers', 'admin.admin_customers'] %}active{% endif %}">
+            <a href="{{ url_for('admin_customers') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_customers', 'admin.admin_customers'] %}active{% endif %}">
                 <i class="fa-solid fa-users mr-1 md:mr-1.5"></i> Customers
             </a>
-            <a href="{{ url_for('admin_profit_analysis') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_profit_analysis', 'admin.admin_profit_analysis'] %}active{% endif %}">
+            <a href="{{ url_for('admin_profit_analysis') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_profit_analysis', 'admin.admin_profit_analysis'] %}active{% endif %}">
                 <i class="fa-solid fa-coins mr-1 md:mr-1.5"></i> Profit Analysis
             </a>
-            <a href="{{ url_for('admin_settings') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_settings', 'admin.admin_settings'] %}active{% endif %}">
+            <a href="{{ url_for('admin_settings') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint in ['admin_settings', 'admin.admin_settings'] %}active{% endif %}">
                 <i class="fa-solid fa-gear mr-1 md:mr-1.5"></i> Settings
             </a>
-            <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_redeem' %}active{% endif %}">
+            <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_redeem' %}active{% endif %}">
                 <i class="fa-solid fa-ticket mr-1 md:mr-1.5"></i> Promo Codes
             </a>
-            <a href="{{ url_for('admin_spin') }}" class="tab-btn flex-1 min-w-max px-4 py-2.5 md:py-3 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_spin' %}active{% endif %}">
+            <a href="{{ url_for('admin_spin') }}" class="tab-btn flex-1 min-w-max px-3.5 py-2 text-[9px] md:text-[10px] font-black uppercase rounded-lg md:rounded-xl transition-all flex items-center justify-center {% if request.endpoint == 'admin_spin' %}active{% endif %}">
                 <i class="fa-solid fa-gamepad mr-1 md:mr-1.5"></i> Minifig Spin
             </a>
         </div>
@@ -191,7 +191,7 @@
         </div>
     </div>
 
-    <main class="max-w-[1400px] mx-auto p-3 md:p-6">
+    <main class="w-full max-w-[1400px] mx-auto px-2 py-2 md:px-4 md:py-2.5 flex-1 min-h-0 {% block main_class %}overflow-y-auto custom-admin-scrollbar{% endblock %}">
         {% block content %}{% endblock %}
     </main>
 
@@ -311,7 +311,7 @@
     </script>
     
     <!-- MOBILE BOTTOM NAVIGATION BAR (Fixed Bottom for Phone) -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around">
+    <nav class="md:hidden shrink-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] px-2 pt-1 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around z-40">
         <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
             <i class="fa-solid fa-chart-pie text-base mb-1"></i>
             <span>Overview</span>
