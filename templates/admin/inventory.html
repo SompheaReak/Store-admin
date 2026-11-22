@@ -87,14 +87,14 @@
 <div id="view-inventory" class="grid grid-cols-1 lg:grid-cols-12 gap-5 md:gap-6 pb-24 text-slate-800">
     
     <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
-    <section class="lg:col-span-4 xl:col-span-3">
+    <section class="lg:col-span-5 xl:col-span-4 2xl:col-span-3">
         <!-- Mobile Quick Add Accordion Trigger -->
         <button type="button" onclick="toggleQuickAddAccordion()" class="lg:hidden w-full bg-gradient-to-r from-[#ff9000] to-[#ff5000] text-white py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-wider shadow-md shadow-orange-500/20 flex items-center justify-between active:scale-[0.99] transition-all mb-3">
             <span class="flex items-center gap-2"><i class="fa-solid fa-plus-circle text-base"></i> Quick Add New Product</span>
             <i id="quick-add-accordion-chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
         </button>
 
-        <div id="quick-add-form-container" class="hidden lg:block bg-white p-4 md:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-20 space-y-4 md:space-y-5 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto custom-admin-scrollbar overscroll-contain">
+        <div id="quick-add-form-container" class="hidden lg:block bg-white p-4 sm:p-5 lg:p-5 xl:p-6 rounded-3xl shadow-sm border border-slate-200/80 lg:sticky lg:top-20 space-y-4 lg:max-h-[calc(100vh-5.5rem)] lg:overflow-y-auto custom-admin-scrollbar overscroll-contain">
             
             <!-- Section Header -->
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -237,18 +237,23 @@
                 <div id="variant-config" class="hidden space-y-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/60">
                     <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
                     
-                    <div class="bg-blue-50/50 p-2.5 rounded-xl border border-blue-100 flex flex-col sm:flex-row gap-2 justify-between items-center mt-2 mb-2">
-                        <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider whitespace-nowrap"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Magic Batch</span>
-                        <div class="flex gap-2 w-full sm:w-auto">
-                            <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden flex-1 sm:flex-none">
-                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-200">$</span>
-                                <input type="number" step="any" id="batch-price-input" placeholder="Price" class="w-16 p-1.5 text-xs font-black outline-none text-center">
-                                <button type="button" onclick="applyBatchPrice()" class="bg-blue-600 hover:bg-blue-700 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-colors">Apply</button>
+                    <div class="bg-blue-50/60 p-2.5 rounded-2xl border border-blue-100 flex flex-col gap-2 mt-2 mb-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Magic Batch
+                            </span>
+                            <span class="text-[8px] font-bold text-blue-400 uppercase">Apply to all</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 w-full">
+                            <div class="flex items-center bg-white rounded-xl border border-blue-200 overflow-hidden shadow-xs focus-within:border-blue-400">
+                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-100 shrink-0">$</span>
+                                <input type="number" step="any" id="batch-price-input" placeholder="Price" class="w-full min-w-0 p-1.5 text-xs font-black outline-none text-center">
+                                <button type="button" onclick="applyBatchPrice()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-all shrink-0">Apply</button>
                             </div>
-                            <div class="flex items-center bg-white rounded-lg border border-blue-200 overflow-hidden flex-1 sm:flex-none">
-                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-200">Qty</span>
-                                <input type="number" id="batch-stock-input" placeholder="1" class="w-14 p-1.5 text-xs font-black outline-none text-center">
-                                <button type="button" onclick="applyBatchStock()" class="bg-slate-800 hover:bg-slate-900 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-colors">Apply</button>
+                            <div class="flex items-center bg-white rounded-xl border border-blue-200 overflow-hidden shadow-xs focus-within:border-blue-400">
+                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-100 shrink-0">Qty</span>
+                                <input type="number" id="batch-stock-input" placeholder="1" class="w-full min-w-0 p-1.5 text-xs font-black outline-none text-center">
+                                <button type="button" onclick="applyBatchStock()" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-all shrink-0">Apply</button>
                             </div>
                         </div>
                     </div>
@@ -266,38 +271,38 @@
                         </span>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2.5">
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block">
-                                <i class="fa-solid fa-lock text-slate-400 mr-1"></i> Cost Price
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="space-y-1 min-w-0">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block truncate">
+                                <i class="fa-solid fa-lock text-slate-400 mr-0.5"></i> Cost Price
                             </label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
-                                <input type="number" step="0.01" name="cost_price" placeholder="0.00" class="input-field w-full pl-6 font-bold text-slate-700 bg-white" title="Admin only - hidden from customers">
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
+                                <input type="number" step="0.01" name="cost_price" placeholder="0.00" class="input-field w-full pl-6 pr-1 font-bold text-slate-700 bg-white" title="Admin only - hidden from customers">
                             </div>
-                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Original cost</span>
+                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5 truncate">Original cost</span>
                         </div>
 
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block">
-                                <i class="fa-solid fa-tag mr-1"></i> Selling Price
+                        <div class="space-y-1 min-w-0">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block truncate">
+                                <i class="fa-solid fa-tag mr-0.5"></i> Selling Price
                             </label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#ff5000] font-black text-xs">$</span>
-                                <input type="number" step="0.01" name="price" placeholder="0.00" class="input-field w-full pl-6 font-black text-slate-900 bg-white">
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#ff5000] font-black text-xs">$</span>
+                                <input type="number" step="0.01" name="price" placeholder="0.00" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
                             </div>
-                            <span class="text-[8px] font-bold text-emerald-600 block pl-0.5">Storefront price</span>
+                            <span class="text-[8px] font-bold text-emerald-600 block pl-0.5 truncate">Storefront</span>
                         </div>
 
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block">
-                                <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock Qty
+                        <div class="space-y-1 min-w-0">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate">
+                                <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
                             </label>
                             <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
-                                <input type="number" name="stock" placeholder="1" min="0" class="input-field w-full pl-7 font-black text-slate-900 bg-white">
+                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
+                                <input type="number" name="stock" placeholder="1" min="0" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
                             </div>
-                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Inventory count</span>
+                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5 truncate">Total stock</span>
                         </div>
                     </div>
                 </div>
@@ -326,7 +331,7 @@
     </section>
 
     <!-- ==================== RIGHT COLUMN: PRODUCT CATALOG GRID ==================== -->
-    <section class="lg:col-span-8 xl:col-span-9 space-y-4">
+    <section class="lg:col-span-7 xl:col-span-8 2xl:col-span-9 space-y-4">
         
         <!-- Search & Storefront Filter Bar -->
         <div class="bg-white border border-slate-200/80 p-2.5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-3">
@@ -367,7 +372,7 @@
         </div>
 
         <!-- Product Cards Grid (DRAGGABLE) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-4" id="main-inventory-list">
             {% for p in products %}
             {% set p_variants = p.parsed_variants %}
             <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ (p.category or '')|lower }}">
@@ -445,6 +450,23 @@
                 <div class="edit-mode" id="edit-mode-{{p.id}}"></div>
             </div>
             {% endfor %}
+            {% if not products %}
+            <div class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-200 flex flex-col items-center justify-center">
+                <div class="w-16 h-16 rounded-2xl bg-orange-50 border border-orange-100 flex items-center justify-center text-[#ff5000] text-2xl mb-3 shadow-xs">
+                    <i class="fa-solid fa-box-open"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">No Catalog Items Found</h3>
+                <p class="text-xs text-slate-400 font-medium mt-1 max-w-sm">Use the Quick Add form on the left to publish a new product, or switch store/category filters above.</p>
+            </div>
+            {% endif %}
+            <div id="no-filter-results" class="col-span-full py-16 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-200 hidden flex-col items-center justify-center">
+                <div class="w-16 h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 text-2xl mb-3 shadow-xs">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <h3 class="text-sm font-black text-slate-800 uppercase tracking-wider">No Matching Items</h3>
+                <p class="text-xs text-slate-400 font-medium mt-1 max-w-sm">No items match your active search or filters.</p>
+                <button type="button" onclick="document.getElementById('inventory-search-input').value=''; filterStore('All');" class="mt-3 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-[#ff5000] transition-colors">Clear Filter</button>
+            </div>
         </div>
     </section>
 </div>
@@ -616,12 +638,12 @@
 
             variantRowsHtml += `
             <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors" data-variant-image="${escapeHtml(v.image || '')}">
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 shrink-0">
-                        <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
-                            <i class="fa-solid fa-grip-vertical text-sm"></i>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <div class="handle p-1 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
+                            <i class="fa-solid fa-grip-vertical text-xs"></i>
                         </div>
-                        <div class="relative w-12 h-12 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('${escapeHtml(v.image || '')}')" title="Click to view image">
+                        <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors flex items-center justify-center" onclick="openImageViewer('${escapeHtml(v.image || '')}')" title="Click to view image">
                             <img src="${escapeHtml(v.image || '')}" class="max-w-full max-h-full object-contain mix-blend-multiply variant-image-preview">
                             <div class="absolute inset-0 bg-black/40 hidden group-hover:flex items-center justify-center rounded-[7px] transition-all">
                                 <i class="fa-solid fa-eye text-white text-[11px]"></i>
@@ -629,24 +651,24 @@
                         </div>
                     </div>
 
-                    <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-                        <div class="relative flex-1 min-w-[100px]">
-                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
-                            <input type="text" name="v_codes[]" value="${escapeHtml(v.code || '')}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
+                    <div class="flex-1 min-w-0 flex items-center gap-1.5">
+                        <div class="relative flex-1 min-w-[70px]">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[9px]">#</span>
+                            <input type="text" name="v_codes[]" value="${escapeHtml(v.code || '')}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-5 pr-1 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-8">
                         </div>
                         
                         <div class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shrink-0">
-                            <button type="button" onclick="updateVarQty(this, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                            <input type="number" name="v_stocks[]" value="${v.stock !== undefined ? v.stock : 0}" class="w-12 text-center text-sm font-black bg-transparent outline-none hide-scrollbar">
-                            <button type="button" onclick="updateVarQty(this, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                            <button type="button" onclick="updateVarQty(this, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-xs text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                            <input type="number" name="v_stocks[]" value="${v.stock !== undefined ? v.stock : 0}" class="w-8 sm:w-10 text-center text-xs font-black bg-transparent outline-none hide-scrollbar">
+                            <button type="button" onclick="updateVarQty(this, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-xs text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[9px]"></i></button>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <button type="button" onclick="toggleVariantDetails(this)" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-sm" title="Advanced Settings">
-                            <i class="fa-solid fa-sliders"></i>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" onclick="toggleVariantDetails(this)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-xs" title="Advanced Settings">
+                            <i class="fa-solid fa-sliders text-xs"></i>
                         </button>
-                        <button type="button" onclick="removeVariantRow(this, '${p.id}')" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm">
+                        <button type="button" onclick="removeVariantRow(this, '${p.id}')" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-xs">
                             <i class="fa-solid fa-trash-can text-xs"></i>
                         </button>
                     </div>
@@ -655,29 +677,29 @@
                     <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
                 </div>
 
-                <div class="variant-details hidden border-t border-slate-100 pt-2.5 mt-0.5">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 price-sync-group items-center bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                        <div class="col-span-2 md:col-span-1">
-                            <input type="text" name="v_names[]" value="${escapeHtml(v.name || '')}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                <div class="variant-details hidden border-t border-slate-100 pt-2 space-y-2">
+                    <div>
+                        <input type="text" name="v_names[]" value="${escapeHtml(v.name || '')}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/70 p-2 rounded-xl border border-slate-100">
+                        <div class="relative min-w-0">
+                            <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white">
+                            <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
                         </div>
-                        <div class="relative">
-                            <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5 bg-white">
-                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400">%</span>
+                        <div class="relative min-w-0">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
+                            <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
                         </div>
-                        <div class="relative">
-                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
-                            <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="USD" class="usd-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
+                        <div class="relative min-w-0">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
+                            <input type="number" step="any" value="${vPriceKhr}" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
                         </div>
-                        <div class="relative">
-                            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">៛</span>
-                            <input type="number" step="any" value="${vPriceKhr}" placeholder="KHR" class="khr-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
-                        </div>
-                        <div class="col-span-2 md:col-span-4 tag-wrapper">
-                            <input type="hidden" name="v_categories[]" class="hidden-category-input" value="${escapeHtml(v.category || '')}">
-                            <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex items-center bg-white w-full cursor-text">
-                                ${vCatBadges}
-                                <input type="text" list="edit-cats-${p.id}" class="tag-input variant-tag-input text-[10px] w-full bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
-                            </div>
+                    </div>
+                    <div class="tag-wrapper">
+                        <input type="hidden" name="v_categories[]" class="hidden-category-input" value="${escapeHtml(v.category || '')}">
+                        <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex flex-wrap items-center gap-1 bg-white w-full cursor-text">
+                            ${vCatBadges}
+                            <input type="text" list="edit-cats-${p.id}" class="tag-input variant-tag-input text-[10px] flex-1 min-w-[60px] bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
                         </div>
                     </div>
                 </div>
@@ -1045,6 +1067,18 @@
 
         const countEl = document.getElementById('visible-item-count');
         if (countEl) countEl.innerText = visibleCount;
+
+        const noResults = document.getElementById('no-filter-results');
+        if (noResults) {
+            const totalItems = document.querySelectorAll('.product-item').length;
+            if (totalItems > 0 && visibleCount === 0) {
+                noResults.classList.remove('hidden');
+                noResults.classList.add('flex');
+            } else {
+                noResults.classList.add('hidden');
+                noResults.classList.remove('flex');
+            }
+        }
     }
 
     // ================= 3. IMAGE UPLOAD TOGGLES & HANDLERS =================
@@ -1552,62 +1586,62 @@
 
             const html = `
                 <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 shrink-0">
-                            <div class="handle p-1.5 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
-                                <i class="fa-solid fa-grip-vertical text-sm"></i>
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <div class="handle p-1 cursor-grab text-slate-300 hover:text-[#ff5000] flex items-center justify-center">
+                                <i class="fa-solid fa-grip-vertical text-xs"></i>
                             </div>
-                            <div class="relative w-12 h-12 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors group flex items-center justify-center" onclick="openImageViewer('${tempUrl}')">
+                            <div class="relative w-11 h-11 bg-slate-50 border border-slate-200 rounded-lg p-0.5 shrink-0 cursor-pointer hover:border-[#ff5000] transition-colors flex items-center justify-center" onclick="openImageViewer('${tempUrl}')">
                                 <img src="${tempUrl}" class="w-full h-full object-contain mix-blend-multiply variant-image-preview">
                             </div>
                         </div>
 
-                        <div class="flex-1 flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
-                            <div class="relative flex-1 min-w-[100px]">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[10px]">#</span>
-                                <input type="text" name="variant_codes[]" value="${escapeHtml(defaultCode)}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-6 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-9">
+                        <div class="flex-1 min-w-0 flex items-center gap-1.5">
+                            <div class="relative flex-1 min-w-[70px]">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-black text-[9px]">#</span>
+                                <input type="text" name="variant_codes[]" value="${escapeHtml(defaultCode)}" oninput="autoSequenceCodes(this)" placeholder="1001" class="variant-code-input input-field w-full pl-5 pr-1 text-xs font-mono font-bold uppercase tracking-wider bg-slate-50 focus:bg-white h-8">
                             </div>
                             
                             <div class="flex items-center bg-slate-100 border border-slate-200 rounded-lg p-0.5 shrink-0">
-                                <button type="button" onclick="updateVarQty(this, -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-12 text-center text-sm font-black bg-transparent outline-none hide-scrollbar">
-                                <button type="button" onclick="updateVarQty(this, 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded shadow-sm text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                <button type="button" onclick="updateVarQty(this, -1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-xs text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-minus text-[9px]"></i></button>
+                                <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-8 sm:w-10 text-center text-xs font-black bg-transparent outline-none hide-scrollbar">
+                                <button type="button" onclick="updateVarQty(this, 1)" class="w-7 h-7 flex items-center justify-center bg-white rounded shadow-xs text-slate-500 hover:text-[#ff5000] active:scale-95 transition-all"><i class="fa-solid fa-plus text-[9px]"></i></button>
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-1.5 shrink-0">
-                            <button type="button" onclick="toggleVariantDetails(this)" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-sm" title="Advanced Settings">
-                                <i class="fa-solid fa-sliders"></i>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button type="button" onclick="toggleVariantDetails(this)" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-orange-50 hover:text-[#ff5000] hover:border-orange-200 transition-colors flex items-center justify-center shadow-xs" title="Advanced Settings">
+                                <i class="fa-solid fa-sliders text-xs"></i>
                             </button>
-                            <button type="button" onclick="this.closest('.variant-row').remove()" class="w-9 h-9 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-sm">
+                            <button type="button" onclick="this.closest('.variant-row').remove()" class="w-8 h-8 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors shadow-xs">
                                 <i class="fa-solid fa-trash-can text-xs"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="variant-details hidden border-t border-slate-100 pt-2.5 mt-0.5">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 price-sync-group items-center bg-slate-50/50 p-2.5 rounded-lg border border-slate-100">
-                            <div class="col-span-2 md:col-span-1">
-                                <input type="text" name="variant_names[]" value="${escapeHtml(defaultName)}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                    <div class="variant-details hidden border-t border-slate-100 pt-2 space-y-2">
+                        <div>
+                            <input type="text" name="variant_names[]" value="${escapeHtml(defaultName)}" placeholder="Variant Name" class="input-field w-full text-xs font-bold bg-white">
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5 price-sync-group items-center bg-slate-50/70 p-2 rounded-xl border border-slate-100">
+                            <div class="relative min-w-0">
+                                <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white">
+                                <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
                             </div>
-                            <div class="relative">
-                                <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="Disc %" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-5 bg-white">
-                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400">%</span>
+                            <div class="relative min-w-0">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
+                                <input type="number" step="any" name="variant_prices[]" value="0.00" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
                             </div>
-                            <div class="relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
-                                <input type="number" step="any" name="variant_prices[]" value="0.00" placeholder="USD" class="usd-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'USD')">
+                            <div class="relative min-w-0">
+                                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
+                                <input type="number" step="any" value="0" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
                             </div>
-                            <div class="relative">
-                                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">៛</span>
-                                <input type="number" step="any" value="0" placeholder="KHR" class="khr-input input-field pl-6 w-full text-xs font-black bg-white" oninput="calcPrice(this, 'KHR')">
-                            </div>
-                            <div class="col-span-2 md:col-span-4 tag-wrapper">
-                                <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${escapeHtml(defaultCat)}">
-                                <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex items-center bg-white w-full cursor-text">
-                                    ${tagBadgesHtml}
-                                    <input type="text" list="add-cats" class="tag-input variant-tag-input text-[10px] w-full bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
-                                </div>
+                        </div>
+                        <div class="tag-wrapper">
+                            <input type="hidden" name="variant_categories[]" class="hidden-category-input" value="${escapeHtml(defaultCat)}">
+                            <div class="tag-container variant-tag-container border border-slate-200 rounded-xl px-2 py-1 min-h-[34px] flex flex-wrap items-center gap-1 bg-white w-full cursor-text">
+                                ${tagBadgesHtml}
+                                <input type="text" list="add-cats" class="tag-input variant-tag-input text-[10px] flex-1 min-w-[60px] bg-transparent p-0 border-none outline-none font-semibold" placeholder="Tags..." autocomplete="off">
                             </div>
                         </div>
                     </div>
