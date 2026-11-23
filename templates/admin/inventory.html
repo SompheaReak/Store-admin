@@ -78,25 +78,26 @@
 
 {% block content %}
 
-<!-- IMAGE VIEWER MODAL (Fullscreen view) -->
-<div id="image-viewer-modal" class="fixed inset-0 z-[9999] bg-slate-900/95 backdrop-blur-sm hidden flex-col items-center justify-center transition-opacity" onclick="closeImageViewer()">
-    <button type="button" onclick="closeImageViewer()" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
-        <i class="fa-solid fa-xmark text-xl"></i>
-    </button>
-    <img id="viewer-img" src="" class="max-w-[90%] max-h-[90%] object-contain rounded-xl shadow-2xl" onclick="event.stopPropagation()">
-</div>
-
-<div id="view-inventory" class="h-full min-h-0 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3.5 md:gap-4 text-slate-800 overflow-hidden">
+<div id="view-inventory" class="h-full min-h-0 flex-1 flex flex-col text-slate-800 overflow-hidden">
     
-    <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
-    <section class="lg:col-span-5 xl:col-span-4 2xl:col-span-3 h-full min-h-0 flex flex-col">
-        <!-- Mobile Quick Add Accordion Trigger -->
-        <button type="button" onclick="toggleQuickAddAccordion()" class="lg:hidden shrink-0 w-full bg-gradient-to-r from-[#ff9000] to-[#ff5000] text-white py-2.5 px-4 rounded-2xl font-black text-xs uppercase tracking-wider shadow-md shadow-orange-500/20 flex items-center justify-between active:scale-[0.99] transition-all mb-2">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-plus-circle text-base"></i> Quick Add New Product</span>
-            <i id="quick-add-accordion-chevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+    <!-- Tablet & Mobile View Switcher (< 1024px) -->
+    <div class="lg:hidden shrink-0 mb-2.5 bg-slate-200/80 p-1 rounded-2xl flex gap-1 shadow-inner">
+        <button type="button" id="tab-btn-catalog" onclick="switchInventoryTabletView('catalog')" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-white text-[#ff5000] shadow-sm active:scale-[0.98]">
+            <i class="fa-solid fa-boxes-stacked text-xs"></i>
+            <span>Catalog (<span id="tablet-catalog-count">{{ products|length }}</span>)</span>
         </button>
+        <button type="button" id="tab-btn-quickadd" onclick="switchInventoryTabletView('quickadd')" class="flex-1 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all text-slate-600 hover:text-slate-900 active:scale-[0.98]">
+            <i class="fa-solid fa-plus-circle text-[#ff5000] text-xs"></i>
+            <span>Quick Add Product</span>
+        </button>
+    </div>
 
-        <div id="quick-add-form-container" class="hidden lg:flex flex-col flex-1 min-h-0 min-w-0 w-full bg-white p-3.5 sm:p-4 rounded-2xl md:rounded-3xl shadow-sm border border-slate-200/80 overflow-y-auto overflow-x-hidden custom-admin-scrollbar overscroll-contain">
+    <!-- Main Grid: 1-column on Tablet Portrait / Mobile, 12-column on Tablet Landscape & Desktop (1024px+) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 md:gap-4 flex-1 min-h-0 overflow-hidden">
+        
+        <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
+        <section id="panel-quickadd" class="lg:col-span-5 xl:col-span-4 2xl:col-span-3 h-full min-h-0 flex-col hidden lg:flex w-full">
+            <div id="quick-add-form-container" class="flex flex-col flex-1 min-h-0 min-w-0 w-full bg-white p-3.5 sm:p-4 rounded-2xl md:rounded-3xl shadow-sm border border-slate-200/80 overflow-y-auto overflow-x-hidden custom-admin-scrollbar overscroll-contain">
             
             <!-- Section Header -->
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0">
@@ -242,35 +243,14 @@
                         <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
                         <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down text-orange-500 mr-0.5"></i> Drag to reorder</span>
                     </div>
-                    
-                    <div class="bg-blue-50/60 p-2.5 rounded-2xl border border-blue-100 flex flex-col gap-2 mt-2 mb-2">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[9px] font-black text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
-                                <i class="fa-solid fa-wand-magic-sparkles"></i> Magic Batch
-                            </span>
-                            <span class="text-[8px] font-bold text-blue-400 uppercase">Apply to all</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 w-full">
-                            <div class="flex items-center bg-white rounded-xl border border-blue-200 overflow-hidden shadow-xs focus-within:border-blue-400">
-                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-100 shrink-0">$</span>
-                                <input type="number" step="any" id="batch-price-input" placeholder="Price" class="w-full min-w-0 p-1.5 text-xs font-black outline-none text-center">
-                                <button type="button" onclick="applyBatchPrice()" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-all shrink-0">Apply</button>
-                            </div>
-                            <div class="flex items-center bg-white rounded-xl border border-blue-200 overflow-hidden shadow-xs focus-within:border-blue-400">
-                                <span class="px-2 text-[10px] font-bold text-slate-400 bg-slate-50 border-r border-blue-100 shrink-0">Qty</span>
-                                <input type="number" id="batch-stock-input" placeholder="1" class="w-full min-w-0 p-1.5 text-xs font-black outline-none text-center">
-                                <button type="button" onclick="applyBatchStock()" class="bg-slate-800 hover:bg-slate-900 active:scale-95 text-white px-2.5 py-1.5 text-[9px] font-black uppercase transition-all shrink-0">Apply</button>
-                            </div>
-                        </div>
-                    </div>
                     <div id="variant-list" class="space-y-2.5 max-h-[35vh] overflow-y-auto overflow-x-hidden w-full min-w-0 pr-0.5 custom-admin-scrollbar sortable-container"></div>
                 </div>
 
-                <!-- Pricing & Profit Setup (Cost Price vs Selling Price) -->
+                <!-- Pricing & Profit Setup (Unified Master Controls) -->
                 <div class="bg-gradient-to-br from-slate-50 to-orange-50/40 p-3.5 rounded-2xl border border-orange-200/80 space-y-2.5">
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                            <i class="fa-solid fa-coins text-[#ff5000]"></i> Pricing & Profit Margins
+                            <i class="fa-solid fa-coins text-[#ff5000]"></i> Pricing &amp; Stock Margins
                         </span>
                         <span class="text-[9px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                             USD ($)
@@ -279,7 +259,7 @@
 
                     <div class="grid grid-cols-3 gap-2">
                         <div class="space-y-1 min-w-0">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block truncate">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-slate-500 block truncate" title="Admin only cost">
                                 <i class="fa-solid fa-lock text-slate-400 mr-0.5"></i> Cost Price
                             </label>
                             <div class="relative">
@@ -290,25 +270,29 @@
                         </div>
 
                         <div class="space-y-1 min-w-0">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block truncate">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-orange-600 block truncate" title="Storefront Price">
                                 <i class="fa-solid fa-tag mr-0.5"></i> Selling Price
                             </label>
                             <div class="relative">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#ff5000] font-black text-xs">$</span>
-                                <input type="number" step="0.01" name="price" placeholder="0.00" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
+                                <input type="number" step="0.01" name="price" id="main-selling-price" placeholder="0.00" oninput="handleMasterPriceInput(this.value)" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
                             </div>
-                            <span class="text-[8px] font-bold text-emerald-600 block pl-0.5 truncate">Storefront</span>
+                            <button type="button" onclick="applySellingPriceToAllVariants()" class="text-[8px] font-extrabold text-[#ff5000] hover:underline flex items-center gap-0.5 pl-0.5" title="Copy to all variants">
+                                <i class="fa-solid fa-arrows-rotate text-[7px]"></i> Sync variants
+                            </button>
                         </div>
 
                         <div class="space-y-1 min-w-0">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate">
+                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate" title="Stock Quantity">
                                 <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
                             </label>
                             <div class="relative">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
-                                <input type="number" name="stock" placeholder="1" min="0" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
+                                <input type="number" name="stock" id="main-stock-qty" placeholder="1" min="0" oninput="handleMasterStockInput(this.value)" class="input-field w-full pl-6 pr-1 font-black text-slate-900 bg-white">
                             </div>
-                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5 truncate">Total stock</span>
+                            <button type="button" onclick="applyStockToAllVariants()" class="text-[8px] font-extrabold text-blue-600 hover:underline flex items-center gap-0.5 pl-0.5" title="Set this stock on each variant">
+                                <i class="fa-solid fa-arrows-rotate text-[7px]"></i> Sync variants
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -339,13 +323,18 @@
     </section>
 
     <!-- ==================== RIGHT COLUMN: PRODUCT CATALOG GRID ==================== -->
-    <section class="lg:col-span-7 xl:col-span-8 2xl:col-span-9 h-full min-h-0 flex flex-col space-y-2">
+    <section id="panel-catalog" class="lg:col-span-7 xl:col-span-8 2xl:col-span-9 h-full min-h-0 flex flex-col space-y-2 w-full">
         
         <!-- Search & Storefront Filter Bar -->
         <div class="bg-white border border-slate-200/80 p-2 sm:p-2.5 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-2 shrink-0">
-            <div class="relative w-full md:w-64">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" id="inventory-search-input" oninput="filterProducts()" placeholder="Search title, ID or #Code..." class="input-field pl-9 w-full bg-slate-50 border-slate-200 text-xs py-1.5">
+            <div class="flex items-center gap-2 w-full md:w-auto flex-1">
+                <div class="relative w-full md:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" id="inventory-search-input" oninput="filterProducts()" placeholder="Search title, ID or #Code..." class="input-field pl-9 w-full bg-slate-50 border-slate-200 text-xs py-1.5">
+                </div>
+                <button type="button" onclick="switchInventoryTabletView('quickadd')" class="lg:hidden px-3 py-2 bg-gradient-to-r from-[#ff9000] to-[#ff5000] text-white rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all shrink-0">
+                    <i class="fa-solid fa-plus-circle"></i> <span class="hidden xs:inline">Add</span>
+                </button>
             </div>
 
             <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto touch-pan-x">
@@ -487,6 +476,7 @@
             </div>
         </div>
     </section>
+    </div>
 </div>
 
 <!-- ==================== MANAGE CATEGORIES MODAL (WITH DRAG SORTING) ==================== -->
@@ -591,21 +581,56 @@
 
 {% block scripts %}
 <script>
-    // Mobile Quick Add Collapsible
-    function toggleQuickAddAccordion() {
-        const el = document.getElementById('quick-add-form-container');
-        const chevron = document.getElementById('quick-add-accordion-chevron');
-        if (!el) return;
-        if (el.classList.contains('hidden')) {
-            el.classList.remove('hidden');
-            el.classList.add('flex');
-            if (chevron) chevron.classList.add('rotate-180');
+    // Tablet & Mobile View Switcher (< 1024px)
+    function switchInventoryTabletView(view) {
+        const panelCatalog = document.getElementById('panel-catalog');
+        const panelQuickAdd = document.getElementById('panel-quickadd');
+        const btnCatalog = document.getElementById('tab-btn-catalog');
+        const btnQuickAdd = document.getElementById('tab-btn-quickadd');
+        if (!panelCatalog || !panelQuickAdd) return;
+
+        if (view === 'quickadd') {
+            panelCatalog.classList.add('hidden');
+            panelCatalog.classList.remove('flex');
+            panelQuickAdd.classList.remove('hidden');
+            panelQuickAdd.classList.add('flex');
+
+            if (btnQuickAdd && btnCatalog) {
+                btnQuickAdd.classList.add('bg-white', 'text-[#ff5000]', 'shadow-sm');
+                btnQuickAdd.classList.remove('text-slate-600');
+                btnCatalog.classList.remove('bg-white', 'text-[#ff5000]', 'shadow-sm');
+                btnCatalog.classList.add('text-slate-600');
+            }
         } else {
-            el.classList.add('hidden');
-            el.classList.remove('flex');
-            if (chevron) chevron.classList.remove('rotate-180');
+            panelQuickAdd.classList.add('hidden');
+            panelQuickAdd.classList.remove('flex');
+            panelCatalog.classList.remove('hidden');
+            panelCatalog.classList.add('flex');
+
+            if (btnQuickAdd && btnCatalog) {
+                btnCatalog.classList.add('bg-white', 'text-[#ff5000]', 'shadow-sm');
+                btnCatalog.classList.remove('text-slate-600');
+                btnQuickAdd.classList.remove('bg-white', 'text-[#ff5000]', 'shadow-sm');
+                btnQuickAdd.classList.add('text-slate-600');
+            }
         }
     }
+
+    // Auto-restore 2-column split view when resizing to desktop/tablet landscape (>= 1024px)
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) {
+            const panelCatalog = document.getElementById('panel-catalog');
+            const panelQuickAdd = document.getElementById('panel-quickadd');
+            if (panelCatalog) {
+                panelCatalog.classList.remove('hidden');
+                panelCatalog.classList.add('flex');
+            }
+            if (panelQuickAdd) {
+                panelQuickAdd.classList.remove('hidden');
+                panelQuickAdd.classList.add('flex');
+            }
+        }
+    });
 
     // State Tracking & Preloaded Clean JSON Models
     let productOrderChanged = false;
@@ -1004,16 +1029,6 @@
         } 
     }
 
-    function openImageViewer(src) { 
-        const modal = document.getElementById('image-viewer-modal');
-        const img = document.getElementById('viewer-img');
-        if(modal && img) { img.src = src; modal.classList.remove('hidden'); modal.classList.add('flex'); }
-    }
-    function closeImageViewer() { 
-        const modal = document.getElementById('image-viewer-modal');
-        if(modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-    }
-
     function syncFirstVariantThumbnail(productId) {
         const toggle = document.querySelector(`.edit-thumbnail-toggle[data-product-id="${productId}"]`);
         if (!toggle || toggle.checked) return;
@@ -1108,6 +1123,8 @@
 
         const countEl = document.getElementById('visible-item-count');
         if (countEl) countEl.innerText = visibleCount;
+        const tabletCountEl = document.getElementById('tablet-catalog-count');
+        if (tabletCountEl) tabletCountEl.innerText = visibleCount;
 
         const noResults = document.getElementById('no-filter-results');
         if (noResults) {
@@ -1392,33 +1409,60 @@
         setTimeout(() => { window.location.reload(); }, 1200);
     }
 
-    // ================= 5. MAGIC BATCH TOOLS =================
-    function applyBatchPrice() {
-        const val = document.getElementById('batch-price-input').value;
-        if(val === '') return;
-        document.querySelectorAll('#variant-list .usd-input').forEach(input => {
-            input.value = val;
-            calcPrice(input, 'USD');
-        });
-        const masterPriceInput = document.querySelector('input[name="price"]');
-        if(masterPriceInput && (!masterPriceInput.value || parseFloat(masterPriceInput.value) <= 0)) {
-            masterPriceInput.value = val;
+    // ================= 5. UNIFIED MASTER PRICING & STOCK CONTROLS =================
+    function handleMasterPriceInput(val) {
+        if (!val || parseFloat(val) <= 0) return;
+        const varUsdInputs = document.querySelectorAll('#variant-list .usd-input');
+        const allZeroOrEmpty = Array.from(varUsdInputs).every(inp => !inp.value || parseFloat(inp.value) === 0);
+        if (allZeroOrEmpty && varUsdInputs.length > 0) {
+            applySellingPriceToAllVariants(val, false);
         }
     }
 
-    function applyBatchStock() {
-        const val = document.getElementById('batch-stock-input').value;
-        if(val === '') return;
-        document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').forEach(input => {
-            input.value = val;
+    function applySellingPriceToAllVariants(customVal, notify = true) {
+        const val = customVal !== undefined ? customVal : document.getElementById('main-selling-price')?.value;
+        if (!val || parseFloat(val) < 0) return;
+        const formatted = parseFloat(val).toFixed(2);
+        document.querySelectorAll('#variant-list .usd-input').forEach(input => {
+            input.value = formatted;
+            calcPrice(input, 'USD');
         });
-        const masterStockInput = document.querySelector('input[name="stock"]');
-        if(masterStockInput) {
-            const count = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').length;
-            if(count > 0) {
-                masterStockInput.value = (parseInt(val) || 0) * count;
-            }
+        if (notify && typeof showClientToast === 'function') {
+            showClientToast(`Price $${formatted} synced to all variants`);
         }
+    }
+
+    function handleMasterStockInput(val) {
+        const count = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').length;
+        if (count > 0 && (!val || parseInt(val) <= 0)) {
+            recalculateTotalVariantStock();
+        }
+    }
+
+    function applyStockToAllVariants(customVal, notify = true) {
+        const val = customVal !== undefined ? customVal : document.getElementById('main-stock-qty')?.value;
+        if (val === undefined || val === '') return;
+        const stockVal = Math.max(0, parseInt(val) || 0);
+        const inputs = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]');
+        inputs.forEach(input => {
+            input.value = stockVal;
+        });
+        const mainStock = document.getElementById('main-stock-qty');
+        if (mainStock && inputs.length > 0) {
+            mainStock.value = stockVal * inputs.length;
+        }
+        if (notify && typeof showClientToast === 'function') {
+            showClientToast(`Stock ${stockVal} applied to all variants`);
+        }
+    }
+
+    function recalculateTotalVariantStock() {
+        const inputs = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]');
+        if (inputs.length === 0) return;
+        let sum = 0;
+        inputs.forEach(inp => { sum += (parseInt(inp.value) || 0); });
+        const mainStock = document.getElementById('main-stock-qty');
+        if (mainStock) mainStock.value = sum;
     }
 
     window.applyEditBatchPrice = function(productId) {
@@ -1632,6 +1676,9 @@
         val += delta;
         if(val < 0) val = 0;
         input.value = val;
+        if (input.name === 'variant_stocks[]' && typeof recalculateTotalVariantStock === 'function') {
+            recalculateTotalVariantStock();
+        }
     };
 
     window.toggleVariantDetails = function(btn) {
@@ -1703,16 +1750,15 @@
         const defaultTagString = document.getElementById('main-category-input').value.trim();
         const mainProductCode = document.querySelector('input[name="product_code"]').value.trim().toUpperCase();
 
-        const masterSellingPrice = parseFloat(document.querySelector('input[name="price"]')?.value) || 0;
-        const magicBatchPrice = parseFloat(document.getElementById('batch-price-input')?.value) || 0;
-        const initPrice = magicBatchPrice > 0 ? magicBatchPrice : (masterSellingPrice > 0 ? masterSellingPrice : 0);
-        const defaultPriceStr = initPrice > 0 ? initPrice.toFixed(2) : '0.00';
-        const defaultPriceKhr = initPrice > 0 ? Math.round(initPrice * 4000) : 0;
+        const masterSellingPrice = parseFloat(document.getElementById('main-selling-price')?.value || document.querySelector('input[name="price"]')?.value) || 0;
+        const masterStockQty = parseInt(document.getElementById('main-stock-qty')?.value || document.querySelector('input[name="stock"]')?.value) || 1;
+        const defaultPriceStr = masterSellingPrice > 0 ? masterSellingPrice.toFixed(2) : '0.00';
+        const defaultPriceKhr = masterSellingPrice > 0 ? Math.round(masterSellingPrice * 4000) : 0;
 
         uploadedFiles.forEach((file, index) => {
             const tempUrl = URL.createObjectURL(file);
             let defaultName = `Variant ${index + 1}`;
-            let defaultStock = '1';
+            let defaultStock = String(masterStockQty > 0 ? masterStockQty : 1);
             let defaultCat = defaultTagString || '';
             
             let defaultCode = '';
@@ -1807,27 +1853,9 @@
 
         variantList.querySelectorAll('.tag-container').forEach(setupTagInput);
         initializeUploadVariantSortable();
-    }
-
-    // Auto-sync master price input to variants if variants are still 0.00
-    const quickSellingPriceInput = document.querySelector('input[name="price"]');
-    if (quickSellingPriceInput) {
-        quickSellingPriceInput.addEventListener('input', function() {
-            const val = this.value;
-            if (!val || parseFloat(val) <= 0) return;
-            const batchInput = document.getElementById('batch-price-input');
-            if (batchInput && !batchInput.value) {
-                batchInput.placeholder = val;
-            }
-            const varUsdInputs = document.querySelectorAll('#variant-list .usd-input');
-            const allZero = Array.from(varUsdInputs).every(inp => !inp.value || parseFloat(inp.value) === 0);
-            if (allZero && varUsdInputs.length > 0) {
-                varUsdInputs.forEach(inp => {
-                    inp.value = val;
-                    calcPrice(inp, 'USD');
-                });
-            }
-        });
+        if (typeof recalculateTotalVariantStock === 'function') {
+            recalculateTotalVariantStock();
+        }
     }
 
     // ================= 8. FORM & TAG LOGIC =================
