@@ -470,27 +470,43 @@ def update_currency_rates():
 @login_required
 def admin_settings():
     if request.method == 'POST':
+        setting_type = request.form.get('setting_type', '')
         try:
-            # Credit rules
-            pts_usd = int(request.form.get('points_per_usd', 10))
-            pts_voucher = int(request.form.get('points_per_voucher_dollar', 20))
-            min_pts = int(request.form.get('min_redeem_points', 100))
+            if setting_type == 'delivery' or 'min_spend_for_free_delivery' in request.form:
+                # Delivery & Free Shipping Rules
+                free_deliv_enabled = request.form.get('free_delivery_enabled') in ['true', 'on', '1']
+                min_spend = max(0.0, float(request.form.get('min_spend_for_free_delivery', 20.0) or 0.0))
+                std_fee = max(0.0, float(request.form.get('standard_delivery_fee', 1.5) or 0.0))
 
-            SystemSetting.set_val('credit_rules', {
-                'points_per_usd': max(1, pts_usd),
-                'points_per_voucher_dollar': max(1, pts_voucher),
-                'min_redeem_points': max(10, min_pts)
-            })
+                SystemSetting.set_val('delivery_rules', {
+                    'free_delivery_enabled': free_deliv_enabled,
+                    'min_spend_for_free_delivery': round(min_spend, 2),
+                    'standard_delivery_fee': round(std_fee, 2)
+                })
+                flash('Delivery & free shipping rules saved successfully!', 'success')
+            elif setting_type == 'credit' or 'points_per_usd' in request.form:
+                # Credit rules
+                pts_usd = int(request.form.get('points_per_usd', 10))
+                pts_voucher = int(request.form.get('points_per_voucher_dollar', 20))
+                min_pts = int(request.form.get('min_redeem_points', 100))
 
-            # Telegram config
-            tg_token = request.form.get('bot_token', '').strip()
-            tg_chat = request.form.get('chat_id', '').strip()
-            SystemSetting.set_val('telegram_config', {
-                'bot_token': tg_token,
-                'chat_id': tg_chat
-            })
-
-            flash('Store settings saved successfully!', 'success')
+                SystemSetting.set_val('credit_rules', {
+                    'points_per_usd': max(1, pts_usd),
+                    'points_per_voucher_dollar': max(1, pts_voucher),
+                    'min_redeem_points': max(10, min_pts)
+                })
+                flash('Credit points rules saved successfully!', 'success')
+            elif setting_type == 'telegram' or 'bot_token' in request.form:
+                # Telegram config
+                tg_token = request.form.get('bot_token', '').strip()
+                tg_chat = request.form.get('chat_id', '').strip()
+                SystemSetting.set_val('telegram_config', {
+                    'bot_token': tg_token,
+                    'chat_id': tg_chat
+                })
+                flash('Telegram notification settings saved successfully!', 'success')
+            else:
+                flash('Store settings saved successfully!', 'success')
         except Exception as e:
             flash(f'Error saving settings: {e}', 'error')
 
@@ -507,7 +523,39 @@ def admin_settings():
         'chat_id': os.environ.get('TELEGRAM_CHAT_ID', '')
     })
 
-    return render_template('admin/settings.html', credit_rules=credit_rules, tg_config=tg_config)
+    delivery_rules = SystemSetting.get_val('delivery_rules', {
+        'free_delivery_enabled': True,
+        'min_spend_for_free_delivery': 20.0,
+        'standard_delivery_fee': 1.5
+    })
+
+    return render_template(
+        'admin/settings.html', 
+        credit_rules=credit_rules, 
+        tg_config=tg_config, 
+        delivery_rules=delivery_rules
+    )
+
+@admin_bp.route('/api/delivery-settings', methods=['GET'])
+def get_delivery_settings():
+    rules = SystemSetting.get_val('delivery_rules', {
+        'free_delivery_enabled': True,
+        'min_spend_for_free_delivery': 20.0,
+        'standard_delivery_fee': 1.5
+    })
+    min_spend = float(rules.get('min_spend_for_free_delivery', 20.0) or 20.0)
+    std_fee = float(rules.get('standard_delivery_fee', 1.5) or 1.5)
+    enabled = bool(rules.get('free_delivery_enabled', True))
+    rate = 4000.0
+    return jsonify({
+        'status': 'success',
+        'free_delivery_enabled': enabled,
+        'min_spend_usd': min_spend,
+        'min_spend_khr': int(round(min_spend * rate)),
+        'standard_delivery_usd': std_fee,
+        'standard_delivery_khr': int(round(std_fee * rate)),
+        'currency_rate': rate
+    })
 
 @admin_bp.route('/admin/settings/test-telegram', methods=['POST'])
 @login_required

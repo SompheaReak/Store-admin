@@ -1,17 +1,17 @@
 {% extends "admin/base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
+<div class="max-w-6xl mx-auto space-y-6">
 
     <!-- Header -->
     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                 <i class="fa-solid fa-gear text-[#ff5000]"></i>
-                Store & Telegram Settings
+                Store & System Settings
             </h1>
             <p class="text-xs font-semibold text-slate-500 mt-0.5">
-                Configure customer credit reward rules and real-time Telegram order alerts.
+                Configure delivery thresholds, free shipping rules, customer credits, and real-time Telegram alerts.
             </p>
         </div>
     </div>
@@ -29,9 +29,84 @@
         {% endif %}
     {% endwith %}
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- 1. CREDIT POINTS & VOUCHER SETTINGS -->
+        <!-- 1. DELIVERY & FREE SHIPPING RULES -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2.5 mb-4 border-b border-slate-100 pb-3">
+                    <span class="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-tight">Delivery & Free Shipping</h3>
+                        <p class="text-[10px] text-slate-400 font-bold">Set minimum customer spend for free delivery</p>
+                    </div>
+                </div>
+
+                <form id="deliveryForm" action="{{ url_for('admin.admin_settings') }}" method="POST" class="space-y-4">
+                    <input type="hidden" name="setting_type" value="delivery">
+
+                    <!-- Free Delivery Promo Toggle -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div>
+                            <span class="text-xs font-black text-slate-800 block">Free Delivery Promo</span>
+                            <span class="text-[10px] font-bold text-slate-400">Offer free shipping on minimum spend</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" name="free_delivery_enabled" id="free_delivery_enabled" value="true" class="sr-only peer" {% if delivery_rules.free_delivery_enabled %}checked{% endif %} onchange="updateDeliveryKhrHints()">
+                            <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Minimum Spend for Free Delivery -->
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+                            Free Delivery Minimum Spend ($ USD)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
+                            <input type="number" step="0.5" min="0" name="min_spend_for_free_delivery" id="deliv_min_spend" value="{{ '%.2f'|format(delivery_rules.min_spend_for_free_delivery or 20.0) }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-xs font-black text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition-all" oninput="updateDeliveryKhrHints()">
+                        </div>
+                        <span class="text-[10px] text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-calculator text-[9px]"></i>
+                            <span>≈ <span id="deliv_min_khr_hint">80,000</span> ៛ (Spend ≥ this = FREE delivery)</span>
+                        </span>
+                    </div>
+
+                    <!-- Standard Delivery Fee -->
+                    <div>
+                        <label class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
+                            Standard Delivery Fee ($ USD)
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
+                            <input type="number" step="0.25" min="0" name="standard_delivery_fee" id="deliv_std_fee" value="{{ '%.2f'|format(delivery_rules.standard_delivery_fee or 1.5) }}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-2.5 text-xs font-black text-slate-900 outline-none focus:border-emerald-500 focus:bg-white transition-all" oninput="updateDeliveryKhrHints()">
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-bold mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-truck text-[9px]"></i>
+                            <span>≈ <span id="deliv_std_khr_hint">6,000</span> ៛ (Applied when below threshold)</span>
+                        </span>
+                    </div>
+
+                    <!-- Storefront Customer Preview -->
+                    <div class="p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-xl">
+                        <div class="flex items-center gap-1.5 text-emerald-700 text-[10px] font-black uppercase tracking-wider mb-1">
+                            <i class="fa-solid fa-sparkles text-emerald-500"></i> Storefront Cart Preview
+                        </div>
+                        <p class="text-[11px] font-bold text-slate-700 leading-snug" id="deliv_preview_text">
+                            Spend <span class="text-emerald-600 font-black" id="deliv_preview_amount">$20.00 (80,000 ៛)</span> or more to get <span class="text-emerald-600 font-black">Free Delivery</span>!
+                        </p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-emerald-600/20 transition-all mt-4">
+                        Save Delivery Rules
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. CREDIT POINTS & VOUCHER SETTINGS -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between">
             <div>
                 <div class="flex items-center gap-2.5 mb-4 border-b border-slate-100 pb-3">
@@ -45,6 +120,8 @@
                 </div>
 
                 <form id="settingsForm" action="{{ url_for('admin.admin_settings') }}" method="POST" class="space-y-4">
+                    <input type="hidden" name="setting_type" value="credit">
+
                     <div>
                         <label class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
                             Points Earned per $1 USD Spent
@@ -69,10 +146,6 @@
                         <span class="text-[10px] text-slate-400 mt-1 block">Threshold customer must accumulate before converting</span>
                     </div>
 
-                    <!-- Hidden fields to preserve telegram settings if saved here -->
-                    <input type="hidden" name="bot_token" id="hidden_bot_token" value="{{ tg_config.bot_token or '' }}">
-                    <input type="hidden" name="chat_id" id="hidden_chat_id" value="{{ tg_config.chat_id or '' }}">
-
                     <button type="submit" class="w-full bg-[#ff5000] hover:bg-orange-600 text-white py-3 rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-orange-500/20 transition-all mt-4">
                         Save Credit Rules
                     </button>
@@ -80,7 +153,7 @@
             </div>
         </div>
 
-        <!-- 2. TELEGRAM BOT ORDER ALERTS -->
+        <!-- 3. TELEGRAM BOT ORDER ALERTS -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 flex flex-col justify-between">
             <div>
                 <div class="flex items-center gap-2.5 mb-4 border-b border-slate-100 pb-3">
@@ -94,10 +167,7 @@
                 </div>
 
                 <form id="tgForm" action="{{ url_for('admin.admin_settings') }}" method="POST" class="space-y-4">
-                    <!-- Hidden fields to preserve credit rules -->
-                    <input type="hidden" name="points_per_usd" value="{{ credit_rules.points_per_usd or 10 }}">
-                    <input type="hidden" name="points_per_voucher_dollar" value="{{ credit_rules.points_per_voucher_dollar or 20 }}">
-                    <input type="hidden" name="min_redeem_points" value="{{ credit_rules.min_redeem_points or 100 }}">
+                    <input type="hidden" name="setting_type" value="telegram">
 
                     <div>
                         <label class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
@@ -138,13 +208,44 @@
 </div>
 
 <script>
+function updateDeliveryKhrHints() {
+    const rate = 4000;
+    const minSpendInput = document.getElementById('deliv_min_spend');
+    const stdFeeInput = document.getElementById('deliv_std_fee');
+    const enabledCb = document.getElementById('free_delivery_enabled');
+    
+    const minVal = parseFloat(minSpendInput?.value || 0) || 0;
+    const stdVal = parseFloat(stdFeeInput?.value || 0) || 0;
+    const isEnabled = enabledCb ? enabledCb.checked : true;
+    
+    const minKhr = Math.round(minVal * rate);
+    const stdKhr = Math.round(stdVal * rate);
+    
+    const minHint = document.getElementById('deliv_min_khr_hint');
+    if (minHint) minHint.innerText = minKhr.toLocaleString();
+    
+    const stdHint = document.getElementById('deliv_std_khr_hint');
+    if (stdHint) stdHint.innerText = stdKhr.toLocaleString();
+    
+    const previewText = document.getElementById('deliv_preview_text');
+    if (previewText) {
+        if (!isEnabled) {
+            previewText.innerHTML = `<span class="text-slate-500 font-bold">Free delivery promo is currently disabled. Standard delivery fee of $${stdVal.toFixed(2)} (${stdKhr.toLocaleString()} ៛) applies.</span>`;
+        } else {
+            previewText.innerHTML = `Spend <span class="text-emerald-600 font-black">$${minVal.toFixed(2)} (${minKhr.toLocaleString()} ៛)</span> or more to get <span class="text-emerald-600 font-black">Free Delivery</span>!`;
+        }
+    }
+}
+
 function syncTestFields() {
     const t = document.getElementById('tg_token_input').value;
     const c = document.getElementById('tg_chat_input').value;
     document.getElementById('test_token').value = t;
     document.getElementById('test_chat').value = c;
-    document.getElementById('hidden_bot_token').value = t;
-    document.getElementById('hidden_chat_id').value = c;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateDeliveryKhrHints();
+});
 </script>
 {% endblock %}
