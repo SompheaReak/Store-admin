@@ -871,14 +871,14 @@ def delete_promo_code(id):
 def quick_update_stock():
     data = request.json or {}
     p_id = data.get('product_id')
-    v_idx = data.get('variant_index') 
+    v_idx = data.get('variant_index', -1) 
     new_stock = int(data.get('stock', 0))
 
     product = Product.query.get(p_id)
     if not product: 
-        return jsonify({'success': False})
+        return jsonify({'success': False, 'error': 'Product not found'}), 404
 
-    if v_idx != -1 and product.variants:
+    if v_idx != -1 and v_idx is not None and product.variants:
         try:
             variants = json.loads(product.variants)
             if 0 <= v_idx < len(variants):
@@ -889,10 +889,24 @@ def quick_update_stock():
             pass
     else: 
         product.stock = new_stock
+        # If updating entire product stock, synchronize its variants
+        if product.variants:
+            try:
+                variants = json.loads(product.variants)
+                if new_stock <= 0:
+                    for v in variants:
+                        v['stock'] = 0
+                elif sum(int(v.get('stock', 0)) for v in variants) == 0:
+                    # Setting back in stock from 0
+                    for v in variants:
+                        v['stock'] = max(1, int(new_stock // len(variants)) or 1)
+                product.variants = json.dumps(variants)
+            except Exception:
+                pass
 
-    _sync_product_to_pool(p_id, v_idx, new_stock)
+    _sync_product_to_pool(p_id, v_idx if v_idx is not None else -1, new_stock)
     db.session.commit()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'stock': product.stock})
 
 @admin_bp.route('/admin/categories/update', methods=['POST'])
 @login_required
@@ -1003,8 +1017,12 @@ def update_product(id):
             p.price = _safe_float(request.form.get('price'), 0.0)
 
         # Editable Stock Quantity directly set by admin
+        is_oos = request.form.get('is_out_of_stock') in ['true', 'on', '1']
         req_stock = request.form.get('stock')
-        user_stock = _safe_int(req_stock, None) if (req_stock is not None and str(req_stock).strip() != '') else None
+        if is_oos:
+            user_stock = 0
+        else:
+            user_stock = _safe_int(req_stock, None) if (req_stock is not None and str(req_stock).strip() != '') else None
         
         use_custom_thumb_val = request.form.get('use_custom_thumbnail')
         p.use_custom_thumbnail = True if str(use_custom_thumb_val).lower() == 'true' else False
@@ -1034,6 +1052,8 @@ def update_product(id):
             vid = _safe_int(raw_vid, i)
             v_stock_raw = v_stocks[i] if i < len(v_stocks) else 0
             stock = _safe_int(v_stock_raw, 0)
+            if is_oos:
+                stock = 0
             if i < len(v_prices) and v_prices[i] is not None and str(v_prices[i]).strip() != '':
                 v_pr = _safe_float(v_prices[i], p.price)
             else:
@@ -1068,12 +1088,13 @@ def update_product(id):
                     try:
                         res = optimize_and_upload(f)
                         last_id += 1
+                        init_new_stock = 0 if is_oos else 1
                         updated_variants.append({
                             "id": last_id, "name": f"New Style {last_id}", "price": updated_variants[0]['price'] if updated_variants else p.price, 
-                            "stock": 1, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0,
+                            "stock": init_new_stock, "image": res['secure_url'], "category": p.category, "discount_percent": 0.0,
                             "code": ""
                         })
-                        total_stock += 1
+                        total_stock += init_new_stock
                     except Exception as e: 
                         print(f"Error adding new variant image: {e}")
         
@@ -1098,7 +1119,7 @@ def update_product(id):
 
         if updated_variants:
             p.variants = json.dumps(updated_variants)
-            if not p.use_custom_thumbnail:
+            if not p.use_custom_thumbnail and updated_variants[0].get('image'):
                 p.image = updated_variants[0]['image']
             if request.form.get('price') is not None and str(request.form.get('price')).strip() != '':
                 p.price = _safe_float(request.form.get('price'), p.price)
@@ -1106,8 +1127,16 @@ def update_product(id):
                 p.price = updated_variants[0]['price']
             p.stock = total_stock if user_stock is None else user_stock
         else:
+            if request.form.get('price') is not None and str(request.form.get('price')).strip() != '':
+                p.price = _safe_float(request.form.get('price'), p.price)
             if user_stock is not None:
                 p.stock = user_stock
+            # Ensure at least 1 valid variant JSON exists so item is always editable in the future
+            p.variants = json.dumps([{
+                "id": 0, "name": p.title or "Standard", "price": p.price, 
+                "stock": p.stock, "image": p.image or '', "category": p.category, 
+                "discount_percent": p.discount_percent, "code": p.product_code or ''
+            }])
 
         db.session.commit()
         flash(f'Product "{p.title}" updated successfully!', 'success')
@@ -1172,7 +1201,8 @@ def add_product():
 
     cost_price = _safe_float(request.form.get('cost_price'), 0.0)
     selling_price_input = _safe_float(request.form.get('price'), 0.0)
-    req_stock = _safe_int(request.form.get('stock'), 1)
+    is_oos = request.form.get('is_out_of_stock') in ['true', 'on', '1']
+    req_stock = 0 if is_oos else _safe_int(request.form.get('stock'), 1)
 
     try:
         new_p = None
@@ -1185,7 +1215,10 @@ def add_product():
                     price = v_val if v_val >= 0 else selling_price_input
                 else:
                     price = selling_price_input
-                stock = _safe_int(v_stocks[i], 0) if i < len(v_stocks) else 0
+                if is_oos:
+                    stock = 0
+                else:
+                    stock = _safe_int(v_stocks[i], 0) if i < len(v_stocks) else 0
                 cat_str = v_categories[i] if i < len(v_categories) else category
                 v_disc = _safe_float(v_discounts[i], 0.0) if i < len(v_discounts) else 0.0
                 v_code = v_codes[i] if i < len(v_codes) else ''
@@ -1197,9 +1230,11 @@ def add_product():
                 })
                 total_stock += stock
 
-            if len(uploaded_urls) == 1 and req_stock > 0 and total_stock <= 1:
+            if not is_oos and len(uploaded_urls) == 1 and req_stock > 0 and total_stock <= 1:
                 vars_json[0]['stock'] = req_stock
                 total_stock = req_stock
+            elif is_oos:
+                total_stock = 0
                 
             if not use_custom_thumb or not thumbnail_url:
                 thumbnail_url = uploaded_urls[0]

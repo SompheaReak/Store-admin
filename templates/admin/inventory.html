@@ -211,7 +211,7 @@
                         </label>
                         <div class="mt-2 flex items-center gap-2 p-1.5 bg-white rounded-xl border border-slate-200">
                             <div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                                <img id="quick-thumbnail-preview-img" class="w-full h-full object-cover hidden">
+                                <img id="quick-thumbnail-preview-img" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E" alt="Thumbnail preview" class="w-full h-full object-cover hidden">
                                 <i id="quick-thumbnail-placeholder-icon" class="fa-regular fa-image text-slate-400 text-xs"></i>
                             </div>
                             <span class="text-[9px] font-bold text-slate-500">Live preview active</span>
@@ -291,9 +291,15 @@
                         </div>
 
                         <div class="space-y-1 min-w-0">
-                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate" title="Stock Quantity">
-                                <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
-                            </label>
+                            <div class="flex items-center justify-between">
+                                <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate" title="Stock Quantity">
+                                    <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
+                                </label>
+                                <label class="inline-flex items-center gap-1 cursor-pointer bg-white px-1.5 py-0.5 rounded border border-slate-200 hover:border-rose-300 transition-colors shadow-2xs select-none" title="Mark product as out of stock">
+                                    <input type="checkbox" name="is_out_of_stock" id="quickadd-out-of-stock" onchange="toggleQuickAddMasterOOS(this.checked)" class="accent-rose-500 rounded cursor-pointer w-2.5 h-2.5">
+                                    <span class="text-[8px] font-black uppercase tracking-wider text-rose-500">Out of Stock</span>
+                                </label>
+                            </div>
                             <div class="relative">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
                                 <input type="number" name="stock" id="main-stock-qty" placeholder="1" min="0" oninput="handleMasterStockInput(this.value)" class="input-field w-full pl-6 pr-2 font-black text-slate-900 bg-white">
@@ -417,11 +423,17 @@
                     <div class="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
                             <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
-                            <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                <span class="text-[10px] font-bold text-slate-400">{{ p_variants|length }} Variant(s)</span>
-                                <span class="text-[10px] font-extrabold {% if p.stock > 0 %}text-emerald-600 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-500 bg-rose-50 border border-rose-200/60{% endif %} px-1.5 py-0.5 rounded">
-                                    <i class="fa-solid fa-boxes-stacked text-[9px] mr-0.5"></i> {{ p.stock }} in stock
-                                </span>
+                            <div class="flex items-center justify-between gap-1.5 mt-1.5 flex-wrap">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-[10px] font-bold text-slate-400">{{ p_variants|length }} Var</span>
+                                    <span id="card-stock-badge-{{ p.id }}" class="text-[10px] font-extrabold {% if p.stock > 0 %}text-emerald-600 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-500 bg-rose-50 border border-rose-200/60{% endif %} px-1.5 py-0.5 rounded">
+                                        <i class="fa-solid fa-boxes-stacked text-[9px] mr-0.5"></i> <span id="card-stock-val-{{ p.id }}">{{ p.stock }}</span> in stock
+                                    </span>
+                                </div>
+                                <label class="inline-flex items-center gap-1 cursor-pointer bg-slate-50 hover:bg-rose-50 px-1.5 py-0.5 rounded-md border border-slate-200/90 hover:border-rose-200 transition-colors text-[8.5px] font-black uppercase tracking-wider text-slate-600 hover:text-rose-600 select-none shadow-2xs" onclick="event.stopPropagation()" title="Toggle Out of Stock status">
+                                    <input type="checkbox" class="accent-rose-500 rounded cursor-pointer w-3 h-3 card-oos-checkbox" id="card-oos-{{ p.id }}" data-product-id="{{ p.id }}" {% if p.stock <= 0 %}checked{% endif %} onchange="toggleCardOutOfStock('{{ p.id }}', this.checked)">
+                                    <span id="card-oos-label-{{ p.id }}" class="{% if p.stock <= 0 %}text-rose-600 font-extrabold{% endif %}">Out of Stock</span>
+                                </label>
                             </div>
                         </div>
                         
@@ -677,9 +689,21 @@
             pCatBadges += `<span class="tag-badge bg-slate-100 border border-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">${escapeHtml(c)} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
         });
 
-        // Variant rows
+        // Variant rows (Fallback to standard variant if empty, ensuring item can always be edited in the future)
         let variantRowsHtml = '';
-        const variants = p.variants || [];
+        const rawVariants = Array.isArray(p.variants) && p.variants.length > 0 ? p.variants : [];
+        const variants = rawVariants.length > 0 ? rawVariants : [
+            {
+                id: 0,
+                name: p.title || 'Standard',
+                price: p.price || 0,
+                stock: p.stock !== undefined ? p.stock : 0,
+                image: p.image || '',
+                category: p.category || '',
+                discount_percent: p.discount_percent || 0,
+                code: p.product_code || ''
+            }
+        ];
         variants.forEach(v => {
             const vCats = v.category ? v.category.split(',').map(c => c.trim()).filter(c => c) : [];
             let vCatBadges = '';
@@ -688,9 +712,10 @@
             });
             const vPrice = parseFloat(v.price) || 0;
             const vPriceKhr = Math.round(vPrice * 4000);
+            const isVarOos = (parseInt(v.stock) <= 0);
 
             variantRowsHtml += `
-            <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm relative group hover:border-[#ff5000] transition-colors w-full min-w-0 box-border overflow-hidden" data-variant-image="${escapeHtml(v.image || '')}">
+            <div class="variant-row flex flex-col gap-2 bg-white p-2.5 rounded-xl border ${isVarOos ? 'border-rose-200 bg-rose-50/20' : 'border-slate-200'} shadow-sm relative group hover:border-[#ff5000] transition-colors w-full min-w-0 box-border overflow-hidden" data-variant-image="${escapeHtml(v.image || '')}">
                 <!-- ROW 1: Grip + Thumb + SKU Code + Actions -->
                 <div class="flex items-center gap-1.5 w-full min-w-0">
                     <div class="handle p-1 cursor-grab active:cursor-grabbing text-slate-400 hover:text-[#ff5000] hover:bg-orange-50 rounded transition-colors flex items-center justify-center shrink-0 touch-none select-none" style="touch-action: none;" title="Drag to reorder">
@@ -719,7 +744,7 @@
                     <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
                 </div>
 
-                <!-- ROW 2: Price ($ USD / ៛ KHR) + Stock Qty + Discount % (Clean 2-Column Grid) -->
+                <!-- ROW 2: Price ($ USD / ៛ KHR) + Stock Qty + Discount % + Out of Stock Checkbox -->
                 <div class="grid grid-cols-2 gap-1.5 w-full min-w-0 price-sync-group bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/70">
                     <!-- Price USD -->
                     <div class="relative min-w-0">
@@ -730,7 +755,7 @@
                     <!-- Stock Stepper -->
                     <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-xs h-7.5 min-w-0">
                         <button type="button" onclick="updateVarQty(this, -1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-minus text-[8px]"></i></button>
-                        <input type="number" name="v_stocks[]" value="${v.stock !== undefined ? v.stock : 0}" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar" title="Quantity">
+                        <input type="number" name="v_stocks[]" value="${v.stock !== undefined ? v.stock : 0}" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar" title="Quantity" oninput="handleVariantStockInput(this)">
                         <button type="button" onclick="updateVarQty(this, 1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-plus text-[8px]"></i></button>
                     </div>
 
@@ -744,6 +769,19 @@
                     <div class="relative min-w-0">
                         <input type="number" step="any" name="v_discounts[]" value="${v.discount_percent || 0}" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white h-7.5 py-0" title="Discount %">
                         <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
+                    </div>
+
+                    <!-- Variant Out of Stock Checkbox -->
+                    <div class="col-span-2 pt-0.5">
+                        <label class="flex items-center justify-between px-2 py-1 bg-white rounded-md border border-slate-200/90 hover:border-rose-300 transition-colors cursor-pointer select-none">
+                            <span class="text-[8.5px] font-bold text-slate-500 flex items-center gap-1">
+                                <i class="fa-solid fa-boxes-stacked text-[8px] text-slate-400"></i> Stock Status
+                            </span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <input type="checkbox" class="accent-rose-500 rounded cursor-pointer w-3 h-3 variant-oos-checkbox" ${isVarOos ? 'checked' : ''} onchange="toggleVariantRowOOS(this)">
+                                <span class="text-[8.5px] font-black uppercase tracking-wider ${isVarOos ? 'text-rose-600' : 'text-slate-600'} variant-oos-text">Out of Stock</span>
+                            </span>
+                        </label>
                     </div>
                 </div>
 
@@ -883,14 +921,20 @@
                                 <span class="text-[8px] font-bold text-emerald-600 block pl-0.5">Displayed storefront price</span>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block">
-                                    <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock Quantity
-                                </label>
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block">
+                                        <i class="fa-solid fa-boxes-stacked mr-1"></i> Stock Quantity
+                                    </label>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer bg-white px-1.5 py-0.5 rounded border border-slate-200 hover:border-rose-300 transition-colors shadow-2xs select-none" title="Mark this product as out of stock">
+                                        <input type="checkbox" name="is_out_of_stock" id="edit-product-oos-${p.id}" value="true" ${parseInt(p.stock) <= 0 ? 'checked' : ''} onchange="toggleProductEditOOS('${p.id}', this.checked)" class="accent-rose-500 rounded cursor-pointer w-3 h-3">
+                                        <span class="text-[8px] font-black uppercase tracking-wider ${parseInt(p.stock) <= 0 ? 'text-rose-600 font-extrabold' : 'text-slate-500'}">Out of Stock</span>
+                                    </label>
+                                </div>
                                 <div class="relative">
                                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[11px]"></i></span>
-                                    <input type="number" name="stock" value="${p.stock !== undefined ? p.stock : 0}" min="0" placeholder="0" class="input-field w-full pl-7 font-black text-slate-900 bg-white">
+                                    <input type="number" name="stock" id="edit-product-stock-${p.id}" value="${p.stock !== undefined ? p.stock : 0}" min="0" placeholder="0" class="input-field w-full pl-7 font-black text-slate-900 bg-white" oninput="handleEditProductStockInput('${p.id}', this.value)">
                                 </div>
-                                <span class="text-[8px] font-bold text-slate-400 block pl-0.5">Editable total inventory</span>
+                                <span class="text-[8px] font-bold text-slate-400 block pl-0.5" id="edit-product-stock-hint-${p.id}">${parseInt(p.stock) <= 0 ? '<span class="text-rose-500 font-extrabold"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Marked Out of Stock</span>' : 'Editable total inventory'}</span>
                             </div>
                         </div>
                     </div>
@@ -1441,11 +1485,50 @@
     }
 
     function handleMasterStockInput(val) {
+        const stockNum = parseInt(val) || 0;
+        const oosCb = document.getElementById('quickadd-out-of-stock');
+        if (oosCb) {
+            oosCb.checked = (stockNum <= 0 && val !== '');
+        }
         const count = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').length;
         if (count > 0 && (!val || parseInt(val) <= 0)) {
             recalculateTotalVariantStock();
         }
     }
+
+    window.toggleQuickAddMasterOOS = function(isOos) {
+        const mainStock = document.getElementById('main-stock-qty');
+        if (isOos) {
+            if (mainStock) {
+                if (parseInt(mainStock.value) > 0) mainStock.dataset.prevStock = mainStock.value;
+                mainStock.value = 0;
+            }
+            document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').forEach(input => {
+                if (parseInt(input.value) > 0) input.dataset.prevStock = input.value;
+                input.value = 0;
+            });
+            document.querySelectorAll('#variant-list .variant-oos-checkbox').forEach(cb => {
+                cb.checked = true;
+            });
+            document.querySelectorAll('#variant-list .variant-oos-text').forEach(t => {
+                t.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600 variant-oos-text';
+            });
+        } else {
+            const restored = (mainStock && mainStock.dataset.prevStock && parseInt(mainStock.dataset.prevStock) > 0) ? parseInt(mainStock.dataset.prevStock) : 1;
+            if (mainStock) mainStock.value = restored;
+            document.querySelectorAll('#variant-list input[name="variant_stocks[]"]').forEach(input => {
+                const r = (input.dataset.prevStock && parseInt(input.dataset.prevStock) > 0) ? parseInt(input.dataset.prevStock) : 1;
+                input.value = r;
+            });
+            document.querySelectorAll('#variant-list .variant-oos-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            document.querySelectorAll('#variant-list .variant-oos-text').forEach(t => {
+                t.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600 variant-oos-text';
+            });
+            recalculateTotalVariantStock();
+        }
+    };
 
     function applyStockToAllVariants(customVal, notify = true) {
         const val = customVal !== undefined ? customVal : document.getElementById('main-stock-qty')?.value;
@@ -1454,11 +1537,14 @@
         const inputs = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]');
         inputs.forEach(input => {
             input.value = stockVal;
+            if (typeof handleVariantStockInput === 'function') handleVariantStockInput(input);
         });
         const mainStock = document.getElementById('main-stock-qty');
         if (mainStock && inputs.length > 0) {
             mainStock.value = stockVal * inputs.length;
         }
+        const oosCb = document.getElementById('quickadd-out-of-stock');
+        if (oosCb) oosCb.checked = (stockVal === 0);
         if (notify && typeof showClientToast === 'function') {
             showClientToast(`Stock ${stockVal} applied to all variants`);
         }
@@ -1471,7 +1557,155 @@
         inputs.forEach(inp => { sum += (parseInt(inp.value) || 0); });
         const mainStock = document.getElementById('main-stock-qty');
         if (mainStock) mainStock.value = sum;
+        const oosCb = document.getElementById('quickadd-out-of-stock');
+        if (oosCb) oosCb.checked = (sum <= 0);
     }
+
+    window.toggleProductEditOOS = function(productId, isOos) {
+        const stockInput = document.getElementById(`edit-product-stock-${productId}`);
+        const hint = document.getElementById(`edit-product-stock-hint-${productId}`);
+        if (isOos) {
+            if (stockInput) {
+                if (parseInt(stockInput.value) > 0) stockInput.dataset.prevStock = stockInput.value;
+                stockInput.value = 0;
+            }
+            if (hint) hint.innerHTML = '<span class="text-rose-500 font-extrabold"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Marked Out of Stock</span>';
+            document.querySelectorAll(`#sortable-variants-${productId} input[name="v_stocks[]"]`).forEach(stk => {
+                if (parseInt(stk.value) > 0) stk.dataset.prevStock = stk.value;
+                stk.value = 0;
+            });
+            document.querySelectorAll(`#sortable-variants-${productId} .variant-oos-checkbox`).forEach(cb => {
+                cb.checked = true;
+            });
+            document.querySelectorAll(`#sortable-variants-${productId} .variant-oos-text`).forEach(t => {
+                t.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600 variant-oos-text';
+            });
+        } else {
+            const restored = (stockInput && stockInput.dataset.prevStock && parseInt(stockInput.dataset.prevStock) > 0) ? parseInt(stockInput.dataset.prevStock) : 1;
+            if (stockInput) stockInput.value = restored;
+            if (hint) hint.innerHTML = 'Editable total inventory';
+            document.querySelectorAll(`#sortable-variants-${productId} input[name="v_stocks[]"]`).forEach(stk => {
+                const r = (stk.dataset.prevStock && parseInt(stk.dataset.prevStock) > 0) ? parseInt(stk.dataset.prevStock) : 1;
+                stk.value = r;
+            });
+            document.querySelectorAll(`#sortable-variants-${productId} .variant-oos-checkbox`).forEach(cb => {
+                cb.checked = false;
+            });
+            document.querySelectorAll(`#sortable-variants-${productId} .variant-oos-text`).forEach(t => {
+                t.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600 variant-oos-text';
+            });
+        }
+    };
+
+    window.handleEditProductStockInput = function(productId, val) {
+        const oosCb = document.getElementById(`edit-product-oos-${productId}`);
+        const hint = document.getElementById(`edit-product-stock-hint-${productId}`);
+        const num = parseInt(val) || 0;
+        if (num <= 0) {
+            if (oosCb) oosCb.checked = true;
+            if (hint) hint.innerHTML = '<span class="text-rose-500 font-extrabold"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Marked Out of Stock</span>';
+        } else {
+            if (oosCb) oosCb.checked = false;
+            if (hint) hint.innerHTML = 'Editable total inventory';
+        }
+    };
+
+    window.toggleVariantRowOOS = function(checkbox) {
+        const row = checkbox.closest('.variant-row') || checkbox.closest('.border-slate-200');
+        if (!row) return;
+        const stockInput = row.querySelector('input[name="v_stocks[]"], input[name="variant_stocks[]"]');
+        const labelText = row.querySelector('.variant-oos-text');
+        
+        if (checkbox.checked) {
+            if (stockInput) {
+                if (parseInt(stockInput.value) > 0) stockInput.dataset.prevStock = stockInput.value;
+                stockInput.value = 0;
+            }
+            if (labelText) labelText.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600 variant-oos-text';
+        } else {
+            if (stockInput) {
+                const restored = (stockInput.dataset.prevStock && parseInt(stockInput.dataset.prevStock) > 0) ? parseInt(stockInput.dataset.prevStock) : 1;
+                stockInput.value = restored;
+            }
+            if (labelText) labelText.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600 variant-oos-text';
+        }
+        
+        if (row.closest('#variant-list')) {
+            recalculateTotalVariantStock();
+        }
+    };
+
+    window.handleVariantStockInput = function(input) {
+        const row = input.closest('.variant-row') || input.closest('.border-slate-200');
+        const val = parseInt(input.value) || 0;
+        if (row) {
+            const oosCb = row.querySelector('.variant-oos-checkbox');
+            const labelText = row.querySelector('.variant-oos-text');
+            if (val <= 0) {
+                if (oosCb) oosCb.checked = true;
+                if (labelText) labelText.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600 variant-oos-text';
+            } else {
+                if (oosCb) oosCb.checked = false;
+                if (labelText) labelText.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600 variant-oos-text';
+            }
+        }
+        if (row && row.closest('#variant-list')) {
+            recalculateTotalVariantStock();
+        }
+    };
+
+    window.toggleCardOutOfStock = async function(productId, isOos) {
+        const targetStock = isOos ? 0 : 1;
+        const badge = document.getElementById(`card-stock-badge-${productId}`);
+        const valSpan = document.getElementById(`card-stock-val-${productId}`);
+        const label = document.getElementById(`card-oos-label-${productId}`);
+        const cb = document.getElementById(`card-oos-${productId}`);
+        
+        try {
+            const res = await fetch('/admin/product/quick_stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: parseInt(productId), variant_index: -1, stock: targetStock })
+            });
+            const data = await res.json();
+            if (data && data.success) {
+                const finalStock = (data.stock !== undefined) ? data.stock : targetStock;
+                if (valSpan) valSpan.innerText = finalStock;
+                if (badge) {
+                    if (finalStock <= 0) {
+                        badge.className = 'text-[10px] font-extrabold text-rose-500 bg-rose-50 border border-rose-200/60 px-1.5 py-0.5 rounded';
+                    } else {
+                        badge.className = 'text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded';
+                    }
+                }
+                if (label) {
+                    if (isOos) {
+                        label.className = 'text-rose-600 font-extrabold';
+                    } else {
+                        label.className = '';
+                    }
+                }
+                const editStock = document.getElementById(`edit-product-stock-${productId}`);
+                const editOos = document.getElementById(`edit-product-oos-${productId}`);
+                const editHint = document.getElementById(`edit-product-stock-hint-${productId}`);
+                if (editStock) editStock.value = finalStock;
+                if (editOos) editOos.checked = isOos;
+                if (editHint) {
+                    editHint.innerHTML = isOos ? '<span class="text-rose-500 font-extrabold"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Marked Out of Stock</span>' : 'Editable total inventory';
+                }
+                if (typeof showClientToast === 'function') {
+                    showClientToast(isOos ? 'Marked out of stock' : 'Product set in stock');
+                }
+            } else {
+                throw new Error(data?.error || 'Failed to update stock');
+            }
+        } catch (err) {
+            if (cb) cb.checked = !isOos;
+            if (typeof showClientToast === 'function') {
+                showClientToast(`Error: ${err.message || 'Could not update stock'}`, true);
+            }
+        }
+    };
 
     window.applyEditBatchPrice = function(productId) {
         const input = document.getElementById(`edit-batch-price-${productId}`);
@@ -1489,6 +1723,7 @@
         const val = input.value;
         document.querySelectorAll(`#sortable-variants-${productId} input[name="v_stocks[]"]`).forEach(stkIn => {
             stkIn.value = val;
+            if (typeof handleVariantStockInput === 'function') handleVariantStockInput(stkIn);
         });
     };
 
@@ -1684,7 +1919,9 @@
         val += delta;
         if(val < 0) val = 0;
         input.value = val;
-        if (input.name === 'variant_stocks[]' && typeof recalculateTotalVariantStock === 'function') {
+        if (typeof handleVariantStockInput === 'function') {
+            handleVariantStockInput(input);
+        } else if (input.name === 'variant_stocks[]' && typeof recalculateTotalVariantStock === 'function') {
             recalculateTotalVariantStock();
         }
     };
@@ -1826,7 +2063,7 @@
                         <!-- Stock Stepper -->
                         <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-xs h-7.5 min-w-0">
                             <button type="button" onclick="updateVarQty(this, -1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-minus text-[8px]"></i></button>
-                            <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar" title="Quantity">
+                            <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar" title="Quantity" oninput="handleVariantStockInput(this)">
                             <button type="button" onclick="updateVarQty(this, 1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-plus text-[8px]"></i></button>
                         </div>
 
@@ -1840,6 +2077,19 @@
                         <div class="relative min-w-0">
                             <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white h-7.5 py-0" title="Discount %">
                             <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
+                        </div>
+
+                        <!-- Variant Out of Stock Checkbox -->
+                        <div class="col-span-2 pt-0.5">
+                            <label class="flex items-center justify-between px-2 py-1 bg-white rounded-md border border-slate-200/90 hover:border-rose-300 transition-colors cursor-pointer select-none">
+                                <span class="text-[8.5px] font-bold text-slate-500 flex items-center gap-1">
+                                    <i class="fa-solid fa-boxes-stacked text-[8px] text-slate-400"></i> Stock Status
+                                </span>
+                                <span class="inline-flex items-center gap-1.5">
+                                    <input type="checkbox" class="accent-rose-500 rounded cursor-pointer w-3 h-3 variant-oos-checkbox" ${parseInt(defaultStock) <= 0 ? 'checked' : ''} onchange="toggleVariantRowOOS(this)">
+                                    <span class="text-[8.5px] font-black uppercase tracking-wider ${parseInt(defaultStock) <= 0 ? 'text-rose-600' : 'text-slate-600'} variant-oos-text">Out of Stock</span>
+                                </span>
+                            </label>
                         </div>
                     </div>
 
