@@ -97,8 +97,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 md:gap-4 flex-1 min-h-0 overflow-hidden">
         
         <!-- ==================== LEFT COLUMN: QUICK UPLOAD FORM ==================== -->
-        <section id="panel-quickadd" class="lg:col-span-5 xl:col-span-4 2xl:col-span-3 h-full min-h-0 flex-col hidden lg:flex w-full">
-            <div id="quick-add-form-container" class="flex flex-col flex-1 min-h-0 min-w-0 w-full bg-white p-3.5 sm:p-4 rounded-2xl md:rounded-3xl shadow-sm border border-slate-200/80 overflow-y-auto overflow-x-hidden custom-admin-scrollbar overscroll-contain">
+        <section id="panel-quickadd" class="lg:col-span-4 xl:col-span-4 2xl:col-span-3 h-full min-h-0 flex-col hidden lg:flex w-full">
+            <div id="quick-add-form-container" class="flex flex-col flex-1 min-h-0 min-w-0 w-full bg-white p-3.5 sm:p-4 rounded-2xl md:rounded-3xl shadow-sm border border-slate-200/80 overflow-y-auto overflow-x-hidden custom-admin-scrollbar">
             
             <!-- Section Header -->
             <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0">
@@ -331,7 +331,7 @@
     </section>
 
     <!-- ==================== RIGHT COLUMN: PRODUCT CATALOG GRID ==================== -->
-    <section id="panel-catalog" class="lg:col-span-7 xl:col-span-8 2xl:col-span-9 h-full min-h-0 flex flex-col space-y-2 w-full">
+    <section id="panel-catalog" class="lg:col-span-8 xl:col-span-8 2xl:col-span-9 h-full min-h-0 flex flex-col space-y-2 w-full">
         
         <!-- Search & Storefront Filter Bar -->
         <div class="bg-white border border-slate-200/80 p-2 sm:p-2.5 rounded-2xl shadow-sm flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-2 shrink-0">
@@ -376,8 +376,8 @@
             <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down"></i> Drag cards to reorder</span>
         </div>
 
-        <!-- Product Cards Grid (DRAGGABLE & INDEPENDENTLY SCROLLABLE) -->
-        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-3.5 flex-1 min-h-0 overflow-y-auto custom-admin-scrollbar pr-1 content-start pb-4" id="main-inventory-list">
+        <!-- Product Cards Grid (DRAGGABLE & INDEPENDENTLY SCROLLABLE: 3 PER ROW) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-3 md:gap-3.5 flex-1 min-h-0 overflow-y-auto custom-admin-scrollbar pr-1 content-start pb-4" id="main-inventory-list">
             {% for p in products %}
             {% set p_variants = p.parsed_variants %}
             <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ (p.category or '')|lower }}">
@@ -444,18 +444,18 @@
                         </div>
                     </div>
 
-                    <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex gap-1.5">
-                        <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 flex-1">
-                            <button type="submit" class="w-full h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm" title="Toggle Visibility">
+                    <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex items-center gap-1.5">
+                        <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 shrink-0">
+                            <button type="submit" class="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-xs cursor-pointer" title="Toggle Visibility">
                                 <i class="fa-solid {% if p.is_visible %}fa-eye text-emerald-500{% else %}fa-eye-slash text-slate-400{% endif %} text-xs"></i>
                             </button>
                         </form>
-                        <button type="button" onclick="toggleEdit('{{p.id}}')" class="flex-1 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm font-extrabold text-[10px] uppercase gap-1">
+                        <button type="button" onclick="toggleEdit('{{p.id}}')" class="flex-1 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 hover:border-blue-200 transition-all shadow-xs font-extrabold text-[10px] uppercase gap-1.5 cursor-pointer">
                             <i class="fa-solid fa-pen text-[10px]"></i> Edit
                         </button>
                         <form action="/admin/product/delete/{{ p.id }}" method="POST" class="m-0 flex-1" onsubmit="return confirm('Delete this product permanently?')">
-                            <button type="submit" class="w-full h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm" title="Delete Product">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            <button type="submit" class="w-full h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-xs font-extrabold text-[10px] uppercase gap-1.5 cursor-pointer" title="Delete Product">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i> Delete
                             </button>
                         </form>
                     </div>
