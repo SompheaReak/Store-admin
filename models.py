@@ -93,6 +93,7 @@ class Order(db.Model):
     telegram_id = db.Column(db.String(100), nullable=True)
     telegram_name = db.Column(db.String(200), nullable=True)
     telegram_user_payload = db.Column(db.Text, nullable=True) 
+    customer_id = db.Column(db.Integer, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property

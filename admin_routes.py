@@ -771,6 +771,33 @@ def admin_orders():
         
     return render_template('admin/orders.html', global_orders=valid_orders)
 
+def _award_order_credits(order):
+    """Award points only if the order was placed by a logged-in CustomerUser and not already awarded."""
+    if not order or not getattr(order, 'customer_id', None):
+        return 0
+    user = CustomerUser.query.get(order.customer_id)
+    if not user:
+        return 0
+    marker = f"Earned from Order #{order.id} "
+    already = CreditTransaction.query.filter(
+        CreditTransaction.user_id == user.id,
+        CreditTransaction.description.like(f"{marker}%")
+    ).first()
+    if already:
+        return 0
+    credit_rules = SystemSetting.get_val('credit_rules', {"points_per_usd": 10})
+    pts_per_usd = max(0, int(credit_rules.get('points_per_usd', 10)))
+    earned = int(float(order.total_usd or 0.0) * pts_per_usd)
+    if earned > 0:
+        user.credit_balance = (user.credit_balance or 0) + earned
+        tx = CreditTransaction(
+            user_id=user.id,
+            amount=earned,
+            description=f"Earned from Order #{order.id} (${float(order.total_usd or 0.0):.2f})"
+        )
+        db.session.add(tx)
+    return earned
+
 @admin_bp.route('/admin/orders/confirm/<int:id>', methods=['POST'])
 @login_required
 def confirm_admin_order(id):
@@ -778,8 +805,12 @@ def confirm_admin_order(id):
     if order and order.status == 'Pending':
         _deduct_order_stock(order)
         order.status = 'Processing'
+        earned = _award_order_credits(order)
         db.session.commit()
-        flash('Order Confirmed and Stock Deducted!', 'success')
+        if earned > 0:
+            flash(f'Order Confirmed, Stock Deducted, and +{earned} credits awarded!', 'success')
+        else:
+            flash('Order Confirmed and Stock Deducted!', 'success')
     return redirect(url_for('admin_orders'))
 
 @admin_bp.route('/admin/orders/update/<int:id>', methods=['POST'])
@@ -796,6 +827,8 @@ def update_admin_order(id):
             _deduct_order_stock(order)
             
         order.status = new_status
+        if new_status in ('Processing', 'Completed'):
+            _award_order_credits(order)
         
         if 'total_usd' in request.form:
             try: order.total_usd = float(request.form.get('total_usd'))
