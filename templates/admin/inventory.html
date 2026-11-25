@@ -202,9 +202,14 @@
                             </label>
                             <div class="relative">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs">$</span>
-                                <input type="number" step="0.01" name="cost_price" id="main-cost-price" placeholder="0.00" class="input-field w-full pl-6 pr-2 font-bold text-slate-700 bg-white h-[38px]" title="Admin only - hidden from customers">
+                                <input type="number" step="0.01" name="cost_price" id="main-cost-price" placeholder="0.00" oninput="handleMasterCostInput(this.value)" class="input-field w-full pl-6 pr-2 font-bold text-slate-700 bg-white h-[38px]" title="Admin only - hidden from customers">
                             </div>
-                            <span class="text-[8px] font-bold text-slate-400 block pl-0.5 truncate">Original cost ($)</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[8px] font-bold text-slate-400 block pl-0.5 truncate">Original cost ($)</span>
+                                <button type="button" onclick="applyCostPriceToAllVariants()" class="text-[8px] font-extrabold text-slate-600 hover:text-[#ff5000] flex items-center gap-0.5 pl-0.5 transition-colors" title="Copy to all variants">
+                                    <i class="fa-solid fa-arrows-rotate text-[7px]"></i> Sync variants
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -283,7 +288,27 @@
                         <span class="text-[10px] font-black text-slate-700 uppercase tracking-wider block">4. Configure Variants</span>
                         <span class="text-[9px] font-bold text-slate-400"><i class="fa-solid fa-arrows-up-down text-orange-500 mr-0.5"></i> Drag to reorder</span>
                     </div>
-                    <div id="variant-list" class="space-y-2.5 max-h-[35vh] overflow-y-auto overflow-x-hidden w-full min-w-0 pr-0.5 custom-admin-scrollbar sortable-container"></div>
+
+                    <!-- Bulk Item Quick Action Bar -->
+                    <div class="bg-white p-2 rounded-xl border border-orange-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-1.5 text-[9px]">
+                        <span class="font-extrabold text-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-layer-group text-[#ff5000]"></i>
+                            <span id="bulk-item-count-text">Bulk Edit Items</span>
+                        </span>
+                        <div class="flex items-center gap-1">
+                            <button type="button" onclick="applyCostPriceToAllVariants()" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-black uppercase text-[8px] transition-all active:scale-95 flex items-center gap-1" title="Sync Original Cost across all items">
+                                <i class="fa-solid fa-lock text-[7px] text-slate-400"></i> Sync Cost
+                            </button>
+                            <button type="button" onclick="applySellingPriceToAllVariants()" class="px-2 py-1 bg-orange-50 hover:bg-orange-100 text-[#ff5000] border border-orange-200/80 rounded-lg font-black uppercase text-[8px] transition-all active:scale-95 flex items-center gap-1" title="Sync Selling Price across all items">
+                                <i class="fa-solid fa-tag text-[7px]"></i> Sync Price
+                            </button>
+                            <button type="button" onclick="applyStockToAllVariants()" class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200/80 rounded-lg font-black uppercase text-[8px] transition-all active:scale-95 flex items-center gap-1" title="Sync Stock across all items">
+                                <i class="fa-solid fa-cubes text-[7px]"></i> Sync Stock
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="variant-list" class="space-y-2.5 max-h-[38vh] overflow-y-auto overflow-x-hidden w-full min-w-0 pr-0.5 custom-admin-scrollbar sortable-container"></div>
                 </div>
 
                 <!-- Pricing & Profit Setup (Selling Price & Stock Controls) -->
@@ -787,6 +812,7 @@
                 vCatBadges += `<span class="tag-badge variant-tag-badge bg-orange-50 border border-orange-200 text-[#ff5000] px-1 py-0.5 rounded text-[9px] font-bold flex items-center gap-0.5">${escapeHtml(vc)} <i class="fa-solid fa-xmark cursor-pointer hover:text-red-500 remove-tag-btn"></i></span>`;
             });
             const vPrice = parseFloat(v.price) || 0;
+            const vCost = parseFloat(v.cost_price !== undefined ? v.cost_price : (p.cost_price || 0)) || 0;
             const vPriceKhr = Math.round(vPrice * 4000);
             const isVarOos = (parseInt(v.stock) <= 0);
 
@@ -820,11 +846,17 @@
                     <input type="hidden" name="v_images[]" value="${escapeHtml(v.image || '')}" class="variant-image-hidden">
                 </div>
 
-                <!-- ROW 2: Price ($ USD / ៛ KHR) + Stock Qty + Discount % + Out of Stock Checkbox -->
+                <!-- ROW 2: Cost ($) + Price ($ USD / ៛ KHR) + Stock Qty + Discount % -->
                 <div class="grid grid-cols-2 gap-1.5 w-full min-w-0 price-sync-group bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/70">
+                    <!-- Cost USD -->
+                    <div class="relative min-w-0">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none"><i class="fa-solid fa-lock text-[8px] text-slate-400 mr-0.5"></i>$</span>
+                        <input type="number" step="any" name="v_costs[]" value="${vCost.toFixed(2)}" placeholder="0.00" class="input-field pl-6 pr-1 w-full text-xs font-bold text-slate-700 bg-white h-7.5 py-0" title="Original Cost ($ USD)">
+                    </div>
+
                     <!-- Price USD -->
                     <div class="relative min-w-0">
-                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#ff5000] pointer-events-none">$</span>
                         <input type="number" step="any" name="v_prices[]" value="${vPrice.toFixed(2)}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5 py-0" oninput="calcPrice(this, 'USD')" title="Item Price ($ USD)">
                     </div>
 
@@ -1538,6 +1570,81 @@
     }
 
     // ================= 5. UNIFIED MASTER PRICING & STOCK CONTROLS =================
+    function handleMasterCostInput(val) {
+        if (!val || parseFloat(val) <= 0) return;
+        const varCostInputs = document.querySelectorAll('#variant-list .variant-cost-input');
+        const allZeroOrEmpty = Array.from(varCostInputs).every(inp => !inp.value || parseFloat(inp.value) === 0);
+        if (allZeroOrEmpty && varCostInputs.length > 0) {
+            applyCostPriceToAllVariants(val, false);
+        }
+    }
+
+    function applyCostPriceToAllVariants(customVal, notify = true) {
+        const val = customVal !== undefined ? customVal : document.getElementById('main-cost-price')?.value;
+        if (val === undefined || val === '' || parseFloat(val) < 0) return;
+        const formatted = parseFloat(val).toFixed(2);
+        document.querySelectorAll('#variant-list .variant-cost-input').forEach(input => {
+            input.value = formatted;
+        });
+        if (notify && typeof showClientToast === 'function') {
+            showClientToast(`Cost $${formatted} synced to all items`);
+        }
+    }
+
+    window.syncVariantCostToAll = function(btn) {
+        const row = btn.closest('.variant-row');
+        if (!row) return;
+        const costInput = row.querySelector('.variant-cost-input');
+        if (!costInput) return;
+        const val = costInput.value;
+        if (val === '') return;
+        const formatted = parseFloat(val || 0).toFixed(2);
+        document.querySelectorAll('#variant-list .variant-cost-input').forEach(inp => {
+            inp.value = formatted;
+        });
+        const mainCost = document.getElementById('main-cost-price');
+        if (mainCost) mainCost.value = formatted;
+        if (typeof showClientToast === 'function') {
+            showClientToast(`Original Cost $${formatted} applied to all items`);
+        }
+    };
+
+    window.syncVariantPriceToAll = function(btn) {
+        const row = btn.closest('.variant-row');
+        if (!row) return;
+        const priceInput = row.querySelector('.usd-input');
+        if (!priceInput) return;
+        const val = priceInput.value;
+        if (val === '') return;
+        const formatted = parseFloat(val || 0).toFixed(2);
+        document.querySelectorAll('#variant-list .usd-input').forEach(inp => {
+            inp.value = formatted;
+            calcPrice(inp, 'USD');
+        });
+        const mainPrice = document.getElementById('main-selling-price');
+        if (mainPrice) mainPrice.value = formatted;
+        if (typeof showClientToast === 'function') {
+            showClientToast(`Price $${formatted} applied to all items`);
+        }
+    };
+
+    window.syncVariantStockToAll = function(btn) {
+        const row = btn.closest('.variant-row');
+        if (!row) return;
+        const stockInput = row.querySelector('input[name="variant_stocks[]"]');
+        if (!stockInput) return;
+        const val = Math.max(0, parseInt(stockInput.value) || 0);
+        const allStockInputs = document.querySelectorAll('#variant-list input[name="variant_stocks[]"]');
+        allStockInputs.forEach(inp => {
+            inp.value = val;
+        });
+        const mainStock = document.getElementById('main-stock-qty');
+        if (mainStock) mainStock.value = val * allStockInputs.length;
+        if (typeof showClientToast === 'function') {
+            showClientToast(`Stock ${val} applied to all items`);
+        }
+    };
+
     function handleMasterPriceInput(val) {
         if (!val || parseFloat(val) <= 0) return;
         const varUsdInputs = document.querySelectorAll('#variant-list .usd-input');
@@ -2042,6 +2149,10 @@
         if (countText) {
             countText.innerText = `${uploadedFiles.length} variant photo(s)`;
         }
+        const bulkCountEl = document.getElementById('bulk-item-count-text');
+        if (bulkCountEl) {
+            bulkCountEl.innerText = `${uploadedFiles.length} Bulk Items`;
+        }
     }
 
     window.removeUploadVariantRow = function(btn) {
@@ -2059,6 +2170,10 @@
                 variantConfig.classList.remove('hidden'); 
                 document.getElementById('file-count-text').innerText = `${uploadedFiles.length} variant photo(s)`;
                 document.getElementById('file-count-text').classList.add('text-orange-600', 'font-bold');
+                const bulkCountEl = document.getElementById('bulk-item-count-text');
+                if (bulkCountEl) {
+                    bulkCountEl.innerText = `${uploadedFiles.length} Bulk Items`;
+                }
                 renderUploadVariants(); 
             } else { 
                 variantConfig.classList.add('hidden'); 
@@ -2167,8 +2282,10 @@
         const defaultTagString = document.getElementById('main-category-input').value.trim();
         const mainProductCode = document.querySelector('input[name="product_code"]').value.trim().toUpperCase();
 
+        const masterCostPrice = parseFloat(document.getElementById('main-cost-price')?.value) || 0;
         const masterSellingPrice = parseFloat(document.getElementById('main-selling-price')?.value || document.querySelector('input[name="price"]')?.value) || 0;
         const masterStockQty = parseInt(document.getElementById('main-stock-qty')?.value || document.querySelector('input[name="stock"]')?.value) || 1;
+        const defaultCostStr = masterCostPrice > 0 ? masterCostPrice.toFixed(2) : '0.00';
         const defaultPriceStr = masterSellingPrice > 0 ? masterSellingPrice.toFixed(2) : '0.00';
         const defaultPriceKhr = masterSellingPrice > 0 ? Math.round(masterSellingPrice * 4000) : 0;
 
@@ -2224,44 +2341,78 @@
                         </button>
                     </div>
 
-                    <!-- ROW 2: Price ($ USD / ៛ KHR) + Stock Qty + Discount % (Clean 2-Column Grid) -->
-                    <div class="grid grid-cols-2 gap-1.5 w-full min-w-0 price-sync-group bg-slate-50/80 p-1.5 rounded-lg border border-slate-200/70">
-                        <!-- Price USD -->
-                        <div class="relative min-w-0">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">$</span>
-                            <input type="number" step="any" name="variant_prices[]" value="${defaultPriceStr}" placeholder="0.00" class="usd-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5 py-0" oninput="calcPrice(this, 'USD')" title="Item Price ($ USD)">
+                    <!-- ROW 2: EDITING BOX (Original Cost, Selling Price, Stock Qty, KHR/Disc) -->
+                    <div class="bg-slate-50/90 p-2 rounded-xl border border-slate-200/80 space-y-1.5 text-[10px] shadow-2xs price-sync-group">
+                        <!-- Inputs Grid: Cost & Price -->
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <!-- Original Cost ($) -->
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[8px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-0.5 truncate" title="Original Cost Price">
+                                        <i class="fa-solid fa-lock text-[7px] text-slate-400"></i> Cost ($)
+                                    </label>
+                                    <button type="button" onclick="syncVariantCostToAll(this)" class="text-[7.5px] font-extrabold text-slate-400 hover:text-[#ff5000] flex items-center gap-0.5 transition-colors" title="Apply this cost to all items">
+                                        <i class="fa-solid fa-arrows-rotate text-[6.5px]"></i> All
+                                    </button>
+                                </div>
+                                <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1.5 h-7.5 focus-within:border-slate-400 transition-colors">
+                                    <span class="text-slate-400 font-black text-[9px] mr-1 pointer-events-none">$</span>
+                                    <input type="number" step="0.01" name="variant_costs[]" value="${defaultCostStr}" placeholder="0.00" class="variant-cost-input w-full text-slate-800 font-bold bg-transparent outline-none text-[10.5px]" title="Original Cost Price">
+                                </div>
+                            </div>
+
+                            <!-- Selling Price ($ USD) -->
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[8px] font-black uppercase tracking-wider text-orange-600 flex items-center gap-0.5 truncate" title="Storefront Selling Price">
+                                        <i class="fa-solid fa-tag text-[7px] text-[#ff5000]"></i> Price ($)
+                                    </label>
+                                    <button type="button" onclick="syncVariantPriceToAll(this)" class="text-[7.5px] font-extrabold text-orange-500 hover:text-[#ff5000] flex items-center gap-0.5 transition-colors" title="Apply this price to all items">
+                                        <i class="fa-solid fa-arrows-rotate text-[6.5px]"></i> All
+                                    </button>
+                                </div>
+                                <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1.5 h-7.5 focus-within:border-[#ff5000] transition-colors">
+                                    <span class="text-[#ff5000] font-black text-[9px] mr-1 pointer-events-none">$</span>
+                                    <input type="number" step="0.01" name="variant_prices[]" value="${defaultPriceStr}" placeholder="0.00" class="usd-input w-full text-slate-950 font-black bg-transparent outline-none text-[10.5px]" oninput="calcPrice(this, 'USD')" title="Selling Price ($ USD)">
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Stock Stepper -->
-                        <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-xs h-7.5 min-w-0">
-                            <button type="button" onclick="updateVarQty(this, -1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-minus text-[8px]"></i></button>
-                            <input type="number" name="variant_stocks[]" value="${defaultStock}" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar" title="Quantity" oninput="handleVariantStockInput(this)">
-                            <button type="button" onclick="updateVarQty(this, 1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-plus text-[8px]"></i></button>
-                        </div>
+                        <!-- Inputs Grid: Stock Quantity & KHR / Disc -->
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <!-- Stock Quantity -->
+                            <div class="space-y-0.5 min-w-0">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-[8px] font-black uppercase tracking-wider text-blue-600 flex items-center gap-0.5 truncate" title="Stock Quantity">
+                                        <i class="fa-solid fa-cubes text-[7px] text-blue-500"></i> Stock
+                                    </label>
+                                    <button type="button" onclick="syncVariantStockToAll(this)" class="text-[7.5px] font-extrabold text-blue-500 hover:text-blue-700 flex items-center gap-0.5 transition-colors" title="Apply this stock to all items">
+                                        <i class="fa-solid fa-arrows-rotate text-[6.5px]"></i> All
+                                    </button>
+                                </div>
+                                <div class="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-2xs h-7.5 min-w-0">
+                                    <button type="button" onclick="updateVarQty(this, -1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-minus text-[8px]"></i></button>
+                                    <input type="number" name="variant_stocks[]" value="${defaultStock}" min="0" class="w-full min-w-0 text-center text-xs font-black bg-transparent outline-none hide-scrollbar text-slate-900" title="Quantity" oninput="handleVariantStockInput(this)">
+                                    <button type="button" onclick="updateVarQty(this, 1)" class="w-6 h-full flex items-center justify-center text-slate-400 hover:text-[#ff5000] active:scale-95 transition-all shrink-0"><i class="fa-solid fa-plus text-[8px]"></i></button>
+                                </div>
+                            </div>
 
-                        <!-- Price KHR -->
-                        <div class="relative min-w-0">
-                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 pointer-events-none">៛</span>
-                            <input type="number" step="any" value="${defaultPriceKhr}" placeholder="0" class="khr-input input-field pl-5 pr-1 w-full text-xs font-black bg-white h-7.5 py-0" oninput="calcPrice(this, 'KHR')" title="Item Price (៛ KHR)">
-                        </div>
-
-                        <!-- Discount % -->
-                        <div class="relative min-w-0">
-                            <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="input-field w-full text-xs font-black text-[#ff5000] text-center pr-4 pl-1 bg-white h-7.5 py-0" title="Discount %">
-                            <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-400 pointer-events-none">%</span>
-                        </div>
-
-                        <!-- Variant Out of Stock Checkbox -->
-                        <div class="col-span-2 pt-0.5">
-                            <label class="flex items-center justify-between px-2 py-1 bg-white rounded-md border border-slate-200/90 hover:border-rose-300 transition-colors cursor-pointer select-none">
-                                <span class="text-[8.5px] font-bold text-slate-500 flex items-center gap-1">
-                                    <i class="fa-solid fa-boxes-stacked text-[8px] text-slate-400"></i> Stock Status
-                                </span>
-                                <span class="inline-flex items-center gap-1.5">
-                                    <input type="checkbox" class="accent-rose-500 rounded cursor-pointer w-3 h-3 variant-oos-checkbox" ${parseInt(defaultStock) <= 0 ? 'checked' : ''} onchange="toggleVariantRowOOS(this)">
-                                    <span class="text-[8.5px] font-black uppercase tracking-wider ${parseInt(defaultStock) <= 0 ? 'text-rose-600' : 'text-slate-600'} variant-oos-text">Out of Stock</span>
-                                </span>
-                            </label>
+                            <!-- KHR / Disc -->
+                            <div class="space-y-0.5 min-w-0">
+                                <label class="text-[8px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-0.5 truncate">
+                                    ៛ KHR / % Disc
+                                </label>
+                                <div class="grid grid-cols-2 gap-1 h-7.5">
+                                    <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1 focus-within:border-slate-400">
+                                        <span class="text-slate-400 font-bold text-[8px] mr-0.5 pointer-events-none">៛</span>
+                                        <input type="number" step="any" value="${defaultPriceKhr}" placeholder="0" class="khr-input w-full text-slate-700 font-bold bg-transparent outline-none text-[10px]" oninput="calcPrice(this, 'KHR')" title="Item Price (៛ KHR)">
+                                    </div>
+                                    <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1 focus-within:border-[#ff5000]">
+                                        <input type="number" step="any" name="variant_discounts[]" value="0" placeholder="0" class="w-full text-xs font-black text-[#ff5000] text-center bg-transparent outline-none pr-3" title="Discount %">
+                                        <span class="absolute right-1 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-400 pointer-events-none">%</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -1190,6 +1190,7 @@ def update_product(id):
         v_cats = request.form.getlist('v_categories[]')
         v_discounts = request.form.getlist('v_discounts[]') 
         v_codes = request.form.getlist('v_codes[]')
+        v_costs = request.form.getlist('v_costs[]')
         
         updated_variants = []
         total_stock = 0
@@ -1213,11 +1214,14 @@ def update_product(id):
             if user_stock is not None and len(v_ids) == 1:
                 stock = user_stock
 
+            v_cst = _safe_float(v_costs[i], p.cost_price) if (i < len(v_costs) and v_costs[i] is not None and str(v_costs[i]).strip() != '') else getattr(p, 'cost_price', 0.0)
+
             updated_variants.append({
                 "id": vid, 
                 "image": v_images[i] if i < len(v_images) else p.image, 
                 "name": v_names[i] if i < len(v_names) else f"Style {i+1}",
                 "price": v_pr, 
+                "cost_price": v_cst,
                 "stock": stock, 
                 "category": v_cats[i] if i < len(v_cats) else p.category,
                 "discount_percent": _safe_float(v_discounts[i], 0.0) if i < len(v_discounts) else 0.0,
@@ -1325,6 +1329,7 @@ def add_product():
     v_categories = request.form.getlist('variant_categories[]')
     v_discounts = request.form.getlist('variant_discounts[]')
     v_codes = request.form.getlist('variant_codes[]')
+    v_costs = request.form.getlist('variant_costs[]')
     
     files = request.files.getlist('images')
     uploaded_urls = []
@@ -1368,10 +1373,11 @@ def add_product():
                 cat_str = v_categories[i] if i < len(v_categories) else category
                 v_disc = _safe_float(v_discounts[i], 0.0) if i < len(v_discounts) else 0.0
                 v_code = v_codes[i] if i < len(v_codes) else ''
+                v_cst = _safe_float(v_costs[i], cost_price) if (i < len(v_costs) and v_costs[i] is not None and str(v_costs[i]).strip() != '') else cost_price
                 
                 vars_json.append({
                     "id": i, "name": v_names[i] if i < len(v_names) else f"Style {i+1}", 
-                    "price": price, "stock": stock, "image": url, 
+                    "price": price, "cost_price": v_cst, "stock": stock, "image": url, 
                     "category": cat_str, "discount_percent": v_disc, "code": v_code
                 })
                 total_stock += stock
@@ -1386,11 +1392,12 @@ def add_product():
                 thumbnail_url = uploaded_urls[0]
                 
             final_price = selling_price_input if selling_price_input > 0 else (vars_json[0]['price'] if vars_json else 0.0)
+            final_cost = cost_price if cost_price > 0 else (vars_json[0].get('cost_price', 0.0) if vars_json else 0.0)
             new_p = Product(
                 product_code=product_code_raw,
                 title=title or f"Product #{product_code_raw or ''}", 
                 price=final_price,
-                cost_price=cost_price,
+                cost_price=final_cost,
                 stock=total_stock, 
                 image=thumbnail_url, 
                 category=category or "General", 
