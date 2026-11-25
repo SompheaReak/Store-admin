@@ -956,6 +956,104 @@ def quick_update_stock():
     db.session.commit()
     return jsonify({'success': True, 'stock': product.stock})
 
+@admin_bp.route('/admin/product/quick_update', methods=['POST'])
+@login_required
+def quick_update_product():
+    data = request.json or {}
+    p_id = data.get('product_id')
+    if not p_id:
+        return jsonify({'success': False, 'error': 'Product ID required'}), 400
+
+    product = Product.query.get(p_id)
+    if not product:
+        return jsonify({'success': False, 'error': 'Product not found'}), 404
+
+    # 1. Category
+    if 'category' in data and data.get('category') is not None:
+        product.category = str(data.get('category', '')).strip()
+
+    # 2. Original Cost (cost_price)
+    if 'cost_price' in data and data.get('cost_price') is not None:
+        product.cost_price = _safe_float(data.get('cost_price'), 0.0)
+
+    # 3. Selling Price
+    if 'price' in data and data.get('price') is not None:
+        new_price = _safe_float(data.get('price'), product.price)
+        product.price = new_price
+        if product.variants:
+            try:
+                variants = json.loads(product.variants)
+                if len(variants) == 1:
+                    variants[0]['price'] = new_price
+                    product.variants = json.dumps(variants)
+            except Exception:
+                pass
+
+    # 4. Out of stock & Stock count
+    is_oos = data.get('is_out_of_stock')
+    has_stock = 'stock' in data and data.get('stock') is not None
+
+    if is_oos is True:
+        product.stock = 0
+        if product.variants:
+            try:
+                variants = json.loads(product.variants)
+                for v in variants:
+                    v['stock'] = 0
+                product.variants = json.dumps(variants)
+            except Exception:
+                pass
+    elif is_oos is False and (not has_stock or int(data.get('stock', 0)) <= 0):
+        product.stock = 1
+        if product.variants:
+            try:
+                variants = json.loads(product.variants)
+                if variants:
+                    variants[0]['stock'] = 1
+                    product.variants = json.dumps(variants)
+            except Exception:
+                pass
+    elif has_stock:
+        new_stock = _safe_int(data.get('stock'), 0)
+        product.stock = max(0, new_stock)
+        if product.variants:
+            try:
+                variants = json.loads(product.variants)
+                if new_stock <= 0:
+                    for v in variants:
+                        v['stock'] = 0
+                elif len(variants) == 1:
+                    variants[0]['stock'] = new_stock
+                elif sum(int(v.get('stock', 0)) for v in variants) == 0:
+                    for v in variants:
+                        v['stock'] = max(1, int(new_stock // len(variants)) or 1)
+                product.variants = json.dumps(variants)
+            except Exception:
+                pass
+
+    # Synchronize category to variants if single variant
+    if 'category' in data and product.variants:
+        try:
+            variants = json.loads(product.variants)
+            if len(variants) == 1:
+                variants[0]['category'] = product.category
+                product.variants = json.dumps(variants)
+        except Exception:
+            pass
+
+    _sync_product_to_pool(product.id, -1, product.stock)
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'product_id': product.id,
+        'cost_price': float(product.cost_price or 0.0),
+        'price': float(product.price or 0.0),
+        'stock': int(product.stock or 0),
+        'category': product.category or '',
+        'is_out_of_stock': bool(product.stock <= 0)
+    })
+
 @admin_bp.route('/admin/categories/update', methods=['POST'])
 @login_required
 def update_categories():

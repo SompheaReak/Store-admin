@@ -46,6 +46,22 @@
         border-color: #ff5000;
         box-shadow: 0 0 0 3px rgba(255, 80, 0, 0.08);
     }
+
+    .product-item {
+        will-change: transform, box-shadow;
+        transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+    }
+    .product-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+    }
+    .quick-edit-box {
+        transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+    }
+    .quick-edit-box:focus-within {
+        border-color: #cbd5e1;
+        background-color: #ffffff;
+    }
     
     /* Scrollbar Utility */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -291,15 +307,9 @@
                         </div>
 
                         <div class="space-y-1 min-w-0">
-                            <div class="flex items-center justify-between">
-                                <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate" title="Stock Quantity">
-                                    <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
-                                </label>
-                                <label class="inline-flex items-center gap-1 cursor-pointer bg-white px-1.5 py-0.5 rounded border border-slate-200 hover:border-rose-300 transition-colors shadow-2xs select-none" title="Mark product as out of stock">
-                                    <input type="checkbox" name="is_out_of_stock" id="quickadd-out-of-stock" onchange="toggleQuickAddMasterOOS(this.checked)" class="accent-rose-500 rounded cursor-pointer w-2.5 h-2.5">
-                                    <span class="text-[8px] font-black uppercase tracking-wider text-rose-500">Out of Stock</span>
-                                </label>
-                            </div>
+                            <label class="text-[9px] font-black uppercase tracking-wider text-blue-600 block truncate" title="Stock Quantity">
+                                <i class="fa-solid fa-boxes-stacked mr-0.5"></i> Stock Qty
+                            </label>
                             <div class="relative">
                                 <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue-400 font-black text-xs"><i class="fa-solid fa-cubes text-[10px]"></i></span>
                                 <input type="number" name="stock" id="main-stock-qty" placeholder="1" min="0" oninput="handleMasterStockInput(this.value)" class="input-field w-full pl-6 pr-2 font-black text-slate-900 bg-white">
@@ -368,6 +378,12 @@
                     {% endfor %}
                 </select>
 
+                <datalist id="system-categories-datalist">
+                    {% for cat in categories %}
+                    <option value="{{cat.name}}">{{cat.name}}</option>
+                    {% endfor %}
+                </datalist>
+
                 <button onclick="openCatModal()" class="px-2.5 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-[9px] font-extrabold uppercase transition-colors shrink-0 flex items-center gap-1.5">
                     <i class="fa-solid fa-folder-tree text-slate-500"></i>
                     <span class="hidden sm:inline">Categories</span>
@@ -422,22 +438,77 @@
 
                     <div class="p-3.5 flex-1 flex flex-col justify-between">
                         <div>
-                            <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
-                            <div class="flex items-center justify-between gap-1.5 mt-1.5 flex-wrap">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="text-[10px] font-bold text-slate-400">{{ p_variants|length }} Var</span>
-                                    <span id="card-stock-badge-{{ p.id }}" class="text-[10px] font-extrabold {% if p.stock > 0 %}text-emerald-600 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-500 bg-rose-50 border border-rose-200/60{% endif %} px-1.5 py-0.5 rounded">
-                                        <i class="fa-solid fa-boxes-stacked text-[9px] mr-0.5"></i> <span id="card-stock-val-{{ p.id }}">{{ p.stock }}</span> in stock
-                                    </span>
+                            <div class="flex items-start justify-between gap-1.5">
+                                <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
+                            </div>
+                            <div class="flex items-center justify-between gap-1.5 mt-1.5">
+                                <span class="text-[10px] font-bold text-slate-400">{{ p_variants|length }} Var</span>
+                                <span id="card-stock-badge-{{ p.id }}" class="text-[10px] font-extrabold {% if p.stock > 0 %}text-emerald-600 bg-emerald-50 border border-emerald-200/60{% else %}text-rose-500 bg-rose-50 border border-rose-200/60{% endif %} px-1.5 py-0.5 rounded transition-all">
+                                    <i class="fa-solid fa-boxes-stacked text-[9px] mr-0.5"></i> <span id="card-stock-val-{{ p.id }}">{{ p.stock }}</span> in stock
+                                </span>
+                            </div>
+
+                            <!-- DIRECT QUICK EDIT BOX -->
+                            <div class="mt-2.5 p-2 bg-slate-50/95 rounded-xl border border-slate-200 space-y-2 text-[10px] quick-edit-box shadow-2xs" id="quick-box-{{ p.id }}" onclick="event.stopPropagation()">
+                                <!-- Row 1: Out of Stock Toggle & Stock Number -->
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer bg-white hover:bg-rose-50/50 px-2 py-1 rounded-lg border border-slate-200 hover:border-rose-300 transition-all select-none shadow-2xs group" title="Toggle Out of Stock status">
+                                        <input type="checkbox" id="card-quick-oos-{{ p.id }}" class="accent-rose-500 rounded cursor-pointer w-3.5 h-3.5" {% if p.stock <= 0 %}checked{% endif %} onchange="onQuickCardOosChange('{{ p.id }}', this.checked)">
+                                        <span id="card-quick-oos-text-{{ p.id }}" class="text-[8.5px] font-black uppercase tracking-wider {% if p.stock <= 0 %}text-rose-600{% else %}text-slate-600 group-hover:text-rose-500{% endif %}">Out of Stock</span>
+                                    </label>
+                                    
+                                    <div class="flex items-center gap-1 bg-white px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs">
+                                        <span class="text-[8px] font-extrabold text-blue-600 uppercase tracking-tight flex items-center gap-0.5" title="Number of Stock">
+                                            <i class="fa-solid fa-cubes text-[8px] text-blue-500"></i> Stock
+                                        </span>
+                                        <input type="number" id="card-quick-stock-{{ p.id }}" min="0" value="{{ p.stock }}" class="w-10 text-center font-black text-slate-900 bg-transparent outline-none text-[11px] py-0.5" onchange="onQuickCardStockChange('{{ p.id }}', this.value)" title="Change Stock Quantity">
+                                    </div>
                                 </div>
-                                <label class="inline-flex items-center gap-1 cursor-pointer bg-slate-50 hover:bg-rose-50 px-1.5 py-0.5 rounded-md border border-slate-200/90 hover:border-rose-200 transition-colors text-[8.5px] font-black uppercase tracking-wider text-slate-600 hover:text-rose-600 select-none shadow-2xs" onclick="event.stopPropagation()" title="Toggle Out of Stock status">
-                                    <input type="checkbox" class="accent-rose-500 rounded cursor-pointer w-3 h-3 card-oos-checkbox" id="card-oos-{{ p.id }}" data-product-id="{{ p.id }}" {% if p.stock <= 0 %}checked{% endif %} onchange="toggleCardOutOfStock('{{ p.id }}', this.checked)">
-                                    <span id="card-oos-label-{{ p.id }}" class="{% if p.stock <= 0 %}text-rose-600 font-extrabold{% endif %}">Out of Stock</span>
-                                </label>
+
+                                <!-- Row 2: Original Cost & Price -->
+                                <div class="grid grid-cols-2 gap-1.5">
+                                    <div class="space-y-0.5">
+                                        <label class="text-[8px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-0.5" title="Original Cost (Cost Price)">
+                                            <i class="fa-solid fa-lock text-[7px] text-slate-400"></i> Cost ($)
+                                        </label>
+                                        <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1.5 py-0.5 focus-within:border-slate-400 transition-colors">
+                                            <span class="text-slate-400 font-black text-[9px] mr-1">$</span>
+                                            <input type="number" step="0.01" id="card-quick-cost-{{ p.id }}" value="{{ '%.2f'|format(p.cost_price or 0.0) }}" class="w-full text-slate-800 font-bold bg-transparent outline-none text-[10.5px]" placeholder="0.00" onchange="onQuickCardCostChange('{{ p.id }}', this.value)" title="Original Cost Price">
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-0.5">
+                                        <label class="text-[8px] font-black uppercase tracking-wider text-orange-600 flex items-center gap-0.5" title="Storefront Selling Price">
+                                            <i class="fa-solid fa-tag text-[7px] text-[#ff5000]"></i> Price ($)
+                                        </label>
+                                        <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1.5 py-0.5 focus-within:border-[#ff5000] transition-colors">
+                                            <span class="text-[#ff5000] font-black text-[9px] mr-1">$</span>
+                                            <input type="number" step="0.01" id="card-quick-price-{{ p.id }}" value="{{ '%.2f'|format(p.price) }}" class="w-full text-slate-950 font-black bg-transparent outline-none text-[10.5px]" placeholder="0.00" onchange="onQuickCardPriceChange('{{ p.id }}', this.value)" title="Selling Price">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Row 3: Category & Save Action -->
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center justify-between">
+                                        <label class="text-[8px] font-black uppercase tracking-wider text-slate-500 flex items-center gap-0.5" title="Product Category">
+                                            <i class="fa-solid fa-folder text-[7px] text-slate-400"></i> Category
+                                        </label>
+                                        <span id="card-quick-status-{{ p.id }}" class="text-[8px] font-extrabold uppercase tracking-wider text-emerald-600 hidden items-center gap-0.5">
+                                            <i class="fa-solid fa-check text-[7px]"></i> Saved
+                                        </span>
+                                    </div>
+                                    <div class="relative bg-white rounded-lg border border-slate-200 shadow-2xs flex items-center px-1.5 py-0.5 focus-within:border-[#ff5000] transition-colors">
+                                        <input type="text" list="system-categories-datalist" id="card-quick-cat-{{ p.id }}" value="{{ p.category or '' }}" placeholder="Category..." class="w-full text-slate-800 font-semibold bg-transparent outline-none text-[10px] truncate" onchange="onQuickCardCategoryChange('{{ p.id }}', this.value)">
+                                        <button type="button" onclick="triggerQuickCardSave('{{ p.id }}')" class="ml-1 text-[8px] font-black text-[#ff5000] hover:text-white hover:bg-[#ff5000] active:scale-95 px-2 py-0.5 bg-orange-50 rounded-md transition-all shrink-0 uppercase tracking-wider shadow-2xs" title="Save changes for this product">
+                                            Save
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100">
+                        <div class="flex justify-between items-center mt-2.5 pt-2 border-t border-slate-100">
                             <div>
                                 {% set p_prices = [] %}
                                 {% for v in p_variants %}
@@ -446,13 +517,13 @@
                                     {% endif %}
                                 {% endfor %}
                                 {% if p_prices|length > 1 and (p_prices|min) != (p_prices|max) %}
-                                    <span class="text-xs font-black text-[#ff5000] leading-none" title="Variants have individual pricing">$ {{ "%.2f"|format(p_prices|min) }} ~ $ {{ "%.2f"|format(p_prices|max) }}</span>
+                                    <span id="card-display-price-{{ p.id }}" class="text-xs font-black text-[#ff5000] leading-none" title="Variants have individual pricing">$ {{ "%.2f"|format(p_prices|min) }} ~ $ {{ "%.2f"|format(p_prices|max) }}</span>
                                 {% else %}
-                                    <span class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
+                                    <span id="card-display-price-{{ p.id }}" class="text-sm font-black text-[#ff5000] leading-none">$ {{ "%.2f"|format(p.price) }}</span>
                                 {% endif %}
-                                <span class="text-[10px] text-slate-400 font-bold block mt-0.5">Cost: $ {{ "%.2f"|format(p.cost_price or 0.0) }}</span>
+                                <span id="card-display-cost-{{ p.id }}" class="text-[10px] text-slate-400 font-bold block mt-0.5">Cost: $ {{ "%.2f"|format(p.cost_price or 0.0) }}</span>
                             </div>
-                            <span class="text-[10px] font-bold text-slate-400">{{ (p.price * 4000) | int }} ៛</span>
+                            <span id="card-display-khr-{{ p.id }}" class="text-[10px] font-bold text-slate-400">{{ (p.price * 4000) | int }} ៛</span>
                         </div>
                     </div>
 
@@ -1654,58 +1725,154 @@
         }
     };
 
-    window.toggleCardOutOfStock = async function(productId, isOos) {
-        const targetStock = isOos ? 0 : 1;
-        const badge = document.getElementById(`card-stock-badge-${productId}`);
-        const valSpan = document.getElementById(`card-stock-val-${productId}`);
-        const label = document.getElementById(`card-oos-label-${productId}`);
-        const cb = document.getElementById(`card-oos-${productId}`);
-        
+    // ================= QUICK EDIT INLINE PROPERTIES HANDLERS =================
+    window.onQuickCardOosChange = function(productId, isOos) {
+        const stockInput = document.getElementById(`card-quick-stock-${productId}`);
+        const oosText = document.getElementById(`card-quick-oos-text-${productId}`);
+        if (isOos) {
+            if (stockInput) {
+                stockInput.dataset.prevStock = stockInput.value;
+                stockInput.value = 0;
+            }
+            if (oosText) {
+                oosText.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600';
+            }
+        } else {
+            if (stockInput) {
+                const prev = parseInt(stockInput.dataset.prevStock) || 1;
+                stockInput.value = prev > 0 ? prev : 1;
+            }
+            if (oosText) {
+                oosText.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600';
+            }
+        }
+        triggerQuickCardSave(productId);
+    };
+
+    window.onQuickCardStockChange = function(productId, val) {
+        const stockVal = parseInt(val) || 0;
+        const oosCb = document.getElementById(`card-quick-oos-${productId}`);
+        const oosText = document.getElementById(`card-quick-oos-text-${productId}`);
+        if (stockVal <= 0) {
+            if (oosCb) oosCb.checked = true;
+            if (oosText) oosText.className = 'text-[8.5px] font-black uppercase tracking-wider text-rose-600';
+        } else {
+            if (oosCb) oosCb.checked = false;
+            if (oosText) oosText.className = 'text-[8.5px] font-black uppercase tracking-wider text-slate-600';
+        }
+        triggerQuickCardSave(productId);
+    };
+
+    window.onQuickCardCostChange = function(productId, val) {
+        triggerQuickCardSave(productId);
+    };
+
+    window.onQuickCardPriceChange = function(productId, val) {
+        triggerQuickCardSave(productId);
+    };
+
+    window.onQuickCardCategoryChange = function(productId, val) {
+        triggerQuickCardSave(productId);
+    };
+
+    window.triggerQuickCardSave = async function(productId) {
+        const oosCb = document.getElementById(`card-quick-oos-${productId}`);
+        const stockInput = document.getElementById(`card-quick-stock-${productId}`);
+        const costInput = document.getElementById(`card-quick-cost-${productId}`);
+        const priceInput = document.getElementById(`card-quick-price-${productId}`);
+        const catInput = document.getElementById(`card-quick-cat-${productId}`);
+        const statusSpan = document.getElementById(`card-quick-status-${productId}`);
+
+        const isOos = oosCb ? oosCb.checked : false;
+        const stock = stockInput ? Math.max(0, parseInt(stockInput.value) || 0) : 0;
+        const costPrice = costInput ? parseFloat(costInput.value) || 0.0 : 0.0;
+        const price = priceInput ? parseFloat(priceInput.value) || 0.0 : 0.0;
+        const category = catInput ? catInput.value.trim() : '';
+
+        if (statusSpan) {
+            statusSpan.classList.remove('hidden');
+            statusSpan.classList.add('inline-flex');
+            statusSpan.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-[7px] text-orange-500"></i> <span class="text-orange-500">Saving</span>';
+        }
+
         try {
-            const res = await fetch('/admin/product/quick_stock', {
+            const res = await fetch('/admin/product/quick_update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: parseInt(productId), variant_index: -1, stock: targetStock })
+                body: JSON.stringify({
+                    product_id: parseInt(productId),
+                    is_out_of_stock: isOos,
+                    stock: stock,
+                    cost_price: costPrice,
+                    price: price,
+                    category: category
+                })
             });
             const data = await res.json();
             if (data && data.success) {
-                const finalStock = (data.stock !== undefined) ? data.stock : targetStock;
-                if (valSpan) valSpan.innerText = finalStock;
+                const badge = document.getElementById(`card-stock-badge-${productId}`);
+                const valSpan = document.getElementById(`card-stock-val-${productId}`);
+                const displayPrice = document.getElementById(`card-display-price-${productId}`);
+                const displayCost = document.getElementById(`card-display-cost-${productId}`);
+                const displayKhr = document.getElementById(`card-display-khr-${productId}`);
+                const itemCard = document.getElementById(`item-${productId}`);
+
+                if (valSpan) valSpan.innerText = data.stock;
                 if (badge) {
-                    if (finalStock <= 0) {
-                        badge.className = 'text-[10px] font-extrabold text-rose-500 bg-rose-50 border border-rose-200/60 px-1.5 py-0.5 rounded';
+                    if (data.stock <= 0) {
+                        badge.className = 'text-[10px] font-extrabold text-rose-500 bg-rose-50 border border-rose-200/60 px-1.5 py-0.5 rounded transition-all';
                     } else {
-                        badge.className = 'text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded';
+                        badge.className = 'text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded transition-all';
                     }
                 }
-                if (label) {
-                    if (isOos) {
-                        label.className = 'text-rose-600 font-extrabold';
-                    } else {
-                        label.className = '';
-                    }
+
+                if (displayPrice) displayPrice.innerText = `$ ${data.price.toFixed(2)}`;
+                if (displayCost) displayCost.innerText = `Cost: $ ${data.cost_price.toFixed(2)}`;
+                if (displayKhr) displayKhr.innerText = `${Math.round(data.price * 4000).toLocaleString()} ៛`;
+
+                if (itemCard) {
+                    itemCard.dataset.categories = (data.category || '').toLowerCase();
                 }
+
+                if (window.ADMIN_PRODUCTS_MAP && window.ADMIN_PRODUCTS_MAP[productId]) {
+                    const pObj = window.ADMIN_PRODUCTS_MAP[productId];
+                    pObj.stock = data.stock;
+                    pObj.cost_price = data.cost_price;
+                    pObj.price = data.price;
+                    pObj.category = data.category;
+                }
+
                 const editStock = document.getElementById(`edit-product-stock-${productId}`);
                 const editOos = document.getElementById(`edit-product-oos-${productId}`);
-                const editHint = document.getElementById(`edit-product-stock-hint-${productId}`);
-                if (editStock) editStock.value = finalStock;
-                if (editOos) editOos.checked = isOos;
-                if (editHint) {
-                    editHint.innerHTML = isOos ? '<span class="text-rose-500 font-extrabold"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> Marked Out of Stock</span>' : 'Editable total inventory';
+                if (editStock) editStock.value = data.stock;
+                if (editOos) editOos.checked = (data.stock <= 0);
+
+                if (statusSpan) {
+                    statusSpan.innerHTML = '<i class="fa-solid fa-check text-[7px] text-emerald-600"></i> <span class="text-emerald-600">Saved</span>';
+                    setTimeout(() => {
+                        statusSpan.classList.add('hidden');
+                        statusSpan.classList.remove('inline-flex');
+                    }, 2200);
                 }
+
                 if (typeof showClientToast === 'function') {
-                    showClientToast(isOos ? 'Marked out of stock' : 'Product set in stock');
+                    showClientToast(`Product #${productId} updated!`);
                 }
             } else {
-                throw new Error(data?.error || 'Failed to update stock');
+                throw new Error(data?.error || 'Failed to update product');
             }
         } catch (err) {
-            if (cb) cb.checked = !isOos;
+            console.error('Quick save error:', err);
+            if (statusSpan) {
+                statusSpan.innerHTML = '<i class="fa-solid fa-circle-exclamation text-[7px] text-rose-500"></i> <span class="text-rose-500">Error</span>';
+            }
             if (typeof showClientToast === 'function') {
-                showClientToast(`Error: ${err.message || 'Could not update stock'}`, true);
+                showClientToast(`Error: ${err.message || 'Could not save'}`, true);
             }
         }
     };
+
+    window.toggleCardOutOfStock = window.onQuickCardOosChange;
 
     window.applyEditBatchPrice = function(productId) {
         const input = document.getElementById(`edit-batch-price-${productId}`);

@@ -30,27 +30,61 @@
             user-select: none;
             -webkit-user-select: none;
         }
-        .input-box { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; width: 100%; font-size: 14px; font-weight: 700; outline: none; transition: 0.2s; background: white; color: #0f172a; appearance: none; }
-        .input-box:focus { border-color: #ff5000; box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.05); }
-        .btn-taobao { background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%); color: white; font-weight: 800; border-radius: 12px; transition: all 0.2s; border: none; box-shadow: 0 4px 6px rgba(255, 80, 0, 0.2); }
-        @media (hover: hover) and (pointer: fine) {
-            .btn-taobao:hover { transform: translateY(-1px); box-shadow: 0 6px 12px rgba(255, 80, 0, 0.3); }
+        .input-box {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 10px;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 700;
+            outline: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            background: white;
+            color: #0f172a;
+            appearance: none;
         }
-        .btn-taobao:active { transform: scale(0.98); }
+        .input-box:focus {
+            border-color: #ff5000;
+            box-shadow: 0 0 0 4px rgba(255, 80, 0, 0.08);
+            background-color: #ffffff;
+        }
+        .btn-taobao {
+            background: linear-gradient(135deg, #ff9000 0%, #ff5000 100%);
+            color: white;
+            font-weight: 800;
+            border-radius: 14px;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s ease;
+            border: none;
+            box-shadow: 0 4px 12px rgba(255, 80, 0, 0.25);
+            will-change: transform;
+        }
+        @media (hover: hover) and (pointer: fine) {
+            .btn-taobao:hover {
+                transform: translateY(-1.5px);
+                box-shadow: 0 8px 18px rgba(255, 80, 0, 0.35);
+                filter: brightness(1.03);
+            }
+        }
+        .btn-taobao:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(255, 80, 0, 0.2);
+        }
         .tab-btn { 
             background: transparent; 
             color: #64748b; 
-            transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1), background-color 150ms ease-out, color 150ms ease-out, box-shadow 150ms ease-out; 
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; 
             border-bottom: 2px solid transparent; 
             white-space: nowrap; 
             min-height: 42px;
+            border-radius: 12px 12px 0 0;
+            will-change: transform;
         }
-        .tab-btn:hover { color: #0f172a; }
-        .tab-btn:active { transform: scale(0.97); }
+        .tab-btn:hover { color: #0f172a; background-color: rgba(255, 255, 255, 0.6); }
+        .tab-btn:active { transform: scale(0.96); }
         .tab-btn.active { 
             background: white; 
             color: #ff5000; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            box-shadow: 0 4px 12px -2px rgba(0,0,0,0.06); 
             border-bottom: 2px solid #ff5000; 
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
