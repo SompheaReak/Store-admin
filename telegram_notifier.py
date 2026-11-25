@@ -83,11 +83,21 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
             "text": msg,
             "parse_mode": "Markdown"
         }
-        resp = requests.post(url, json=payload, timeout=8.0)
-        if resp.status_code != 200:
-            logger.error(f"Telegram order alert failed ({resp.status_code}): {resp.text[:300]}")
-            return False
-        return True
+        for attempt in range(2):
+            try:
+                resp = requests.post(url, json=payload, timeout=6.0)
+                if resp.status_code == 200:
+                    return True
+                if resp.status_code == 400 and "parse_mode" in payload:
+                    logger.warning(f"Telegram Markdown 400, retrying plain text: {resp.text[:200]}")
+                    payload = {"chat_id": chat_id, "text": msg.replace('*', '').replace('`', '')}
+                    continue
+                logger.error(f"Telegram order alert failed ({resp.status_code}): {resp.text[:300]}")
+                if resp.status_code < 500:
+                    return False
+            except requests.RequestException as req_err:
+                logger.warning(f"Telegram request attempt {attempt + 1} failed: {req_err}")
+        return False
     except Exception as e:
         logger.error(f"Error sending Telegram alert: {e}")
         return False

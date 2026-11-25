@@ -609,8 +609,9 @@
 
     <script>
         (function() {
-            const POLL_MS = 15000;
+            const POLL_MS = 4000;
             const STORAGE_KEY = 'admin_last_seen_order_id';
+            let inFlight = false;
 
             function playOrderChime() {
                 try {
@@ -651,9 +652,13 @@
             }
 
             async function pollPendingOrders() {
-                if (document.hidden) return;
+                if (document.hidden || inFlight) return;
+                inFlight = true;
                 try {
-                    const res = await fetch('/admin/api/pending-orders', { credentials: 'same-origin' });
+                    const res = await fetch('/admin/api/pending-orders', {
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    });
                     if (!res.ok) return;
                     const data = await res.json();
                     updateOrderBadges(Number(data.pending_count || 0));
@@ -669,11 +674,20 @@
                         localStorage.setItem(STORAGE_KEY, String(latestId));
                         showOrderAlertBanner(data.latest_order);
                         playOrderChime();
+                        if (window.location.pathname.startsWith('/admin/orders') && !document.querySelector('.fixed:not(.hidden)')) {
+                            setTimeout(() => window.location.reload(), 1200);
+                        }
                     }
-                } catch (e) {}
+                } catch (e) {
+                } finally {
+                    inFlight = false;
+                }
             }
 
             setInterval(pollPendingOrders, POLL_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) pollPendingOrders();
+            });
             pollPendingOrders();
         })();
     </script>

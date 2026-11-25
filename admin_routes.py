@@ -657,7 +657,7 @@ def admin_api_next_product_code():
 def admin_api_pending_orders():
     pending_count = Order.query.filter_by(status='Pending').count()
     latest = Order.query.filter_by(status='Pending').order_by(Order.id.desc()).first()
-    return jsonify({
+    resp = jsonify({
         "pending_count": pending_count,
         "latest_order_id": latest.id if latest else 0,
         "latest_order": {
@@ -666,6 +666,8 @@ def admin_api_pending_orders():
             "total_usd": float(latest.total_usd or 0.0)
         } if latest else None
     })
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
 @admin_bp.route('/admin/api/live_stock', methods=['GET'])
 @login_required
 def admin_api_live_stock():
