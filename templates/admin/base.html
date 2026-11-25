@@ -187,9 +187,7 @@
             </a>
             <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center relative {% if request.endpoint in ['admin_orders', 'admin.admin_orders'] %}active{% endif %}">
                 <i class="fa-solid fa-receipt mr-1 lg:mr-1.5 text-xs"></i> Orders
-                {% if pending_count and pending_count > 0 %}
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border-2 border-white animate-bounce">{{ pending_count }}</span>
-                {% endif %}
+                <span class="orders-pending-badge absolute -top-1 -right-1 bg-red-500 text-white min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border-2 border-white animate-bounce {% if not (pending_count and pending_count > 0) %}hidden{% endif %}">{{ pending_count or 0 }}</span>
             </a>
             <a href="{{ url_for('admin_customers') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_customers', 'admin.admin_customers'] %}active{% endif %}">
                 <i class="fa-solid fa-users mr-1 lg:mr-1.5 text-xs"></i> Customers
@@ -396,9 +394,7 @@
         <a href="{{ url_for('admin_orders') }}" class="mobile-nav-item {% if request.endpoint in ['admin_orders', 'admin.admin_orders'] %}active{% endif %} relative">
             <i class="fa-solid fa-receipt text-base mb-1"></i>
             <span>Orders</span>
-            {% if pending_count and pending_count > 0 %}
-            <span class="absolute top-0.5 right-3 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm animate-bounce">{{ pending_count }}</span>
-            {% endif %}
+            <span class="orders-pending-badge absolute top-0.5 right-3 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm animate-bounce {% if not (pending_count and pending_count > 0) %}hidden{% endif %}">{{ pending_count or 0 }}</span>
         </a>
         <button type="button" onclick="toggleMobileMoreSheet()" class="mobile-nav-item {% if request.endpoint in ['admin_customers', 'admin.admin_customers', 'admin_profit_analysis', 'admin.admin_profit_analysis', 'admin_settings', 'admin.admin_settings', 'admin_redeem', 'admin.admin_redeem', 'admin_spin', 'admin.admin_spin'] %}active{% endif %}">
             <i class="fa-solid fa-bars text-base mb-1"></i>
@@ -601,6 +597,85 @@
             sheet.classList.add('hidden');
             sheet.classList.remove('flex');
         }
+    </script>
+
+    <div id="live-order-alert" onclick="window.location.href='{{ url_for('admin_orders') }}'" class="hidden fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[9998] cursor-pointer bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-orange-500/50 flex items-center gap-3 max-w-xs hover:bg-slate-800 transition-all">
+        <span class="w-9 h-9 rounded-xl bg-[#ff5000] flex items-center justify-center shrink-0 animate-pulse"><i class="fa-solid fa-bell text-sm"></i></span>
+        <div class="min-w-0">
+            <div class="text-[10px] font-black uppercase tracking-wider text-orange-400">New Order Alert</div>
+            <div id="live-order-alert-text" class="text-xs font-bold truncate">Check pending orders</div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const POLL_MS = 15000;
+            const STORAGE_KEY = 'admin_last_seen_order_id';
+
+            function playOrderChime() {
+                try {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtx) return;
+                    const ctx = new AudioCtx();
+                    [587.33, 880].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.setValueAtTime(0.08, ctx.currentTime + idx * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(ctx.currentTime + idx * 0.12);
+                        osc.stop(ctx.currentTime + idx * 0.12 + 0.25);
+                    });
+                } catch (e) {}
+            }
+
+            function updateOrderBadges(count) {
+                document.querySelectorAll('.orders-pending-badge').forEach(el => {
+                    el.textContent = count;
+                    if (count > 0) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                });
+            }
+
+            function showOrderAlertBanner(order) {
+                const box = document.getElementById('live-order-alert');
+                const txt = document.getElementById('live-order-alert-text');
+                if (!box || !txt) return;
+                txt.textContent = `#${order.id} · ${order.customer_name || 'Customer'} ($${Number(order.total_usd || 0).toFixed(2)})`;
+                box.classList.remove('hidden');
+                clearTimeout(window._orderAlertTimer);
+                window._orderAlertTimer = setTimeout(() => box.classList.add('hidden'), 12000);
+            }
+
+            async function pollPendingOrders() {
+                if (document.hidden) return;
+                try {
+                    const res = await fetch('/admin/api/pending-orders', { credentials: 'same-origin' });
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    updateOrderBadges(Number(data.pending_count || 0));
+
+                    const latestId = Number(data.latest_order_id || 0);
+                    const prevRaw = localStorage.getItem(STORAGE_KEY);
+                    if (prevRaw === null) {
+                        localStorage.setItem(STORAGE_KEY, String(latestId));
+                        return;
+                    }
+                    const prevId = Number(prevRaw || 0);
+                    if (latestId > prevId && data.latest_order) {
+                        localStorage.setItem(STORAGE_KEY, String(latestId));
+                        showOrderAlertBanner(data.latest_order);
+                        playOrderChime();
+                    }
+                } catch (e) {}
+            }
+
+            setInterval(pollPendingOrders, POLL_MS);
+            pollPendingOrders();
+        })();
     </script>
 
     {% block scripts %}{% endblock %}

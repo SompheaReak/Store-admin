@@ -519,7 +519,7 @@ def admin_settings():
     })
 
     tg_config = SystemSetting.get_val('telegram_config', {
-        'bot_token': os.environ.get('TELEGRAM_BOT_TOKEN', '9106650406:AAEQDs96gx24HQDe3BPCArNat6lsDnoQvKQ'),
+        'bot_token': os.environ.get('TELEGRAM_BOT_TOKEN', ''),
         'chat_id': os.environ.get('TELEGRAM_CHAT_ID', '')
     })
 
@@ -641,6 +641,21 @@ def admin_inventory():
 @login_required
 def admin_api_next_product_code():
     return jsonify({"code": generate_unique_product_code()})
+
+@admin_bp.route('/admin/api/pending-orders', methods=['GET'])
+@login_required
+def admin_api_pending_orders():
+    pending_count = Order.query.filter_by(status='Pending').count()
+    latest = Order.query.filter_by(status='Pending').order_by(Order.id.desc()).first()
+    return jsonify({
+        "pending_count": pending_count,
+        "latest_order_id": latest.id if latest else 0,
+        "latest_order": {
+            "id": latest.id,
+            "customer_name": latest.customer_name,
+            "total_usd": float(latest.total_usd or 0.0)
+        } if latest else None
+    })
 @admin_bp.route('/admin/api/live_stock', methods=['GET'])
 @login_required
 def admin_api_live_stock():

@@ -46,10 +46,10 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
 
         item_lines = []
         for idx, item in enumerate(items, 1):
-            title = item.get('title') or item.get('name') or 'Item'
+            title = escape_tg_markdown(item.get('title') or item.get('name') or 'Item')
             qty = item.get('qty', 1)
             price = float(item.get('price', 0.0))
-            var_name = item.get('variantName')
+            var_name = escape_tg_markdown(item.get('variantName'))
             var_text = f" ({var_name})" if var_name else ""
             item_lines.append(f"  {idx}. {title}{var_text} x{qty} — ${price:.2f}")
 
@@ -60,12 +60,15 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
         cust_phone = escape_tg_markdown(order.customer_phone)
         cust_addr = escape_tg_markdown(order.customer_address)
         promo_code = escape_tg_markdown(order.promo_code_used or 'None')
+        tg_contact = escape_tg_markdown(getattr(order, 'telegram_name', None))
+        tg_line = f"✈️ *Telegram:* {tg_contact}\n" if tg_contact else ""
 
         msg = (
             f"🛍️ *NEW ORDER ALERT #{order.id}*\n"
             f"━━━━━━━━━━━━━━━━━━━\n"
             f"👤 *Customer:* {cust_name}\n"
             f"📞 *Phone:* `{cust_phone}`\n"
+            f"{tg_line}"
             f"📍 *Address:* {cust_addr}\n"
             f"💵 *Total:* ${order.total_usd:.2f} ({khr_equiv:,} ៛)\n"
             f"🎟️ *Promo:* {promo_code}\n"
@@ -80,8 +83,11 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
             "text": msg,
             "parse_mode": "Markdown"
         }
-        resp = requests.post(url, json=payload, timeout=4.0)
-        return resp.status_code == 200
+        resp = requests.post(url, json=payload, timeout=8.0)
+        if resp.status_code != 200:
+            logger.error(f"Telegram order alert failed ({resp.status_code}): {resp.text[:300]}")
+            return False
+        return True
     except Exception as e:
         logger.error(f"Error sending Telegram alert: {e}")
         return False
