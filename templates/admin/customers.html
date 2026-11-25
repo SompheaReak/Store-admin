@@ -121,6 +121,11 @@
                     <button onclick="viewHistory('{{ c.id }}', '{{ c.phone }}')" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 shadow-sm">
                         History
                     </button>
+                    <form action="{{ url_for('admin.delete_customer_account', user_id=c.id) }}" method="POST" onsubmit="return confirm('Delete account {{ c.phone }}? This cannot be undone.');" class="inline">
+                        <button type="submit" class="py-2.5 px-3 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors active:scale-95 shadow-sm" title="Delete Account">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endfor %}
@@ -193,6 +198,11 @@
                             <button onclick="viewHistory('{{ c.id }}', '{{ c.phone }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors">
                                 History
                             </button>
+                            <form action="{{ url_for('admin.delete_customer_account', user_id=c.id) }}" method="POST" onsubmit="return confirm('Delete account {{ c.phone }}? This cannot be undone.');" class="inline">
+                                <button type="submit" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors" title="Delete Account">
+                                    <i class="fa-solid fa-trash mr-1"></i>Delete
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

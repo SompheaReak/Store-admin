@@ -318,6 +318,16 @@ def admin_reset_customer_password(user_id):
     flash(f"Password for {user.phone} ({user.full_name or 'Customer'}) set to: '{new_password}'. You can now give this password to the customer.", 'success')
     return redirect(url_for('admin.admin_customers'))
 
+@admin_bp.route('/admin/customers/<int:user_id>/delete', methods=['POST'])
+@login_required
+def delete_customer_account(user_id):
+    user = CustomerUser.query.get_or_404(user_id)
+    phone = user.phone
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Deleted customer account {phone}.', 'success')
+    return redirect(url_for('admin.admin_customers'))
+
 # --- PROFIT ANALYSIS ROUTES (USD & KHR) ---
 @admin_bp.route('/admin/profit-analysis')
 @login_required
