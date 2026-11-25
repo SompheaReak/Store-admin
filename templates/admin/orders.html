@@ -143,7 +143,7 @@
         {% set status_class = 'status-pending' %}
         {% if order.status == 'Processing' %}{% set status_class = 'status-processing' %}{% endif %}
         {% if order.status == 'Completed' %}{% set status_class = 'status-completed' %}{% endif %}
-        {% if order.status == 'Cancelled' %}{% set status_class = 'status-cancelled' %}{% endif %}
+        {% if order.status in ('Cancelled', 'Reject') %}{% set status_class = 'status-cancelled' %}{% endif %}
 
         <div class="order-item order-card bg-white rounded-3xl border border-slate-200/80 shadow-sm relative overflow-hidden flex flex-col justify-between" data-status="{{ order.status }}" data-search="{{ order.id | lower }} {{ order.customer_name | lower }} {{ order.customer_phone }}" id="order-{{ order.id }}">
             
@@ -164,6 +164,7 @@
                                 {% if order.status == 'Pending' %}<i class="fa-regular fa-clock mr-1"></i>{% endif %}
                                 {% if order.status == 'Processing' %}<i class="fa-solid fa-box-open mr-1"></i>{% endif %}
                                 {% if order.status == 'Completed' %}<i class="fa-solid fa-check-double mr-1"></i>{% endif %}
+                                {% if order.status in ('Cancelled', 'Reject') %}<i class="fa-solid fa-ban mr-1"></i>{% endif %}
                                 {{ order.status }}
                             </span>
                         </div>

@@ -884,12 +884,18 @@ def update_order_status(id, status):
 def delete_order(id):
     order = Order.query.get(id)
     if order:
-        if order.promo_code_used:
-            promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
-            if promo and promo.current_uses > 0:
-                promo.current_uses -= 1
-        db.session.delete(order)
-        db.session.commit()
+        if order.status != 'Reject':
+            if order.promo_code_used:
+                promo = PromoCode.query.filter_by(code=order.promo_code_used).first()
+                if promo and promo.current_uses > 0:
+                    promo.current_uses -= 1
+            order.status = 'Reject'
+            db.session.commit()
+            flash(f'Order #{order.id} marked as Reject.', 'info')
+        else:
+            db.session.delete(order)
+            db.session.commit()
+            flash(f'Order #{order.id} permanently deleted.', 'info')
     return redirect(url_for('admin_orders'))
 
 @admin_bp.route('/admin/order/bulk_delete', methods=['POST'])
