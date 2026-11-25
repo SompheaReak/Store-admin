@@ -50,6 +50,11 @@
     .product-item {
         will-change: transform, box-shadow;
         transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+        height: 100%;
+        min-height: fit-content;
+    }
+    #main-inventory-list {
+        grid-auto-rows: max-content;
     }
     .product-item:hover {
         transform: translateY(-2px);
@@ -399,15 +404,15 @@
         </div>
 
         <!-- Product Cards Grid (DRAGGABLE & INDEPENDENTLY SCROLLABLE: 3 PER ROW) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-3 md:gap-3.5 flex-1 min-h-0 overflow-y-auto custom-admin-scrollbar pr-1 content-start pb-4" id="main-inventory-list">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-3 md:gap-3.5 flex-1 min-h-0 overflow-y-auto custom-admin-scrollbar pr-1 auto-rows-max content-start pb-4" id="main-inventory-list">
             {% for p in products %}
             {% set p_variants = p.parsed_variants %}
-            <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ (p.category or '')|lower }}">
+            <div class="product-item bg-white rounded-2xl border border-slate-200/80 shadow-sm relative transition-all duration-300 hover:shadow-md hover:border-slate-300 flex flex-col justify-between min-h-fit {% if not p.is_visible %}bg-slate-50/80 opacity-75{% endif %}" id="item-{{p.id}}" data-store="{{p.store}}" data-title="{{ p.title|lower }}" data-code="{{ (p.product_code or '')|lower }}" data-id="{{ p.id }}" data-categories="{{ (p.category or '')|lower }}">
                 
                 <!-- VIEW CARD MODE -->
-                <div class="view-mode flex flex-col h-full">
+                <div class="view-mode flex flex-col justify-between flex-1 min-h-fit">
                     
-                    <div class="relative h-36 md:h-44 w-full bg-slate-50 p-3 flex items-center justify-center border-b border-slate-100 group cursor-pointer" onclick="openImageViewer('{{ p.image }}')">
+                    <div class="relative h-32 md:h-36 w-full bg-slate-50 p-2.5 flex items-center justify-center border-b border-slate-100 group cursor-pointer rounded-t-2xl overflow-hidden shrink-0" onclick="openImageViewer('{{ p.image }}')">
                         <img src="{{ p.image }}" class="max-w-full max-h-full object-contain mix-blend-multiply drop-shadow-sm group-hover:scale-105 transition-transform duration-300" loading="lazy">
                         
                         <div class="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center transition-all">
@@ -436,7 +441,7 @@
                         </div>
                     </div>
 
-                    <div class="p-3.5 flex-1 flex flex-col justify-between">
+                    <div class="p-3.5 flex-1 flex flex-col justify-between min-h-fit">
                         <div>
                             <div class="flex items-start justify-between gap-1.5">
                                 <h4 class="font-extrabold text-xs text-slate-900 leading-snug line-clamp-2 {% if not p.is_visible %}line-through text-slate-400{% endif %}" title="{{ p.title }}">{{ p.title }}</h4>
@@ -527,7 +532,7 @@
                         </div>
                     </div>
 
-                    <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex items-center gap-1.5">
+                    <div class="p-2 border-t border-slate-100 bg-slate-50/50 flex items-center gap-1.5 rounded-b-2xl shrink-0 mt-auto">
                         <form action="/admin/product/toggle/{{ p.id }}" method="POST" class="m-0 shrink-0">
                             <button type="submit" class="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-500 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-xs cursor-pointer" title="Toggle Visibility">
                                 <i class="fa-solid {% if p.is_visible %}fa-eye text-emerald-500{% else %}fa-eye-slash text-slate-400{% endif %} text-xs"></i>
@@ -1237,7 +1242,7 @@
             const mSearch = !searchTerm || title.includes(searchTerm) || id.includes(searchTerm) || code.includes(searchTerm) || `#${code}`.includes(searchTerm);
 
             if (mStore && mCat && mSearch) {
-                item.style.display = 'block';
+                item.style.display = '';
                 visibleCount++;
             } else {
                 item.style.display = 'none';
