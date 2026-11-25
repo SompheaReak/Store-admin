@@ -21,6 +21,45 @@ def get_telegram_credentials():
         logger.warning(f"Failed to fetch telegram_config from DB: {e}")
     return bot_token, chat_id
 
+def _post_telegram_message(bot_token, chat_id, text, parse_mode="Markdown"):
+    """Send a message to one or more comma-separated Telegram chat IDs."""
+    chat_ids = [c.strip() for c in str(chat_id).split(",") if c.strip()]
+    if not bot_token or not chat_ids:
+        return False, "Bot token or Chat ID is missing"
+
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    all_ok = True
+    last_err = "Unknown error"
+
+    for cid in chat_ids:
+        payload = {"chat_id": cid, "text": text}
+        if parse_mode:
+            payload["parse_mode"] = parse_mode
+
+        sent = False
+        for attempt in range(2):
+            try:
+                resp = requests.post(url, json=payload, timeout=6.0)
+                if resp.status_code == 200:
+                    sent = True
+                    break
+                if resp.status_code == 400 and "parse_mode" in payload:
+                    logger.warning(f"Telegram Markdown 400 for {cid}, retrying plain text: {resp.text[:200]}")
+                    payload = {"chat_id": cid, "text": text.replace('*', '').replace('`', '')}
+                    continue
+                data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+                last_err = data.get("description", f"HTTP {resp.status_code}")
+                logger.error(f"Telegram send failed for {cid} ({resp.status_code}): {resp.text[:300]}")
+                if resp.status_code < 500:
+                    break
+            except requests.RequestException as req_err:
+                last_err = str(req_err)
+                logger.warning(f"Telegram request attempt {attempt + 1} for {cid} failed: {req_err}")
+        if not sent:
+            all_ok = False
+
+    return all_ok, ("Sent" if all_ok else last_err)
+
 def send_telegram_order_alert(order, bot_token=None, chat_id=None):
     """
     Dispatches order notification alert to Telegram.
@@ -77,27 +116,8 @@ def send_telegram_order_alert(order, bot_token=None, chat_id=None):
             f"⏰ {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC"
         )
 
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": msg,
-            "parse_mode": "Markdown"
-        }
-        for attempt in range(2):
-            try:
-                resp = requests.post(url, json=payload, timeout=6.0)
-                if resp.status_code == 200:
-                    return True
-                if resp.status_code == 400 and "parse_mode" in payload:
-                    logger.warning(f"Telegram Markdown 400, retrying plain text: {resp.text[:200]}")
-                    payload = {"chat_id": chat_id, "text": msg.replace('*', '').replace('`', '')}
-                    continue
-                logger.error(f"Telegram order alert failed ({resp.status_code}): {resp.text[:300]}")
-                if resp.status_code < 500:
-                    return False
-            except requests.RequestException as req_err:
-                logger.warning(f"Telegram request attempt {attempt + 1} failed: {req_err}")
-        return False
+        ok, _ = _post_telegram_message(bot_token, chat_id, msg)
+        return ok
     except Exception as e:
         logger.error(f"Error sending Telegram alert: {e}")
         return False
@@ -112,25 +132,14 @@ def send_telegram_test_message(bot_token, chat_id):
     if not chat_id:
         return False, "Chat ID is missing"
 
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": (
-                "✅ *Somphea Reak Telegram Alert Connected!*\n\n"
-                "Your bot is now configured successfully. You will receive real-time notifications whenever a customer places an order."
-            ),
-            "parse_mode": "Markdown"
-        }
-        resp = requests.post(url, json=payload, timeout=5.0)
-        data = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
-        if resp.status_code == 200 and data.get("ok"):
-            return True, "Test alert sent successfully! Check your Telegram chat."
-        else:
-            err = data.get("description", f"HTTP {resp.status_code}")
-            return False, f"Telegram API error: {err}"
-    except Exception as e:
-        return False, f"Connection failed: {str(e)}"
+    text = (
+        "✅ *Somphea Reak Telegram Alert Connected!*\n\n"
+        "Your bot is now configured successfully. You will receive real-time notifications whenever a customer places an order."
+    )
+    ok, err = _post_telegram_message(bot_token, chat_id, text)
+    if ok:
+        return True, "Test alert sent successfully! Check your Telegram chat."
+    return False, f"Telegram API error: {err}"
 
 def escape_tg_markdown(text):
     if not text:
@@ -167,14 +176,8 @@ def send_telegram_recovery_alert(user, note=None):
             f"👉 Go to Admin Panel -> Customers to reset and provide their password."
         )
 
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        payload = {
-            "chat_id": chat_id,
-            "text": msg,
-            "parse_mode": "Markdown"
-        }
-        resp = requests.post(url, json=payload, timeout=4.0)
-        return resp.status_code == 200
+        ok, _ = _post_telegram_message(bot_token, chat_id, msg)
+        return ok
     except Exception as e:
         logger.error(f"Error sending recovery Telegram alert: {e}")
         return False
