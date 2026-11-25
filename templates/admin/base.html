@@ -70,22 +70,45 @@
             box-shadow: 0 2px 6px rgba(255, 80, 0, 0.2);
         }
         .tab-btn { 
+            position: relative;
+            z-index: 2;
             background: transparent; 
             color: #64748b; 
-            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; 
+            transition: color 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1); 
             border-bottom: 2px solid transparent; 
             white-space: nowrap; 
             min-height: 42px;
-            border-radius: 12px 12px 0 0;
+            border-radius: 12px;
             will-change: transform;
+            user-select: none;
         }
-        .tab-btn:hover { color: #0f172a; background-color: rgba(255, 255, 255, 0.6); }
+        .tab-btn:hover { color: #0f172a; }
         .tab-btn:active { transform: scale(0.96); }
         .tab-btn.active { 
             background: white; 
             color: #ff5000; 
             box-shadow: 0 4px 12px -2px rgba(0,0,0,0.06); 
             border-bottom: 2px solid #ff5000; 
+        }
+        #admin-nav-container.has-sliding-pill .tab-btn {
+            background: transparent !important;
+            box-shadow: none !important;
+            border-bottom: 2px solid transparent !important;
+        }
+        #admin-nav-container.has-sliding-pill .tab-btn.active {
+            color: #ff5000 !important;
+        }
+        .nav-active-pill {
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px -1px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+            border-bottom: 2px solid #ff5000;
+            transition: left 0.32s cubic-bezier(0.16, 1, 0.3, 1), width 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+            opacity: 0;
+            will-change: left, width, opacity;
         }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -154,14 +177,15 @@
 
     <!-- Top Navigation Tabs (Desktop / Tablet) -->
     <div class="w-full max-w-[1400px] mx-auto px-2 md:px-4 mt-2 shrink-0 hidden md:block">
-        <div class="bg-gray-200/70 p-1 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x" style="-webkit-overflow-scrolling: touch;">
-            <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+        <div id="admin-nav-container" class="relative bg-gray-200/70 p-1 rounded-xl md:rounded-2xl flex gap-1 shadow-inner overflow-x-auto hide-scrollbar touch-pan-x" style="-webkit-overflow-scrolling: touch;">
+            <div id="nav-active-pill" class="nav-active-pill"></div>
+            <a href="{{ url_for('admin_dashboard') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_dashboard', 'admin.admin_dashboard'] %}active{% endif %}">
                 <i class="fa-solid fa-chart-pie mr-1 lg:mr-1.5 text-xs"></i> Overview
             </a>
-            <a href="{{ url_for('admin_inventory') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
+            <a href="{{ url_for('admin_inventory') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_inventory', 'admin.admin_inventory'] %}active{% endif %}">
                 <i class="fa-solid fa-box mr-1 lg:mr-1.5 text-xs"></i> Inventory
             </a>
-            <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center relative {% if request.endpoint == 'admin_orders' %}active{% endif %}">
+            <a href="{{ url_for('admin_orders') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center relative {% if request.endpoint in ['admin_orders', 'admin.admin_orders'] %}active{% endif %}">
                 <i class="fa-solid fa-receipt mr-1 lg:mr-1.5 text-xs"></i> Orders
                 {% if pending_count and pending_count > 0 %}
                 <span class="absolute -top-1 -right-1 bg-red-500 text-white min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center text-[9px] font-black shadow-md border-2 border-white animate-bounce">{{ pending_count }}</span>
@@ -176,10 +200,10 @@
             <a href="{{ url_for('admin_settings') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_settings', 'admin.admin_settings'] %}active{% endif %}">
                 <i class="fa-solid fa-gear mr-1 lg:mr-1.5 text-xs"></i> Settings
             </a>
-            <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint == 'admin_redeem' %}active{% endif %}">
+            <a href="{{ url_for('admin_redeem') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_redeem', 'admin.admin_redeem'] %}active{% endif %}">
                 <i class="fa-solid fa-ticket mr-1 lg:mr-1.5 text-xs"></i> Promo Codes
             </a>
-            <a href="{{ url_for('admin_spin') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint == 'admin_spin' %}active{% endif %}">
+            <a href="{{ url_for('admin_spin') }}" class="tab-btn flex-1 min-w-max px-2.5 lg:px-3.5 py-2 lg:py-2.5 text-[11px] lg:text-xs font-black uppercase rounded-lg md:rounded-xl flex items-center justify-center {% if request.endpoint in ['admin_spin', 'admin.admin_spin'] %}active{% endif %}">
                 <i class="fa-solid fa-gamepad mr-1 lg:mr-1.5 text-xs"></i> Minifig Spin
             </a>
         </div>
@@ -355,11 +379,11 @@
     
     <!-- MOBILE BOTTOM NAVIGATION BAR (Fixed Bottom for Phone) -->
     <nav class="md:hidden shrink-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-8px_20px_rgba(0,0,0,0.05)] px-2 pt-1 pb-[calc(0.4rem+env(safe-area-inset-bottom,0px))] flex items-center justify-around z-40">
-        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+        <a href="{{ url_for('admin_dashboard') }}" class="mobile-nav-item {% if request.endpoint in ['admin_dashboard', 'admin.admin_dashboard'] %}active{% endif %}">
             <i class="fa-solid fa-chart-pie text-base mb-1"></i>
             <span>Overview</span>
         </a>
-        <a href="{{ url_for('admin_inventory') }}" class="mobile-nav-item {% if request.endpoint == 'admin_inventory' %}active{% endif %}">
+        <a href="{{ url_for('admin_inventory') }}" class="mobile-nav-item {% if request.endpoint in ['admin_inventory', 'admin.admin_inventory'] %}active{% endif %}">
             <i class="fa-solid fa-box text-base mb-1"></i>
             <span>Inventory</span>
         </a>
@@ -369,14 +393,14 @@
             </div>
             <span class="mt-0.5 font-black text-[#ff5000]">Stock</span>
         </button>
-        <a href="{{ url_for('admin_orders') }}" class="mobile-nav-item {% if request.endpoint == 'admin_orders' %}active{% endif %} relative">
+        <a href="{{ url_for('admin_orders') }}" class="mobile-nav-item {% if request.endpoint in ['admin_orders', 'admin.admin_orders'] %}active{% endif %} relative">
             <i class="fa-solid fa-receipt text-base mb-1"></i>
             <span>Orders</span>
             {% if pending_count and pending_count > 0 %}
             <span class="absolute top-0.5 right-3 bg-red-500 text-white w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black shadow-sm animate-bounce">{{ pending_count }}</span>
             {% endif %}
         </a>
-        <button type="button" onclick="toggleMobileMoreSheet()" class="mobile-nav-item {% if request.endpoint in ['admin_customers', 'admin.admin_customers', 'admin_profit_analysis', 'admin.admin_profit_analysis', 'admin_settings', 'admin.admin_settings', 'admin_redeem', 'admin_spin'] %}active{% endif %}">
+        <button type="button" onclick="toggleMobileMoreSheet()" class="mobile-nav-item {% if request.endpoint in ['admin_customers', 'admin.admin_customers', 'admin_profit_analysis', 'admin.admin_profit_analysis', 'admin_settings', 'admin.admin_settings', 'admin_redeem', 'admin.admin_redeem', 'admin_spin', 'admin.admin_spin'] %}active{% endif %}">
             <i class="fa-solid fa-bars text-base mb-1"></i>
             <span>More</span>
         </button>
@@ -415,14 +439,14 @@
                         <span class="text-[8px] font-bold text-slate-400 uppercase">Alerts &amp; Rules</span>
                     </div>
                 </a>
-                <a href="{{ url_for('admin_redeem') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint == 'admin_redeem' %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                <a href="{{ url_for('admin_redeem') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint in ['admin_redeem', 'admin.admin_redeem'] %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
                     <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-ticket text-xs"></i></div>
                     <div class="min-w-0">
                         <span class="text-xs font-black block truncate">Promos</span>
                         <span class="text-[8px] font-bold text-slate-400 uppercase">Vouchers</span>
                     </div>
                 </a>
-                <a href="{{ url_for('admin_spin') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint == 'admin_spin' %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
+                <a href="{{ url_for('admin_spin') }}" class="flex items-center gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 active:bg-orange-50 active:border-orange-200 transition-colors {% if request.endpoint in ['admin_spin', 'admin.admin_spin'] %}bg-orange-50 border-orange-200 text-[#ff5000]{% endif %}">
                     <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs"><i class="fa-solid fa-gamepad text-xs"></i></div>
                     <div class="min-w-0">
                         <span class="text-xs font-black block truncate">Spin Game</span>
@@ -439,6 +463,128 @@
             </div>
         </div>
     </div>
+
+    <!-- Admin Navigation Sliding Pill Controller -->
+    <script>
+        (function() {
+            function initNavSlider() {
+                const navContainer = document.getElementById('admin-nav-container');
+                const pill = document.getElementById('nav-active-pill');
+                if (!navContainer || !pill) return;
+
+                const activeBtn = navContainer.querySelector('.tab-btn.active');
+                if (!activeBtn) return;
+
+                navContainer.classList.add('has-sliding-pill');
+
+                function updatePill(btn, smooth = true) {
+                    if (!btn) return;
+                    if (!smooth) {
+                        pill.style.transition = 'none';
+                    } else {
+                        pill.style.transition = 'left 0.32s cubic-bezier(0.16, 1, 0.3, 1), width 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
+                    }
+                    pill.style.left = btn.offsetLeft + 'px';
+                    pill.style.width = btn.offsetWidth + 'px';
+                    pill.style.top = btn.offsetTop + 'px';
+                    pill.style.height = btn.offsetHeight + 'px';
+                    pill.style.opacity = '1';
+
+                    if (!smooth) {
+                        pill.offsetHeight; // trigger reflow
+                        pill.style.transition = 'left 0.32s cubic-bezier(0.16, 1, 0.3, 1), width 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease';
+                    }
+                }
+
+                // Smooth slide on page transitions using sessionStorage
+                let slidFromHistory = false;
+                try {
+                    const stored = sessionStorage.getItem('admin_nav_last_pos');
+                    if (stored) {
+                        const prev = JSON.parse(stored);
+                        const elapsed = Date.now() - (prev.time || 0);
+                        // If within 3 seconds and different position, start from previous and slide in!
+                        if (elapsed < 3000 && typeof prev.left === 'number' && typeof prev.width === 'number') {
+                            if (Math.abs(prev.left - activeBtn.offsetLeft) > 3) {
+                                pill.style.transition = 'none';
+                                pill.style.left = prev.left + 'px';
+                                pill.style.width = prev.width + 'px';
+                                pill.style.top = (prev.top !== undefined ? prev.top : activeBtn.offsetTop) + 'px';
+                                pill.style.height = (prev.height !== undefined ? prev.height : activeBtn.offsetHeight) + 'px';
+                                pill.style.opacity = '1';
+                                pill.offsetHeight; // force reflow
+
+                                requestAnimationFrame(() => {
+                                    requestAnimationFrame(() => {
+                                        updatePill(activeBtn, true);
+                                    });
+                                });
+                                slidFromHistory = true;
+                            }
+                        }
+                    }
+                } catch(e) {}
+
+                if (!slidFromHistory) {
+                    updatePill(activeBtn, false);
+                }
+
+                // If active tab is partially clipped horizontally, scroll it into view
+                try {
+                    const containerLeft = navContainer.scrollLeft;
+                    const containerRight = containerLeft + navContainer.clientWidth;
+                    const btnLeft = activeBtn.offsetLeft;
+                    const btnRight = btnLeft + activeBtn.offsetWidth;
+                    if (btnLeft < containerLeft || btnRight > containerRight) {
+                        navContainer.scrollTo({
+                            left: Math.max(0, btnLeft - 24),
+                            behavior: 'smooth'
+                        });
+                    }
+                } catch(e) {}
+
+                // On clicking tabs: animate immediately & record position
+                navContainer.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        try {
+                            sessionStorage.setItem('admin_nav_last_pos', JSON.stringify({
+                                left: btn.offsetLeft,
+                                width: btn.offsetWidth,
+                                top: btn.offsetTop,
+                                height: btn.offsetHeight,
+                                time: Date.now()
+                            }));
+                        } catch(err) {}
+
+                        // Instant pill slide towards clicked tab
+                        updatePill(btn, true);
+                        navContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                });
+
+                // Observe container resize or font layout updates
+                if (window.ResizeObserver) {
+                    const ro = new ResizeObserver(() => {
+                        const curActive = navContainer.querySelector('.tab-btn.active');
+                        if (curActive) updatePill(curActive, false);
+                    });
+                    ro.observe(navContainer);
+                } else {
+                    window.addEventListener('resize', () => {
+                        const curActive = navContainer.querySelector('.tab-btn.active');
+                        if (curActive) updatePill(curActive, false);
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initNavSlider);
+            } else {
+                initNavSlider();
+            }
+        })();
+    </script>
 
     <script>
         function toggleMobileMoreSheet() {
