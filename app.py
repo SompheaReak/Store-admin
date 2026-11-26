@@ -47,7 +47,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 if os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER') or os.environ.get('DYNO'):
     app.config['SESSION_COOKIE_SECURE'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 # Database Configuration (Point to the same Database as the storefront)
 DEFAULT_NEON_DB = "postgresql://neondb_owner:npg_dq6KIUVe0cyS@ep-polished-feather-a19qzv4s-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
@@ -109,6 +109,26 @@ def home():
     if session.get('admin'):
         return redirect(url_for('admin_dashboard'))
     return redirect(url_for('login'))
+
+@app.route('/manifest.json')
+def root_manifest():
+    return app.send_static_file('manifest.json')
+
+@app.route('/sw.js')
+def root_service_worker():
+    response = app.send_static_file('sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/'
+    return response
+
+@app.route('/favicon.ico')
+def root_favicon():
+    return app.send_static_file('icons/favicon.png')
+
+@app.route('/apple-touch-icon.png')
+@app.route('/apple-touch-icon-precomposed.png')
+def root_apple_touch_icon():
+    return app.send_static_file('icons/apple-touch-icon.png')
 
 @app.route('/admin/db-status')
 def db_status():

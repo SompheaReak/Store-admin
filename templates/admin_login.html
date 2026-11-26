@@ -6,6 +6,15 @@
     <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
     <title>Admin Login | Somphea Reak Studio</title>
+    <!-- App Shortcut & PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SR Admin">
+    <meta name="application-name" content="SR Admin">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -92,7 +101,24 @@
                 </div>
             </div>
 
-            <div class="pt-4">
+            <!-- Apple-style Remember this device toggle -->
+            <label for="remember_device" class="group flex items-center justify-between p-3.5 bg-slate-50/90 hover:bg-slate-100/80 active:scale-[0.98] border border-slate-200/70 rounded-2xl cursor-pointer transition-all duration-200 select-none">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-50 text-[#004b35] flex items-center justify-center text-sm font-bold shrink-0 border border-emerald-100/80">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <div class="flex flex-col text-left">
+                        <span class="text-xs font-black text-slate-800 tracking-tight">Remember this device</span>
+                        <span class="text-[10px] font-semibold text-slate-400">Stay signed in for 7 days</span>
+                    </div>
+                </div>
+                <div class="relative inline-flex items-center">
+                    <input type="checkbox" name="remember_device" id="remember_device" value="1" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-200 peer-checked:bg-[#004b35] shadow-inner"></div>
+                </div>
+            </label>
+
+            <div class="pt-2">
                 <button type="submit" class="w-full btn-taobao py-4 rounded-[16px] text-xs font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2">
                     Access Dashboard <i class="fa-solid fa-arrow-right-to-bracket"></i>
                 </button>
@@ -107,6 +133,13 @@
     </div>
 
     <script>
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/admin/' }).catch(() => {});
+            });
+        }
+
         // Auto-hide flash messages after 4 seconds
         setTimeout(() => {
             document.querySelectorAll('.animate-slide-up').forEach(el => {

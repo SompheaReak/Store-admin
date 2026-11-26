@@ -7,7 +7,8 @@ import hmac
 import time
 from datetime import datetime
 from functools import wraps
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, session, flash, current_app, make_response
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from models import (
     db, Product, Category, Order, PromoCode, PlayerSession,
     RedeemCode, MinifigurePool, DrawHistory, CustomerUser,
@@ -93,10 +94,61 @@ def generate_unique_product_code(prefix="SKU"):
             return candidate
         candidate_num += 1
 
+DEVICE_REMEMBER_SALT = 'sr-admin-device-remember-v1'
+DEVICE_REMEMBER_MAX_AGE = 7 * 24 * 3600  # 7 days in seconds
+
+def generate_admin_device_token(username=ADMIN_USERNAME):
+    secret = (current_app.secret_key if current_app else None) or os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
+    serializer = URLSafeTimedSerializer(secret, salt=DEVICE_REMEMBER_SALT)
+    return serializer.dumps({
+        'user': username,
+        'iat': int(time.time())
+    })
+
+def verify_admin_device_token(token):
+    if not token:
+        return False, None
+    secret = (current_app.secret_key if current_app else None) or os.environ.get('SECRET_KEY', 'somphea_reak_ultra_pro_2025')
+    serializer = URLSafeTimedSerializer(secret, salt=DEVICE_REMEMBER_SALT)
+    try:
+        data = serializer.loads(token, max_age=DEVICE_REMEMBER_MAX_AGE)
+        if data.get('user') == ADMIN_USERNAME:
+            return True, data
+        return False, 'invalid_user'
+    except SignatureExpired:
+        return False, 'expired'
+    except BadSignature:
+        return False, 'invalid_signature'
+    except Exception as e:
+        return False, str(e)
+
+@admin_bp.before_request
+def check_admin_remember_device():
+    """Auto-restore admin session if valid remember-device token is present."""
+    if not session.get('admin'):
+        token = request.cookies.get('admin_device_token')
+        if token:
+            valid, _ = verify_admin_device_token(token)
+            if valid:
+                session.permanent = True
+                session['admin'] = True
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('admin'):
+            token = request.cookies.get('admin_device_token')
+            if token:
+                valid, reason = verify_admin_device_token(token)
+                if valid:
+                    session.permanent = True
+                    session['admin'] = True
+                    return f(*args, **kwargs)
+                elif reason == 'expired':
+                    flash('Your 7-day login session has expired. Please enter your password to sign in.', 'error')
+                    resp = make_response(redirect(url_for('login')))
+                    resp.delete_cookie('admin_device_token')
+                    return resp
             flash('Please log in to access the admin panel.', 'error')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -179,6 +231,22 @@ def login():
     client_ip = forwarded.split(',')[0].strip() if forwarded else (request.remote_addr or '127.0.0.1')
     now = time.time()
 
+    if request.method == 'GET':
+        if session.get('admin'):
+            return redirect(url_for('admin_dashboard'))
+        token = request.cookies.get('admin_device_token')
+        if token:
+            valid, reason = verify_admin_device_token(token)
+            if valid:
+                session.permanent = True
+                session['admin'] = True
+                return redirect(url_for('admin_dashboard'))
+            elif reason == 'expired':
+                flash('Your 7-day login session has expired. Please enter your password to sign in.', 'error')
+                resp = make_response(render_template('admin_login.html'))
+                resp.delete_cookie('admin_device_token')
+                return resp
+
     attempts = [ts for ts in admin_failed_logins.get(client_ip, []) if now - ts < 300]
     if len(attempts) >= 5:
         retry_after = max(1, int(300 - (now - attempts[0])))
@@ -188,11 +256,38 @@ def login():
     if request.method == 'POST':
         user_input = request.form.get('username', '')
         pass_input = request.form.get('password', '')
+        remember = request.form.get('remember_device') in ('1', 'true', 'on', 'yes')
+
         if hmac.compare_digest(user_input, ADMIN_USERNAME) and hmac.compare_digest(pass_input, ADMIN_PASS):
             admin_failed_logins.pop(client_ip, None)
             session.clear()
             session['admin'] = True
-            return redirect(url_for('admin_dashboard'))
+
+            resp = make_response(redirect(url_for('admin_dashboard')))
+            is_secure = (
+                request.is_secure or
+                request.headers.get('X-Forwarded-Proto', '').lower() == 'https' or
+                bool(os.environ.get('RENDER')) or
+                bool(os.environ.get('DYNO')) or
+                os.environ.get('FLASK_ENV') == 'production'
+            )
+
+            if remember:
+                session.permanent = True
+                token = generate_admin_device_token(ADMIN_USERNAME)
+                resp.set_cookie(
+                    'admin_device_token',
+                    token,
+                    max_age=DEVICE_REMEMBER_MAX_AGE,
+                    httponly=True,
+                    samesite='Lax',
+                    secure=is_secure
+                )
+            else:
+                session.permanent = False
+                resp.delete_cookie('admin_device_token')
+
+            return resp
         attempts.append(now)
         admin_failed_logins[client_ip] = attempts
         flash('Invalid Username or Password', 'error')
@@ -201,7 +296,10 @@ def login():
 @admin_bp.route('/admin/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    flash('You have been logged out.', 'success')
+    resp = make_response(redirect(url_for('login')))
+    resp.delete_cookie('admin_device_token')
+    return resp
 
 @admin_bp.route('/admin/panel')
 @login_required
